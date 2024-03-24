@@ -1,49 +1,59 @@
 """
-Container for spike data.
+This class represents spike data for a set of neurons.
 """
+
+import copy
+import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 class SpikeData:
     """
-    Container for spike data.
+    Initialize a SpikeData object.
+
+    Parameters:
+    neuron_indices (list of int): List of neuron indices.
+    spike_times (list of int): List of spike times of the neuron.
     """
-    def __init__(self):
-        """
-        Initialize an empty spike data container.
-        """
-        self.spike_times = []
 
-    def add_spike(self, time):
-        """
-        Add a spike at the specified time.
+    def __init__(self, neuron_index, spike_times: list[int], T: int = 0):
 
-        Args:
-            time (float): Time of the spike in milliseconds.
-        """
-        self.spike_times.append(time)
+        self.__neuron_index = neuron_index
+        self.__spike_times = spike_times
+        self.__T = T if not T else np.max(spike_times)
+    
 
-    def get_spike_times(self):
+    def __copy__(self):
         """
-        Get the list of spike times.
-
-        Returns:
-            list: List of spike times.
+        Implement the copy operation.
+        :return: A copy of the current SpikeData object.
         """
-        return self.spike_times
+        cls = self.__class__
+        new_copy = cls.__new__(cls)
+        new_copy.__dict__.update(self.__dict__)
 
-    def plot_spike_train(self, light_onset_time, light_offset_time):
+        # Ensure that the copied object has a new list for neuron_indices and spike_times
+        new_copy.__neuron_index = copy.copy(self.__neuron_index)
+        new_copy.__spike_times = copy.deepcopy(self.__spike_times)
+
+        return new_copy
+
+
+    def mean_firing_rate(self) -> float:
         """
-        Plot the spike train with shading for stimulus duration.
-
-        Args:
-            light_onset_time (float): Time when the stimulus starts.
-            light_offset_time (float): Time when the stimulus ends.
+        Return the mean firing rate of the neuron.
         """
+        return len(self.__spike_times) / self.__T
 
-        _, ax = plt.subplots()
-        ax.vlines(self.spike_times, 0, 1)
-        ax.set_xlim([0, len(self.spike_times)])
-        ax.set_xlabel('Time (ms)')
-        ax.set_title('Neuronal Spike Times')
-        ax.axvspan(light_onset_time, light_offset_time, alpha=0.5, color='greenyellow')
+
+    def plot_spike_train(self) -> None:
+        """
+        Plot the spike train for a single neuron.
+        """
+        plt.figure(figsize=(10, 6))
+        sns.rugplot(self.__spike_times, height=0.5)
+        plt.xlim([0, self.__T])  # set x-axis limits
+        plt.title(f'Spike Train for Neuron {self.__neuron_index}', fontsize=14)
+        plt.xlabel('Time (s)', fontsize=12)
+        plt.yticks([])
         plt.show()
