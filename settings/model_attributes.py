@@ -6,8 +6,12 @@ class ModelAttributes:
     """
     A class to store the attributes of a model
     """
+
+    INSTANCE = None
+
     def __init__(self, **kwargs):
         self.__attributes = set(kwargs.keys())
+        ModelAttributes.INSTANCE = self
 
         for attr in self.__attributes:
             value = kwargs.get(attr, None)
@@ -29,3 +33,14 @@ class ModelAttributes:
         """
         self.__attributes.add(attr)
         setattr(self, attr, value)
+
+    @staticmethod
+    def get_model_attributes():
+        """
+        Get the model attributes instance.
+        """
+        if ModelAttributes.INSTANCE is None:
+            print("Warning: ModelAttributes instance not found. Creating a new one.")
+            return ModelAttributes()
+
+        return ModelAttributes.INSTANCE

@@ -1,11 +1,11 @@
 """
 This class represents spike data for a set of neurons.
 """
-
-import copy
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+from common import ATTR
 
 class SpikeData:
     """
@@ -16,27 +16,19 @@ class SpikeData:
     spike_times (list of int): List of spike times of the neuron.
     """
 
-    def __init__(self, neuron_index, spike_times: list[int], T: int = 0):
+    def __init__(self, neuron_index, spike_times: list[int]):
 
         self.__neuron_index = neuron_index
         self.__spike_times = spike_times
-        self.__T = T if not T else np.max(spike_times)
-    
+        self.__T = ATTR().get_attr('T')
+
 
     def __copy__(self):
         """
         Implement the copy operation.
         :return: A copy of the current SpikeData object.
         """
-        cls = self.__class__
-        new_copy = cls.__new__(cls)
-        new_copy.__dict__.update(self.__dict__)
-
-        # Ensure that the copied object has a new list for neuron_indices and spike_times
-        new_copy.__neuron_index = copy.copy(self.__neuron_index)
-        new_copy.__spike_times = copy.deepcopy(self.__spike_times)
-
-        return new_copy
+        return SpikeData(self.__neuron_index, self.__spike_times)
 
 
     def mean_firing_rate(self) -> float:

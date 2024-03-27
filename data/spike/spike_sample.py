@@ -11,10 +11,9 @@ class SpikeSample(DataSample):
     This class represents a spike sample.
     It encapsulates a single spike item and provides a method to access it.
     """
-    def __init__(self, data: List[SpikeData], attr: dict, label = None) -> None:
+    def __init__(self, data: List[SpikeData], label = None) -> None:
         super().__init__(data, label)
         self._num_of_neurons = len(data)
-        self._attr = attr
 
     def __str__(self):
         return f"SpikeSample({self._data})"
