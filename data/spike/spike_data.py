@@ -1,11 +1,12 @@
 """
 This class represents spike data for a set of neurons.
 """
-import numpy as np
 import seaborn as sns
+import matplotlib
 import matplotlib.pyplot as plt
+from typing_extensions import override
 
-from common import ATTR
+from common import ATTR, SPIKE_NS
 
 class SpikeData:
     """
@@ -20,7 +21,7 @@ class SpikeData:
 
         self.__neuron_index = neuron_index
         self.__spike_times = spike_times
-        self.__T = ATTR().get_attr('T')
+        self.__T = ATTR(SPIKE_NS.T)
 
 
     def __copy__(self):
@@ -29,7 +30,12 @@ class SpikeData:
         :return: A copy of the current SpikeData object.
         """
         return SpikeData(self.__neuron_index, self.__spike_times)
+    
+    def get_index(self):
+        return self.__neuron_index
 
+    def get_spike_times(self):
+        return self.__spike_times
 
     def mean_firing_rate(self) -> float:
         """
@@ -49,3 +55,32 @@ class SpikeData:
         plt.xlabel('Time (s)', fontsize=12)
         plt.yticks([])
         plt.show()
+    
+    @override   
+    def plot(self, plot: matplotlib.figure.Figure) -> matplotlib.figure.Figure:
+        """
+        this function adds
+        """
+        return add_neuron_raster(self, plot)
+
+def add_neuron_raster(data: SpikeData, plot: matplotlib.figure.Figure) -> matplotlib.figure.Figure:
+    """
+    Adds the raster plot of a specific neuron to an existing raster plot.
+    """
+    # Extract spike times for the specified neuron
+    neuron_spikes = data.get_spike_times()
+    neuron_index = data.get_index()
+
+    # Create a subplot for the new neuron's raster plot
+    ax = plot.add_subplot(111)
+
+    # Plot the spikes for the neuron
+    ax.eventplot(neuron_spikes, lineoffsets=neuron_index, colors='k', linewidths=0.5)
+
+    # Customize the plot (you can adjust these settings as needed)
+    ax.set_title(f"Raster Plot for Neuron {neuron_index}")
+    ax.set_xlabel("Time (ms)")
+    ax.set_ylabel("Neuron Index")
+    ax.set_yticks([])  # Hide y-axis ticks
+
+    return plot

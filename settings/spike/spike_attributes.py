@@ -1,30 +1,14 @@
 """
 in this file we define the attributes of the spike model
 """
-from settings.model_attributes import ModelAttributes
 
-class SpikeAttributes(ModelAttributes):
+class SpikeAttributes(object):
     """
-    A class to store the attributes of a model
+    A class to store the attributes of a spiking model
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    T =  "T"
+    dt = "dt"
+    NUM_NEURONS = "num_neurons"
+    NUM_INPUTS = "num_inputs"
+    NUM_OUTPUTS = "num_outputs"
 
-    def get_T(self):
-        """
-        returns the time of the simulation (in ms)
-        """
-        return self.get_attr('T')
-
-    def get_dt(self):
-        """
-        returns the time step of the simulation (in ms)
-        """
-        return self.get_attr('dt')
-
-    def get_num_of_neurons(self):
-        """
-        returns the number of neurons in the model
-        """
-        return self.get_attr('num_of_neurons')
-    
