@@ -1,6 +1,7 @@
 """
 This module defines the SpikeSample class which encapsulates
 """
+import matplotlib.pyplot as plt 
 from typing import List
 
 from data.data_sample import DataSample
@@ -18,5 +19,13 @@ class SpikeSample(DataSample):
     def __str__(self):
         return f"SpikeSample({self._data})"
 
-    def plot(self, index: int) -> None:
-        self._data[index].plot_spike_train()
+    def plot(self) -> None:
+        """
+        Plot the spike sample.
+        """
+        plot = plt.figure(figsize=(10, 6))
+        
+        for data in self._data:
+            data.plot(plot)
+            
+        plt.show()

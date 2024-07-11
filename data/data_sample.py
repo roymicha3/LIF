@@ -18,7 +18,7 @@ class DataSample:
         """
         return self._data
 
-    def plot(self, index: int):
+    def plot(self):
         """
         plots the data.
         """
