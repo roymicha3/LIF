@@ -17,7 +17,7 @@ class SpikeSample(DataSample):
         self._num_of_neurons = len(data)
 
     def __str__(self):
-        return f"SpikeSample({self._data})"
+        return f"SpikeSample({self.__data})"
 
     def plot(self) -> None:
         """
@@ -25,7 +25,15 @@ class SpikeSample(DataSample):
         """
         plot = plt.figure(figsize=(10, 6))
         
-        for data in self._data:
-            data.plot(plot)
+        # Create a subplot for the new neuron's raster plot
+        ax = plot.add_subplot(111)
+        
+        for data in self.get():
+            data.plot(ax)
+            
+        # Customize the plot (you can adjust these settings as needed)
+        ax.set_xlabel("Time (ms)")
+        ax.set_ylabel("Neuron Index")
+        ax.set_yticks([])  # Hide y-axis ticks
             
         plt.show()

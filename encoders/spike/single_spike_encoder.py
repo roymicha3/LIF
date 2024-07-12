@@ -7,6 +7,7 @@ from typing_extensions import override
 
 from encoders.encoder import Encoder
 from common import ATTR, SPIKE_NS, MODEL_NS
+from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
 from encoders.spike.spike_utils import NUM_TIME_SAMPLES
@@ -33,11 +34,11 @@ class SingleSpikeEncoder(Encoder):
         self.__num_of_neurons = ATTR(MODEL_NS.NUM_INPUTS)
         self.__max_value      = max_value
 
-    def _encode_sample(self, sample) -> SpikeSample:
+    def _encode_sample(self, sample: DataSample) -> SpikeSample:
         time_samples = NUM_TIME_SAMPLES(self.__T, self.__dt)
         data = []
 
-        for neuron_idx, neuron in enumerate(sample):
+        for neuron_idx, neuron in enumerate(sample.get()):
             spike_delay = int((neuron / self.__max_value) * time_samples)
             
             # if the neuron is silent
@@ -58,9 +59,6 @@ class SingleSpikeEncoder(Encoder):
         """
         encode the data into spike times
         """
-        assert len(data.shape) == 2
-        assert self.__num_of_neurons == data.shape[1]
-        
         res = [self._encode_sample(sample) for sample in data]
         return res
     

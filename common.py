@@ -12,6 +12,17 @@ def get_model_attributes():
     """
     return ModelAttributes.get_model_attributes()
 
+
+def init_model_attributes(values: dict):
+    """
+    Initializes the attributes for the model
+    """
+    for key, val in values.items():
+        get_model_attributes().add_attr(key, val)
+        
+    get_model_attributes().summarize()
+
+
 ATTR = get_model_attributes().get_attr
 SPIKE_NS = SpikeNamespace
 MODEL_NS = ModelNamespace

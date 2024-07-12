@@ -23,6 +23,18 @@ class DataLoader:
         self.__batch_size     =    batch_size
         self.__encoder        =    encoder
         
+    def get_batch_size(self) -> int:
+        """
+        return the batch size
+        """
+        return self.__batch_size
+    
+    def get_encoder(self) -> Encoder:
+        """
+        return the loaders encoder
+        """
+        return self.__encoder
+        
     def load(self, type: DataType = DataType.TRAIN) -> List[DataSample]:
         """
         Load the data.

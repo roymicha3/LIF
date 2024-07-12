@@ -9,14 +9,14 @@ class DataSample:
     It encapsulates a single data item and provides a method to access it.
     """
     def __init__(self, data, label = None):
-        self._data = data
-        self._label = label
+        self.__data = data
+        self.__label = label
 
     def get(self):
         """
         Returns the data.
         """
-        return self._data
+        return self.__data
 
     def plot(self):
         """
@@ -28,7 +28,7 @@ class DataSample:
         """
         Returns the label.
         """
-        return self._label
+        return self.__label
 
     def __str__(self):
-        return f"DataSample({self._data})"
+        return f"DataSample({self.__data})"

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from typing import List
 import numpy as np
 
-from data_loader import DataLoader, DataType
+from data.loaders.data_loader import DataLoader, DataType
 from data.data_sample import DataSample
 from common import ATTR, MODEL_NS
 
@@ -19,9 +19,11 @@ class RandomDataLoader(DataLoader):
         super().__init__(batch_size, encoder)
         self.__max_value        = max_value
         self.__num_of_neurons   = ATTR(MODEL_NS.NUM_INPUTS)
+        self.__num_of_classes   = ATTR(MODEL_NS.NUM_CLASSES)
     
     
     def _partial_load(self, size: int) -> List[DataSample]:
+        possible_labels = np.arange(0, self.__num_of_classes, 1)
         data = []
         for _ in range(size):
             current_data = np.random.uniform(
@@ -29,16 +31,17 @@ class RandomDataLoader(DataLoader):
                 high=self.__max_value,
                 size=self.__num_of_neurons)
             
-            data.append(current_data)
+            label = np.random.choice(possible_labels)
+            data.append(DataSample(current_data, label))
         
-        return data
+        return self.get_encoder().encode(np.array(data))
     
     
     def load(self, type: DataType = DataType.TRAIN) -> List[DataSample]:
         return self._partial_load(MAX_SAMPLES)
     
     def load_batch(self, type: DataType = DataType.TRAIN) -> List[DataSample]:
-        return self._partial_load(self.__batch_size)
+        return self._partial_load(self.get_batch_size())
     
     def __call__(self, type: DataType = DataType.TEST) -> List[DataSample]:
         return self.load()

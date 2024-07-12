@@ -1,6 +1,7 @@
 """
 This class represents spike data for a set of neurons.
 """
+import matplotlib.axes
 import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
@@ -57,7 +58,7 @@ class SpikeData:
         plt.show()
     
     @override   
-    def plot(self, plot: matplotlib.figure.Figure) -> matplotlib.figure.Figure:
+    def plot(self, plot: matplotlib.axes.Axes) -> matplotlib.figure.Figure:
         """
         this function adds
         """
@@ -71,16 +72,7 @@ def add_neuron_raster(data: SpikeData, plot: matplotlib.figure.Figure) -> matplo
     neuron_spikes = data.get_spike_times()
     neuron_index = data.get_index()
 
-    # Create a subplot for the new neuron's raster plot
-    ax = plot.add_subplot(111)
-
     # Plot the spikes for the neuron
-    ax.eventplot(neuron_spikes, lineoffsets=neuron_index, colors='k', linewidths=0.5)
-
-    # Customize the plot (you can adjust these settings as needed)
-    ax.set_title(f"Raster Plot for Neuron {neuron_index}")
-    ax.set_xlabel("Time (ms)")
-    ax.set_ylabel("Neuron Index")
-    ax.set_yticks([])  # Hide y-axis ticks
+    plot.eventplot(neuron_spikes, lineoffsets=neuron_index, colors='k', linewidths=0.5)
 
     return plot
