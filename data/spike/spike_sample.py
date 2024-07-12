@@ -17,7 +17,7 @@ class SpikeSample(DataSample):
         self._num_of_neurons = len(data)
 
     def __str__(self):
-        return f"SpikeSample({self.__data})"
+        return f"SpikeSample({self.get_label()})"
 
     def plot(self) -> None:
         """
