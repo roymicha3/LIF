@@ -2,7 +2,6 @@
 This class encodes the data into spike times - via rate encoding.
 """
 import numpy as np
-from typing import List
 from typing_extensions import override
 
 from encoders.encoder import Encoder
@@ -10,15 +9,15 @@ from common import ATTR, SPIKE_NS, MODEL_NS
 from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
-from encoders.spike.spike_utils import NUM_TIME_SAMPLES
+from tools.utils import SEQ_LEN
 
 
-class SingleSpikeEncoder(Encoder):
+class LatencyEncoder(Encoder):
     """
     This class encodes the data into spike times - via single spike encoding.
     """
     @override
-    def __call__(self, data: np.array):
+    def __call__(self, data: DataSample):
         return self.encode(data)
     
     def __init__(
@@ -29,21 +28,25 @@ class SingleSpikeEncoder(Encoder):
         """
         super().__init__()
         
-        self.__T              = ATTR(SPIKE_NS.T)
-        self.__dt             = ATTR(SPIKE_NS.dt)
-        self.__num_of_neurons = ATTR(MODEL_NS.NUM_INPUTS)
-        self.__max_value      = max_value
+        self._T              = ATTR(SPIKE_NS.T)
+        self._dt             = ATTR(SPIKE_NS.dt)
+        self._num_of_neurons = ATTR(MODEL_NS.NUM_INPUTS)
+        self._max_value      = max_value
 
     def _encode_sample(self, sample: DataSample) -> SpikeSample:
-        time_samples = NUM_TIME_SAMPLES(self.__T, self.__dt)
+        seq_len = SEQ_LEN(self._T, self._dt)
         data = []
 
         for neuron_idx, neuron in enumerate(sample.get()):
-            spike_delay = int((neuron / self.__max_value) * time_samples)
+            
+            if isinstance(neuron, list):
+                neuron = neuron[0]
+            spike_delay = int((neuron / self._max_value) * seq_len)
             
             # if the neuron is silent
             if spike_delay == 0:
                 continue
+            
             elif spike_delay > 0:
                 spikes = np.array([spike_delay]).astype(int)
             # if no spikes were fired
@@ -52,13 +55,13 @@ class SingleSpikeEncoder(Encoder):
 
             data.append(SpikeData(neuron_idx, spikes))
 
-        return SpikeSample(data)
+        return SpikeSample(data, seq_len, sample.get_label())
     
     @override
-    def encode(self, data: np.array) -> List[SpikeSample]:
+    def encode(self, data: DataSample) -> SpikeSample:
         """
         encode the data into spike times
         """
-        res = [self._encode_sample(sample) for sample in data]
-        return res
+        return self._encode_sample(data)
+        
     

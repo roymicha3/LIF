@@ -3,6 +3,8 @@ Abstract class for encoders.
 """
 import numpy as np
 
+from data.data_sample import DataSample
+
 class Encoder:
     """
     This class represents an encoder.
@@ -10,7 +12,7 @@ class Encoder:
     def __init__(self) -> None:
         pass
 
-    def __call__(self, data: np.array):
+    def __call__(self, data: DataSample):
         """
         encode data into a format that can be used by the model.
         """

@@ -51,14 +51,14 @@ class ModelAttributes:
         Dump the model attributes to a JSON file.
         """
         attributes = {attr: getattr(self, attr) for attr in self.__attributes}
-        with open(filename, "w") as f:
+        with open(filename, "wb") as f:
             json.dump(attributes, f, indent=4)
 
     def load(self, filename):
         """
         Load model attributes from a JSON file.
         """
-        with open(filename, "r") as f:
+        with open(filename, "rb") as f:
             attributes = json.load(f)
 
         for attr, value in attributes.items():

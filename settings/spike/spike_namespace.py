@@ -7,4 +7,5 @@ class SpikeNamespace(object):
     A class to store the attributes of a spiking model
     """
     T =  "T"
+    tau = "tau"
     dt = "dt"

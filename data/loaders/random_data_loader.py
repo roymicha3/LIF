@@ -1,6 +1,7 @@
 """
 Definition of a random data generator
 """
+import torch
 import matplotlib.pyplot as plt
 from typing import List
 import numpy as np

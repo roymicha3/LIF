@@ -1,6 +1,7 @@
 """
 This class represents spike data for a set of neurons.
 """
+import torch
 import matplotlib.axes
 import seaborn as sns
 import matplotlib
