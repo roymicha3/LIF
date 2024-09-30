@@ -63,7 +63,10 @@ class DataSample:
         """
         Serializes the DataSample object to a file.
         """
-        with open(f"{filename}.pkl", 'wb') as file:
+        if not os.path.splitext(filename)[1]:  # If no extension is present
+            filename += '.pkl'
+        
+        with open(filename, 'wb') as file:
             pickle.dump(self, file)
 
     @classmethod
