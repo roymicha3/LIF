@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
 
-from .kernel import Kernel
-from .leaky_kernel import LeakyKernel
+from .node import Node
+from .leaky_node import LeakyNode
 from common import ATTR, SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 
-# Define the DEN kernel class (assuming the class is provided as is)
-class DENKerenl(Kernel):
+# Define the DEN Node class (assuming the class is provided as is)
+class DENNode(Node):
     def __init__(
         self,
         n,
@@ -16,13 +16,13 @@ class DENKerenl(Kernel):
         scale = False,
         learning = False
     ):
-        super(DENKerenl, self).__init__(n, (n, n), learning)
+        super(DENNode, self).__init__(n, (n, n), learning)
         
         tau_m = ATTR(SPIKE_NS.tau_m)
-        self._coductness = LeakyKernel(n, device, dtype, scale=scale, learning=learning, tau=tau_m)
+        self._coductness = LeakyNode(n, device, dtype, scale=scale, learning=learning, tau=tau_m)
         
         tau_s = ATTR(SPIKE_NS.tau_s)
-        self._voltage = LeakyKernel(n, device, dtype, scale=False, learning=False, tau=tau_s)
+        self._voltage = LeakyNode(n, device, dtype, scale=False, learning=False, tau=tau_s)
         
 
     def forward(self, input_):

@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
 
-from .kernel import Kernel
+from .node import Node
 from common import ATTR, SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 
-# Define the LeakyKernel class (assuming the class is provided as is)
-class LeakyKernel(Kernel):
+# Define the LeakyNode class (assuming the class is provided as is)
+class LeakyNode(Node):
     def __init__(
         self,
         n,
@@ -16,7 +16,7 @@ class LeakyKernel(Kernel):
         learning = False,
         tau = None
     ):
-        super(LeakyKernel, self).__init__(n, (n, n), learning)
+        super(LeakyNode, self).__init__(n, (n, n), learning)
 
         self.rnn = nn.RNN(
             n,

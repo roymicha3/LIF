@@ -6,7 +6,7 @@ from typing import Iterable, Optional
 import torch
 
 
-class Kernel(torch.nn.Module):
+class Node(torch.nn.Module):
     # language=rst
     """
     Abstract base class for groups of neurons.
@@ -64,7 +64,7 @@ class Kernel(torch.nn.Module):
         """
         self.s.zero_()
 
-    def train(self, mode: bool = True) -> "Kernel":
+    def train(self, mode: bool = True) -> "Node":
         # language=rst
         """
         Sets the layer in training mode.

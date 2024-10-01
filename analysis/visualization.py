@@ -6,8 +6,8 @@ import torch
 
 from encoders.spike.latency_encoder import LatencyEncoder
 from data.dataset.random_dataset import RandomDataset, DataType, OutputType
-from network.nodes.leaky_kernel import LeakyKernel
-from network.nodes.den_kernel import DENKerenl
+from network.nodes.leaky_node import LeakyNode
+from network.nodes.den_node import DENNode
 from tools.utils import SEQ_LEN
 from common import ATTR, SPIKE_NS, MODEL_NS
 
@@ -50,12 +50,12 @@ class RandomSpikePattern:
         
         seq_len, n = data.shape
         
-        kernel = LeakyKernel(n, scale=True)
+        kernel = LeakyNode(n, scale=True)
         
         with torch.no_grad():
             response = kernel.forward(data)
 
-        simulated_response = LeakyKernel.assimulate_response(raw_data, ATTR(SPIKE_NS.tau), ATTR(SPIKE_NS.dt))
+        simulated_response = LeakyNode.assimulate_response(raw_data, ATTR(SPIKE_NS.tau), ATTR(SPIKE_NS.dt))
         simulated_response = simulated_response.numpy()
         
         # Plot the results
@@ -82,12 +82,12 @@ class RandomSpikePattern:
             
             seq_len, n = data.shape
             
-            kernel = DENKerenl(n, scale=True)
+            kernel = DENNode(n, scale=True)
             
             with torch.no_grad():
                 response = kernel.forward(data)
 
-            simulated_response = DENKerenl.assimulate_response(raw_data, ATTR(SPIKE_NS.tau_m), ATTR(SPIKE_NS.tau_s), ATTR(SPIKE_NS.dt))
+            simulated_response = DENNode.assimulate_response(raw_data, ATTR(SPIKE_NS.tau_m), ATTR(SPIKE_NS.tau_s), ATTR(SPIKE_NS.dt))
             simulated_response = simulated_response.numpy()
             
             # Plot the results
