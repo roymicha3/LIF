@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
 
-from kernel import Kernel
+from .kernel import Kernel
 from common import ATTR, SPIKE_NS
+from data.spike.spike_sample import SpikeSample
 
 # Define the LeakyKernel class (assuming the class is provided as is)
 class LeakyKernel(Kernel):
@@ -12,7 +13,8 @@ class LeakyKernel(Kernel):
         device=None,
         dtype=None,
         scale = False,
-        learning = False
+        learning = False,
+        tau = None
     ):
         super(LeakyKernel, self).__init__(n, (n, n), learning)
 
@@ -30,7 +32,7 @@ class LeakyKernel(Kernel):
         self._n = n
 
         self._dt = ATTR(SPIKE_NS.dt)
-        self._tau = ATTR(SPIKE_NS.tau)
+        self._tau = tau if tau else ATTR(SPIKE_NS.tau)
         self._beta = 1 - self._dt / self._tau
         
         self._scale = scale
@@ -69,29 +71,30 @@ class LeakyKernel(Kernel):
     def forward(self, input_):
         mem = self.rnn(input_)
         
-        if self.scale:
-            return mem[0] / self.dt
+        if self._scale:
+            return mem[0] / self._dt
         
         return mem[0]
     
     @staticmethod    
-    def assimulate_response(input_seq, tau, dt):
+    def assimulate_response(input_seq : SpikeSample, tau, dt):
         """
         this function assimulate how the output of the model should behave
         """
-        seq_length, batch_size, input_size = input_seq.shape
+        seq_length = input_seq._seq_len 
+        input_size = input_seq.shape()[0]
 
         # Initialize the response tensor
-        response = torch.zeros_like(input_seq)
+        response = torch.zeros(seq_length, input_size)
         
         times = torch.arange(seq_length, dtype=torch.float32)
         
-        for b in range(batch_size):
-            for neuron in range(input_size):
-                for t in range(seq_length):
-                    if input_seq[t, b, neuron] == 1:
-                        # Compute the exponential decay terms
-                        exp = torch.exp(-(times[t:] - t) * dt / tau)
-                        response[t:, b, neuron] += (1 / tau) * exp
+        for neuron in input_seq.get():
+            spikes = neuron.get_spike_times()
+            i = neuron.get_index()
+            for t in spikes:
+                # Compute the exponential decay terms
+                exp = torch.exp(-(times[t:] - t) * dt / tau)
+                response[t:, i] += (1 / tau) * exp
 
         return response

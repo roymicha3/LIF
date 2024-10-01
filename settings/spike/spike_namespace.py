@@ -9,3 +9,5 @@ class SpikeNamespace(object):
     T =  "T"
     tau = "tau"
     dt = "dt"
+    tau_m = "tau_m"
+    tau_s = "tau_s"

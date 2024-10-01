@@ -11,14 +11,18 @@ MODEL_ATTRIBUTES = \
     MODEL_NS.BATCH_SIZE : 10,
     MODEL_NS.NUM_CLASSES : 2,
     MODEL_NS.NUM_OUTPUTS : 1,
-    MODEL_NS.NUM_INPUTS : 20,
+    MODEL_NS.NUM_INPUTS : 1,
     MODEL_NS.TRAINING_PERCENTAGE : 50,
     MODEL_NS.TESTING_PERCENTAGE : 25,
     MODEL_NS.VALIDATION_PERCENTAGE : 25,
     
     # SPIKE PARAMETERS:
     SPIKE_NS.T : 500,
-    SPIKE_NS.dt : 1,
+    SPIKE_NS.dt : 0.1,
+    SPIKE_NS.tau: 10,
+    
+    SPIKE_NS.tau_m: 15,
+    SPIKE_NS.tau_s: 15 / 4,
 }
 
 def main():
@@ -31,10 +35,8 @@ def main():
     
     visualizer = RandomSpikePattern(ATTR(MODEL_NS.BATCH_SIZE))
     
-    visualizer.single_spike_raster()
+    visualizer.den_response()
     
-    
-
 
 if __name__ == "__main__":
     main()

@@ -54,6 +54,12 @@ class Dataset(data.Dataset):
         """
         raise NotImplementedError
     
+    def get_raw(self, idx, encoded = True):
+        """
+        Returns a single raw item from the dataset
+        """
+        raise NotImplementedError
+    
     @staticmethod
     def load(filename) -> DataSample:
         """

@@ -34,7 +34,7 @@ class RandomDataset(Dataset):
         """
         return self._len
     
-    def get_raw(self, idx):
+    def get_raw(self, idx, encoded = True):
         """
         Returns a single raw item from the dataset
         """
@@ -42,12 +42,16 @@ class RandomDataset(Dataset):
         full_path = os.path.join(self._root, filename)
         
         if not os.path.exists(full_path):
-            data = np.random.rand(self._len).reshape((self._len, 1)).tolist()
+            data = np.random.rand(self._input_size).reshape((self._input_size, 1)).tolist()
             label = np.random.randint(0, 1)
             DataSample(data, label).serialize(full_path)
         
         sample = Dataset.load(full_path)
-        return self._encoder(sample)
+        
+        if encoded:
+            return self._encoder(sample)
+        
+        return sample
 
     def __getitem__(self, idx):
         """

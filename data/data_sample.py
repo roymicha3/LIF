@@ -3,7 +3,9 @@ This module defines the DataSample class which encapsulates
 a single data item and provides a method to access it.
 """
 import os
+import torch
 import pickle
+import numpy as np
 
 class DataSample:
     """
@@ -34,9 +36,26 @@ class DataSample:
     
     def shape(self):
         """
-        Returns the shape of the data
+        Returns the shape of the data, supporting lists, NumPy arrays, and tensors.
         """
-        return self._data.shape
+        data = self._data
+
+        if isinstance(data, np.ndarray):
+            return data.shape
+        elif isinstance(data, torch.Tensor):
+            return data.shape
+        elif isinstance(data, list):
+            def get_shape(lst):
+                if isinstance(lst, list):
+                    if len(lst) == 0:
+                        return (0,)
+                    first_elem_shape = get_shape(lst[0])
+                    return (len(lst), *first_elem_shape)
+                return ()
+            
+            return get_shape(data)
+        else:
+            raise TypeError(f"Unsupported data type: {type(data)}")
 
     def plot(self):
         """

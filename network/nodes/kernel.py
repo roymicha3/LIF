@@ -43,10 +43,6 @@ class Kernel(torch.nn.Module):
         else:
             self.shape = shape  # Shape is passed in as an argument.
 
-        assert self.n == reduce(
-            mul, self.shape
-        ), "No. of neurons and shape do not match"
-
         self.register_buffer("s", torch.ByteTensor())  # Spike occurrences.
 
         self.learning = learning

@@ -21,10 +21,9 @@ class SpikeSample(DataSample):
     def to_torch(self):
         input_size = self._num_of_neurons
         spike_train = torch.zeros((self._seq_len, input_size), dtype=torch.float32)
-        
-        for n in range(input_size):
-            spike_times = self._data[n].get_spike_times()
-            neuron_index = self._data[n].get_index()
+        for data in self._data:
+            spike_times = data.get_spike_times()
+            neuron_index = data.get_index()
             for spike in spike_times:
                 spike_train[spike, neuron_index] = 1.0
                 
