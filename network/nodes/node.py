@@ -6,8 +6,7 @@ from typing import Iterable, Optional
 import torch
 
 
-class Node(torch.nn.Module):
-    # language=rst
+class Node(torch.nn.Module, ABC):
     """
     Abstract base class for groups of neurons.
     """
@@ -16,10 +15,8 @@ class Node(torch.nn.Module):
         self,
         n: Optional[int] = None,
         shape: Optional[Iterable[int]] = None,
-        learning: bool = True,
-        **kwargs,
+        learning: bool = True
     ) -> None:
-        # language=rst
         """
         Abstract base class constructor.
 
@@ -49,7 +46,6 @@ class Node(torch.nn.Module):
 
     @abstractmethod
     def forward(self, x: torch.Tensor) -> None:
-        # language=rst
         """
         Abstract base class method for a single simulation step.
 
@@ -58,14 +54,12 @@ class Node(torch.nn.Module):
         pass
 
     def reset_state_variables(self) -> None:
-        # language=rst
         """
         Abstract base class method for resetting state variables.
         """
         self.s.zero_()
 
     def train(self, mode: bool = True) -> "Node":
-        # language=rst
         """
         Sets the layer in training mode.
 

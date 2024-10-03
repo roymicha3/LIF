@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+from typing import override
 
 from .node import Node
 from .leaky_node import LeakyNode
@@ -24,8 +24,11 @@ class DENNode(Node):
         tau_s = ATTR(SPIKE_NS.tau_s)
         self._voltage = LeakyNode(n, device, dtype, scale=False, learning=False, tau=tau_s)
         
-
+    @override
     def forward(self, input_):
+        """
+        forward function for the layer
+        """
         mem = self._coductness(input_)
         mem = self._voltage(mem)
         
