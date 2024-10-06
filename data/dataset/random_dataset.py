@@ -43,7 +43,7 @@ class RandomDataset(Dataset):
         
         if not os.path.exists(full_path):
             data = np.random.rand(self._input_size).reshape((self._input_size, 1)).tolist()
-            label = np.random.randint(0, 1)
+            label = np.random.randint(0, 1) * 2 - 1 # either +1 or -1 label
             DataSample(data, label).serialize(full_path)
         
         sample = Dataset.load(full_path)
