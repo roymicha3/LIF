@@ -23,6 +23,7 @@ MODEL_ATTRIBUTES = \
     
     SPIKE_NS.tau_m: 15,
     SPIKE_NS.tau_s: 15 / 4,
+    SPIKE_NS.v_thr: 1,
 }
 
 def main():

@@ -11,3 +11,4 @@ class SpikeNamespace(object):
     dt = "dt"
     tau_m = "tau_m"
     tau_s = "tau_s"
+    v_thr = "v_thr"

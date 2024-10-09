@@ -1,6 +1,5 @@
 import tempfile
 from typing import Dict, Iterable, Optional, Type, Tuple
-from collections import defaultdict
 
 import torch
 
@@ -32,6 +31,7 @@ class Network(torch.nn.Module):
         super().__init__()
         
         self.batch_size = batch_size
+        self.learning = learning
 
         self.layers = {}
         self.connections = {}
@@ -187,7 +187,6 @@ class Network(torch.nn.Module):
                 
             elif value.dim() == 3:
                 pass
-            
             else:
                 raise Exception("Invalid input dimensions")
             
