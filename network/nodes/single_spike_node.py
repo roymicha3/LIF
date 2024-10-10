@@ -33,11 +33,11 @@ class SingleSpikeNode(Node):
         Returns: (max value time, max value - the threshold)
         """
         # Check if any input exceeds the threshold
-        max_val, max_idx = torch.max(input_, dim=-1)
+        max_val, max_idx = torch.max(input_, dim=-input_.dim())
         
         # If any of the inputs exceed the threshold, return the spike time
         if (max_val >= self._threshold).any():
-            return torch.tensor([max_idx.long() * self._dt, max_val - self._threshold])
+            return torch.stack((max_idx.long() * self._dt, max_val - self._threshold))
 
         # Otherwise, return NO_SPIKE value
         return torch.tensor([SingleSpikeNode.NO_SPIKE, SingleSpikeNode.NO_SPIKE])

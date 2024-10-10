@@ -115,7 +115,7 @@ class RandomSpikePattern:
         """
         IDX = 3
         batch_name = f"{IDX}"
-        data = {batch_name: self._dataset[IDX]}
+        data, _ = {batch_name: self._dataset[IDX]}
         
         input_layer = DENNode(5)
         output_layer = Node(1)
@@ -149,8 +149,8 @@ class RandomSpikePattern:
             """
             IDX = 4
             batch_name = f"{IDX}"
-            data = {batch_name: self._dataset[IDX]}
-            label = self._dataset[IDX].get_label()
+            data, label = self._dataset[IDX]
+            data = {batch_name: data}
             
             input_layer = DENNode(5)
             output_layer = SingleSpikeNode(1)
@@ -171,5 +171,6 @@ class RandomSpikePattern:
             res = loss.forward(response, label)
             
             print(f"The loss of the model is: {res}\n")
+            print(f"The loss's shape of the model is: {res.size()}\n")
             
             

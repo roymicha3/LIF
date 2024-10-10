@@ -34,7 +34,7 @@ class RandomDataset(Dataset):
         """
         return self._len
     
-    def get_raw(self, idx, encoded = True) -> torch.Tensor:
+    def get_raw(self, idx, encoded = True) -> DataSample:
         """
         Returns a single raw item from the dataset
         """
@@ -57,4 +57,5 @@ class RandomDataset(Dataset):
         """
         Returns a single item from the dataset
         """
-        return Dataset.get(self.get_raw(idx), self._output_type)
+        sample = self.get_raw(idx)
+        return Dataset.get(sample, self._output_type), sample.get_label()
