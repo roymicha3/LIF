@@ -67,7 +67,7 @@ class DataSample:
         """
         Returns the label.
         """
-        return self._label
+        return torch.tensor(self._label)
     
     def __getitem__(self, index):
         """

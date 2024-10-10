@@ -16,6 +16,8 @@ from network.nodes.single_spike_node import SingleSpikeNode
 from network.topology.connection import Connection
 from network.topology.network import Network
 
+from network.loss.binary_loss import BinaryLoss
+
 DEFAULT_BATCH = 0
 
 class RandomSpikePattern:
@@ -140,3 +142,34 @@ class RandomSpikePattern:
 
         plt.tight_layout()
         plt.show()
+        
+    def single_spike_network_response(self):
+            """
+            plot the response for a random spike input of the single layer single spike network
+            """
+            IDX = 4
+            batch_name = f"{IDX}"
+            data = {batch_name: self._dataset[IDX]}
+            label = self._dataset[IDX].get_label()
+            
+            input_layer = DENNode(5)
+            output_layer = SingleSpikeNode(1)
+            connection = Connection(input_layer, output_layer)
+            
+            network = Network(1, False)
+            
+            loss = BinaryLoss()
+            
+            network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
+            network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
+            
+            network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
+            
+            response = network.run(data)
+            response = response[batch_name]
+            
+            res = loss.forward(response, label)
+            
+            print(f"The loss of the model is: {res}\n")
+            
+            
