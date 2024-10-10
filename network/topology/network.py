@@ -109,14 +109,13 @@ class Network(torch.nn.Module):
             
         return None
 
-    def _get_inputs(self, data: torch.Tensor, layers: Iterable = None) -> Dict[str, torch.Tensor]:
+    def _get_output(self, data: torch.Tensor, layers: Iterable = None) -> Dict[str, torch.Tensor]:
         """
         Fetches outputs from network layers to use as input to downstream layers.
 
         :param layers: Layers to update inputs for. Defaults to all network layers.
         :return: Inputs to all layers for the current iteration.
         """
-        inputs = {}
 
         if layers is None:
             layers = self.layers.keys()
@@ -125,13 +124,13 @@ class Network(torch.nn.Module):
         
         while current_connection:
             source, target = current_connection
-            inputs[source] = data
             data = self.layers[source].forward(data)
-            data = self.connections[current_connection].forward(inputs[target])
+            data = self.connections[current_connection].forward(data)
+            data = self.layers[target].forward(data)
             
             current_connection = self._get_next_connection(current_connection)
 
-        return dict(inputs)
+        return data
 
 
     def run(
@@ -184,7 +183,7 @@ class Network(torch.nn.Module):
                 data[key] = value.unsqueeze(0).unsqueeze(0)
                 
             elif value.dim() == 2:
-                data[key] = value.unsqeeze(1)
+                data[key] = value.unsqueeze(1)
                 
             elif value.dim() == 3:
                 pass
@@ -195,10 +194,8 @@ class Network(torch.nn.Module):
         
         # iterate over batches
         for key, value in data.items():
-            inputs = self._get_inputs(value)
-            
-            outputs[key] = self.layers[OUTPUT_LAYER_NAME].forward(inputs[OUTPUT_LAYER_NAME])
-            
+            outputs[key] = self._get_output(value)
+        
         return outputs
 
     def reset_state_variables(self) -> None:

@@ -22,7 +22,7 @@ class AbstractConnection(ABC, Module):
         self.target = target
 
     @abstractmethod
-    def compute(self, s: torch.Tensor) -> None:
+    def forward(self, s: torch.Tensor) -> None:
         """
         Compute pre-activations of downstream neurons given spikes of upstream neurons.
 
@@ -105,7 +105,7 @@ class Connection(AbstractConnection):
         else:
             self.b = None
 
-    def compute(self, s: torch.Tensor) -> torch.Tensor:
+    def forward(self, s: torch.Tensor) -> torch.Tensor:
         """
         Compute pre-activations given spikes using connection weights.
 
