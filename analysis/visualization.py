@@ -6,10 +6,14 @@ import torch
 
 from encoders.spike.latency_encoder import LatencyEncoder
 from data.dataset.random_dataset import RandomDataset, DataType, OutputType
-from network.nodes.leaky_node import LeakyNode
-from network.nodes.den_node import DENNode
 from tools.utils import SEQ_LEN
 from common import ATTR, SPIKE_NS, MODEL_NS
+
+from network.nodes.leaky_node import LeakyNode
+from network.nodes.den_node import DENNode
+from network.nodes.single_spike_node import SingleSpikeNode
+from network.topology.connection import Connection
+from network.topology.network import Network
 
 DEFAULT_BATCH = 0
 
@@ -103,3 +107,22 @@ class RandomSpikePattern:
             plt.tight_layout()
             plt.show()
         
+    def single_spike_network_response(self):
+        """
+        plot the response for a random spike input of the single layer single spike network
+        """
+        IDX = 3
+        data = {f"{IDX}": self._dataset[IDX]}
+        
+        input_layer = DENNode(5)
+        output_layer = SingleSpikeNode(1)
+        connection = Connection(input_layer, output_layer)
+        
+        network = Network(1, False)
+        
+        network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
+        network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
+        
+        network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
+        
+        response = network.run(data)

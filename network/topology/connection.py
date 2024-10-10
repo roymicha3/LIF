@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Sequence, Union
 import numpy as np
 import torch
 from torch.nn import Module, Parameter
 
-from nodes.node import Node
+from network.nodes.node import Node
 
 
 class AbstractConnection(ABC, Module):
@@ -78,9 +77,12 @@ class Connection(AbstractConnection):
         """
         super().__init__(source, target)
         self.w = w
-        
-        assert b.size() == target.n
         self.b = b
+        
+        if self.b is None:
+            self.b = torch.zeros(target.n)
+        
+        assert self.b.size()[0] == target.n
         
         self.wmin = wmin
         self.wmax = wmax
@@ -88,7 +90,7 @@ class Connection(AbstractConnection):
         
         # set w to random values
         if self.w is None:
-            if (self.wmin == -np.inf).any() or (self.wmax == np.inf).any():
+            if self.wmin == -np.inf or self.wmax == np.inf:
                 w = torch.clamp(torch.rand(source.n, target.n), self.wmin, self.wmax)
             else:
                 w = self.wmin + torch.rand(source.n, target.n) * (self.wmax - self.wmin)

@@ -4,17 +4,18 @@ from typing import Dict, Iterable, Optional, Type, Tuple
 import torch
 
 from common import ATTR, SPIKE_NS
-from learning.learning_rule import LearningRule
+from network.learning.learning_rule import LearningRule
 from network.nodes.node import Node
-from network.connection import Connection
+from network.topology.connection import Connection
 
-INPUT_LAYER_NAME = "Input"
-OUTPUT_LAYER_NAME = "Output"
 
 class Network(torch.nn.Module):
     """
     Responsible for the simulation and interaction of nodes and connections.
     """
+
+    INPUT_LAYER_NAME = "Input"
+    OUTPUT_LAYER_NAME = "Output"
 
     def __init__(
         self,
@@ -94,10 +95,10 @@ class Network(torch.nn.Module):
         return torch.load(virtual_file)
     
     def _get_next_connection(self, prev_connection: Tuple[str, str] = None) -> Tuple[str, str]:            
-        if INPUT_LAYER_NAME not in self.layers.keys() or OUTPUT_LAYER_NAME not in self.layers.keys():
+        if Network.INPUT_LAYER_NAME not in self.layers.keys() or Network.OUTPUT_LAYER_NAME not in self.layers.keys():
             raise Exception("missing Input and/or Output layer")
         
-        source = INPUT_LAYER_NAME
+        source = Network.INPUT_LAYER_NAME
         
         if prev_connection is not None:
             source = prev_connection[1]
@@ -178,7 +179,7 @@ class Network(torch.nn.Module):
         
         # Dynamic setting of batch size
         # goal shape is [time, batch, n_0, ...]
-        for key, value in data:
+        for key, value in data.items():
             if value.dim() == 1:
                 data[key] = value.unsqueeze(0).unsqueeze(0)
                 

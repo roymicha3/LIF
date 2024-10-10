@@ -7,7 +7,7 @@ import torch
 import torch.nn.functional as F
 from torch.nn.modules.utils import _pair
 
-from network.connection import Connection
+from network.topology.connection import Connection
 
 
 class LearningRule(torch.autograd.Function):

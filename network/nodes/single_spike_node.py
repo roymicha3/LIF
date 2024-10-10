@@ -1,5 +1,5 @@
 import torch
-from typing import override
+# from typing import override
 
 from .node import Node
 from .leaky_node import LeakyNode
@@ -16,14 +16,13 @@ class SingleSpikeNode(Node):
         n,
         device=None,
         dtype=None,
-        scale = False,
         learning = False
     ):
         super(SingleSpikeNode, self).__init__(n, (n, n), learning)
         self._threshold = ATTR(SPIKE_NS.v_thr)
         self._dt = ATTR(SPIKE_NS.dt)
         
-    @override
+    # @override
     def forward(self, input_):
         """
         forward function for the layer, returns the spike time or NO_SPIKE value

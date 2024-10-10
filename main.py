@@ -36,7 +36,7 @@ def main():
     
     visualizer = RandomSpikePattern(ATTR(MODEL_NS.BATCH_SIZE))
     
-    visualizer.den_response()
+    visualizer.single_spike_network_response()
     
 
 if __name__ == "__main__":
