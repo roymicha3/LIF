@@ -9,6 +9,7 @@ from data.dataset.random_dataset import RandomDataset, DataType, OutputType
 from tools.utils import SEQ_LEN
 from common import ATTR, SPIKE_NS, MODEL_NS
 
+from network.nodes.node import Node
 from network.nodes.leaky_node import LeakyNode
 from network.nodes.den_node import DENNode
 from network.nodes.single_spike_node import SingleSpikeNode
@@ -75,7 +76,6 @@ class RandomSpikePattern:
         plt.tight_layout()
         plt.show()
         
-
     def den_response(self):
             """
             plot the response of the spike
@@ -107,15 +107,16 @@ class RandomSpikePattern:
             plt.tight_layout()
             plt.show()
         
-    def single_spike_network_response(self):
+    def simple_network_response(self):
         """
         plot the response for a random spike input of the single layer single spike network
         """
         IDX = 3
-        data = {f"{IDX}": self._dataset[IDX]}
+        batch_name = f"{IDX}"
+        data = {batch_name: self._dataset[IDX]}
         
         input_layer = DENNode(5)
-        output_layer = SingleSpikeNode(1)
+        output_layer = Node(1)
         connection = Connection(input_layer, output_layer)
         
         network = Network(1, False)
@@ -126,3 +127,16 @@ class RandomSpikePattern:
         network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
         
         response = network.run(data)
+        response = response[batch_name]
+        
+        # Plot the results
+        plt.figure()
+
+        plt.plot(response.detach().numpy(), label='Output of a simple one layer fully connected network', color='red')
+        plt.title('Model Output Voltage')
+        plt.xlabel('Time Steps')
+        plt.ylabel('Voltage')
+        plt.legend()
+
+        plt.tight_layout()
+        plt.show()

@@ -25,10 +25,16 @@ class SingleSpikeNode(Node):
     # @override
     def forward(self, input_):
         """
-        forward function for the layer, returns the spike time or NO_SPIKE value
+        Forward function for the layer, returns the spike time or NO_SPIKE value.
+        Supports multiple output neurons by handling dimensions properly.
         """
-        if torch.max(input_) >= self._threshold:
-            return torch.argmax(input_, dim=None, keepdim=False).long() * self._dt
+        # Check if any input exceeds the threshold
+        max_val, max_idx = torch.max(input_, dim=-1)
         
-        return torch.tensor(SingleSpikeNode.NO_SPIKE)
+        # If any of the inputs exceed the threshold, return the spike time
+        if (max_val >= self._threshold).any():
+            return max_idx.long() * self._dt
+
+        # Otherwise, return NO_SPIKE value
+        return torch.tensor(SingleSpikeNode.NO_SPIKE, device=input_.device)
     

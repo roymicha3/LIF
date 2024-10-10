@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from functools import reduce
 from operator import mul
 from typing import Iterable, Optional
@@ -6,9 +5,9 @@ from typing import Iterable, Optional
 import torch
 
 
-class Node(torch.nn.Module, ABC):
+class Node(torch.nn.Module):
     """
-    Abstract base class for groups of neurons.
+    Base class for groups of neurons.
     """
 
     def __init__(
@@ -18,7 +17,7 @@ class Node(torch.nn.Module, ABC):
         learning: bool = True
     ) -> None:
         """
-        Abstract base class constructor.
+        Base class constructor.
 
         :param n: The number of neurons in the layer.
         :param shape: The dimensionality of the layer.
@@ -44,18 +43,17 @@ class Node(torch.nn.Module, ABC):
 
         self.learning = learning
 
-    @abstractmethod
     def forward(self, x: torch.Tensor) -> None:
         """
-        Abstract base class method for a single simulation step.
+        Base class method for a single simulation step.
 
         :param x: Inputs to the layer.
         """
-        pass
+        return x
 
     def reset_state_variables(self) -> None:
         """
-        Abstract base class method for resetting state variables.
+        Base class method for resetting state variables.
         """
         self.s.zero_()
 
