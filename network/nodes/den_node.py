@@ -1,8 +1,8 @@
 import torch
 # from typing import override
 
-from .node import Node
-from .leaky_node import LeakyNode
+from network.nodes.node import Node
+from network.nodes.leaky_node import LeakyNode
 from common import ATTR, SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 

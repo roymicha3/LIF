@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from .node import Node
+from network.nodes.node import Node
 from common import ATTR, SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 
