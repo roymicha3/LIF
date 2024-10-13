@@ -8,10 +8,11 @@ from analysis.visualization import *
 MODEL_ATTRIBUTES = \
 {
     # MODEL PARAMETERS:
-    MODEL_NS.BATCH_SIZE : 10,
+    MODEL_NS.BATCH_SIZE : 32,
+    MODEL_NS.DATASET_SIZE : 64,
     MODEL_NS.NUM_CLASSES : 2,
     MODEL_NS.NUM_OUTPUTS : 1,
-    MODEL_NS.NUM_INPUTS : 5,
+    MODEL_NS.NUM_INPUTS : 100,
     MODEL_NS.TRAINING_PERCENTAGE : 50,
     MODEL_NS.TESTING_PERCENTAGE : 25,
     MODEL_NS.VALIDATION_PERCENTAGE : 25,
@@ -36,7 +37,7 @@ def main():
     
     visualizer = RandomSpikePattern(ATTR(MODEL_NS.BATCH_SIZE))
     
-    visualizer.single_spike_network_response()
+    visualizer.simple_network_response()
     
 
 if __name__ == "__main__":

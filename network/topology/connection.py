@@ -5,6 +5,8 @@ from torch.nn import Module, Parameter
 
 from network.nodes.node import Node
 
+from network.learning.learning_rule import MaxTimeGrad
+
 
 class AbstractConnection(ABC, Module):
     # language=rst
@@ -66,7 +68,7 @@ class Connection(AbstractConnection):
         source: Node,
         target: Node,
         w: torch.Tensor = None,
-        b: torch.Tensor = None,
+        grad_function : torch.autograd.Function = MaxTimeGrad,
         wmin: np.int32 = -np.inf,
         wmax: np.int32 = np.inf,
         norm: np.int32 = None
@@ -77,16 +79,12 @@ class Connection(AbstractConnection):
         """
         super().__init__(source, target)
         self.w = w
-        self.b = b
-        
-        if self.b is None:
-            self.b = torch.zeros(target.n)
-        
-        assert self.b.size()[0] == target.n
         
         self.wmin = wmin
         self.wmax = wmax
         self.norm = norm
+        
+        self._grad_function = grad_function
         
         # set w to random values
         if self.w is None:
@@ -98,12 +96,7 @@ class Connection(AbstractConnection):
             if (self.wmin != -np.inf).any() or (self.wmax != np.inf).any():
                 w = torch.clamp(torch.as_tensor(w), self.wmin, self.wmax)
 
-        self.w = Parameter(w, requires_grad=False)
-
-        if b is not None:
-            self.b = Parameter(b, requires_grad=False)
-        else:
-            self.b = None
+        self.w = Parameter(w, requires_grad=True)
 
     def forward(self, s: torch.Tensor) -> torch.Tensor:
         """
@@ -112,12 +105,8 @@ class Connection(AbstractConnection):
         :param s: Incoming spikes.
         :return: Incoming spikes multiplied by synaptic weights.
         """
-        if self.b is None:
-            post = s.view(s.size(0), -1).float() @ self.w
-        else:
-            post = s.view(s.size(0), -1).float() @ self.w + self.b
-        
-        return post.view(s.size(0), *self.target.shape)
+        post = self._grad_function.apply(s, self.w)
+        return post
 
 
     def update(self, **kwargs) -> None:

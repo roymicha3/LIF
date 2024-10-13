@@ -4,7 +4,6 @@ from typing import Dict, Iterable, Optional, Type, Tuple
 import torch
 
 from common import ATTR, SPIKE_NS
-from network.learning.learning_rule import LearningRule
 from network.nodes.node import Node
 from network.topology.connection import Connection
 
@@ -197,6 +196,22 @@ class Network(torch.nn.Module):
             outputs[key] = self._get_output(value)
         
         return outputs
+    
+    def forward(self, data: torch.Tensor) -> None:
+        """
+        forward function of the network
+        """
+        current_connection = self._get_next_connection()
+        
+        while current_connection:
+            source, _ = current_connection
+            data = self.layers[source].forward(data)
+            data = self.connections[current_connection].forward(data)
+            
+            current_connection = self._get_next_connection(current_connection)
+
+        data = self.layers[Network.OUTPUT_LAYER_NAME].forward(data)
+        return data
 
     def reset_state_variables(self) -> None:
         """

@@ -25,11 +25,11 @@ class DENNode(Node):
         self._voltage = LeakyNode(n, device, dtype, scale=False, learning=False, tau=tau_s)
         
     # @override
-    def forward(self, input_):
+    def forward(self, x):
         """
         forward function for the layer
         """
-        mem = self._coductness(input_)
+        mem = self._coductness(x)
         mem = self._voltage(mem)
         
         return mem
@@ -39,7 +39,7 @@ class DENNode(Node):
         """
         this function assimulate how the output of the model should behave
         """
-        seq_length = input_seq._seq_len 
+        seq_length = input_seq.get_seq_len() 
         input_size = input_seq.shape()[0]
 
         # Initialize the response tensor

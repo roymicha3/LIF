@@ -1,10 +1,35 @@
 import torch
+import torch.autograd
 # from typing import override
 
 from network.nodes.node import Node
-from network.nodes.leaky_node import LeakyNode
 from common import ATTR, SPIKE_NS
-from data.data_sample import DataSample
+
+class MaxTimeGrad(torch.autograd.Function):
+    
+    @staticmethod
+    def forward(ctx, input_, dt, threshold):
+        """
+        Forward pass of the max time training method.
+        Returns a tensor with two values: (max_val - threshold, max_time).
+        """
+        # Check if any input exceeds the threshold
+        max_val, max_idx = torch.max(input_, dim=-input_.dim() + 1)
+        max_time = max_idx * dt
+        
+        # Compute the difference from the threshold
+        threshold_diff = max_val - threshold
+        
+        # Stack the results into a single tensor
+        return torch.stack((threshold_diff, max_time), dim=0)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        """
+        Backward pass of the max time training method - this layer has no parameters to train
+        """
+        # Since dt and threshold are not trainable parameters, we return None for them
+        return grad_output, None, None
 
 # Define the single spike Node class (a neuron that fires once if the max output voltage reaches a certain threshold)
 class SingleSpikeNode(Node):
@@ -13,17 +38,20 @@ class SingleSpikeNode(Node):
     
     SPIKE_TIME_IDX = 0
     SPIKE_VAL_IDX = 1
+    SPIKE_IDX = 2
     
     def __init__(
         self,
         n,
         device=None,
         dtype=None,
-        learning = False
+        learning = False,
+        grad_function : torch.autograd.Function = MaxTimeGrad
     ):
         super(SingleSpikeNode, self).__init__(n, (n, n), learning)
         self._threshold = ATTR(SPIKE_NS.v_thr)
         self._dt = ATTR(SPIKE_NS.dt)
+        self._grad_function = grad_function
         
     # @override
     def forward(self, input_):
@@ -32,13 +60,6 @@ class SingleSpikeNode(Node):
         Supports multiple output neurons by handling dimensions properly.
         Returns: (max value time, max value - the threshold)
         """
-        # Check if any input exceeds the threshold
-        max_val, max_idx = torch.max(input_, dim=-input_.dim())
-        
-        # If any of the inputs exceed the threshold, return the spike time
-        if (max_val >= self._threshold).any():
-            return torch.stack((max_idx.long() * self._dt, max_val - self._threshold))
-
-        # Otherwise, return NO_SPIKE value
-        return torch.tensor([SingleSpikeNode.NO_SPIKE, SingleSpikeNode.NO_SPIKE])
+        return self._grad_function.apply(input_, self._dt, self._threshold)
+    
     

@@ -1,68 +1,38 @@
 import warnings
 from abc import ABC
 from typing import Optional, Sequence, Union
-
-import numpy as np
 import torch
-import torch.nn.functional as F
-from torch.nn.modules.utils import _pair
 
-from network.topology.connection import Connection
-
-
-class LearningRule(torch.autograd.Function):
+class MaxTimeGrad(torch.autograd.Function):
     """
-    Base class for learning rules )(simple learning rule for fully connected linear layer).
+    Max time learning rule (simple learning rule for fully connected linear layer).
     """
-
-    def __init__(
-        self,
-        connection: Connection,
-        lr,
-        **kwargs,
-    ) -> None:
-        """
-        Constructor for the ``LearningRule`` object.
-        :param connection: An ``Connection`` object.
-        :param lr: learning rates for pre- and post-synaptic events
-        """
-        # Connection parameters.
-        self.connection = connection
-        self.source = connection.source
-        self.target = connection.target
-
-        self.wmin = connection.wmin
-        self.wmax = connection.wmax
-
-        self.lr = lr
-
-    def update(self, **kwargs) -> None:
-        """
-        learning rule update.
-        """
-        # Bound weights.
-        if ((self.connection.wmin != -np.inf).any() or (self.connection.wmax != np.inf).any()):
-            self.connection.w.clamp_(self.connection.wmin, self.connection.wmax)
 
     @staticmethod
-    def forward(ctx, input_, weight_) -> any:
+    def forward(ctx, input_, weight_):
         """
-        forward function for the learning rule
+        Forward function for the learning rule.
+        Computes the linear transformation and saves variables for backward pass.
         """
-        # Save input_ and weight_ for backward computation
-        ctx.save_for_backward(input_, weight_)
-        # Perform forward computation (simple linear transformation)
-        output = input_.mm(weight_.t())
+        output = input_ @ weight_
+        max_val, max_idx = torch.max(output, dim=-1)  # Max along the last dimension
+        
+        # Save the tensors for the backward pass
+        ctx.save_for_backward(input_, weight_, max_idx)
         return output
 
     @staticmethod
-    def backward(ctx: any, grad_output: any) -> tuple:
+    def backward(ctx, grad_output, *args):
         """
-        backward function for the learning rule
+        Backward function for the learning rule.
+        Computes the gradient of the loss with respect to inputs and weights.
         """
-        # Retrieve saved tensors
-        input_, weight = ctx.saved_tensors
-        # Compute gradients w.r.t. inputs and weights
-        grad_input = grad_output.mm(weight)
-        grad_weight = grad_output.t().mm(input_)
+        # Retrieve saved tensors from the context
+        input_, weight_, max_idx = ctx.saved_tensors
+        
+        # Compute the gradient of the input
+        grad_input = grad_output @ weight_  # Gradient w.r.t. input
+        # Use `max_idx` to compute the correct gradient for the weights
+        grad_weight = grad_output.t().mm(input_.index_select(0, max_idx))  # Select input based on max_idx
+
         return grad_input, grad_weight

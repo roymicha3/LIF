@@ -18,6 +18,9 @@ class SpikeSample(DataSample):
         self._num_of_neurons = len(data)
         self._seq_len = seq_len
         
+    def get_seq_len(self):
+        return self._seq_len
+        
     def to_torch(self):
         input_size = self._num_of_neurons
         spike_train = torch.zeros((self._seq_len, input_size), dtype=torch.float32)
