@@ -149,50 +149,59 @@ class RandomSpikePattern:
         
     def train_max_time(self):
         """
-        train the a simple one layer fully connected over random single spike data
+        Train the a simple one layer fully connected over random single spike data.
+
+        This function trains the network and also calculates the training accuracy per epoch.
         """
-        
+
         input_layer = DENNode(ATTR(MODEL_NS.NUM_INPUTS))
         output_layer = SingleSpikeNode(ATTR(MODEL_NS.NUM_OUTPUTS))
-        connection = Connection(input_layer, output_layer)
-        
+        connection = Connection(input_layer, output_layer)#, wmin=0, wmax=1)
+
         network = Network(ATTR(MODEL_NS.BATCH_SIZE), False)
-        
+
         network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
         network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
-        
+
         network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
-        
-        criterion = BinaryLoss
-        
-        optimizer = torch.optim.SGD(network.parameters(), lr=0.01)
-        num_epochs = 10
-        
+
+        criterion = BinaryLoss()
+
+        num_epochs = 200
+
         dataloader = torch.utils.data.DataLoader(self._dataset, batch_size=ATTR(MODEL_NS.BATCH_SIZE), shuffle=True)
 
         for epoch in range(num_epochs):
             running_loss = 0.0
+            correct_predictions = 0
+            total_predictions = 0
+
             # Use tqdm to display progress during each epoch
             progress_bar = tqdm(enumerate(dataloader), total=len(dataloader), desc=f"Epoch [{epoch+1}/{num_epochs}]")
-            
-            for i, (inputs, labels) in progress_bar:
-                # Zero the parameter gradients
-                optimizer.zero_grad()
+
+            for i, (inputs, labels) in progress_bar: 
 
                 # Forward pass
                 outputs = network.forward(inputs)
 
                 # Calculate loss
-                loss = criterion.apply(outputs, labels.unsqueeze(1).float())
+                loss = criterion.forward(outputs, labels.unsqueeze(1).float())
 
-                # Backward pass (autograd is triggered here)
-                loss.backward()
-
-                # Update the weights
-                optimizer.step()
+                # Backward pass
+                network.backward(criterion.backward())
 
                 # Update the running loss
-                running_loss += loss.item()
+                running_loss += torch.sum(loss)
 
-                # Update progress bar with loss
-                progress_bar.set_postfix(loss=running_loss / (i + 1))
+                # Calculate predictions and update accuracy
+                predicted = (outputs.squeeze() > 0) * 2 - 1
+                # labels = labels.squeeze()
+                correct_predictions += (predicted == labels).sum().item()
+                total_predictions += labels.size(0)
+
+                # Update progress bar with loss and accuracy
+                accuracy = 100 * correct_predictions / total_predictions
+                progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
+
+            # Print epoch summary (optional)
+            print(f"[Epoch {epoch + 1}] Loss: {running_loss / len(dataloader):.3f}, Accuracy: {accuracy:.2f}%")

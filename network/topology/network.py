@@ -228,7 +228,7 @@ class Network(torch.nn.Module):
         data = self.layers[Network.OUTPUT_LAYER_NAME].forward(data)
         return data
     
-    def backward(self, grad: torch.Tensor):
+    def backward(self, grad: torch.Tensor) -> None:
         """
         the backward function of the network
         """
@@ -237,6 +237,12 @@ class Network(torch.nn.Module):
         
         while current_connection:
             _, target = current_connection
+            grad = self.layers[target].backward(grad)
+            grad = self.connections[current_connection].backward(grad)
+            
+            self.connections[current_connection].update(grad)
+            
+            current_connection = self._get_prev_connection(current_connection)
             
 
     def reset_state_variables(self) -> None:

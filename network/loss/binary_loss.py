@@ -19,6 +19,8 @@ class BinaryLoss(nn.Module):
         # Ensure input and target are at least 2D (batch-wise)
         if input_.dim() == 1:
             input_ = input_.unsqueeze(0)  # Add batch dimension
+        if input_.dim() == 3:
+            input_ = input_.squeeze(1)
         
         if target_.dim() == 1:
             target_ = target_.unsqueeze(0)  # Add batch dimension
@@ -44,9 +46,5 @@ class BinaryLoss(nn.Module):
         # Grad with respect to input_
         grad_input = - target_ * grad_spike_values
         
-        # Grad with respect to target_: dL/d_target_
-        # Squeeze input_ to match target_ dimensions before multiplication
-        grad_target = - input_.squeeze(dim=-1) * grad_spike_values.squeeze(dim=-1)
-
-        return grad_input, grad_target
+        return grad_input
         

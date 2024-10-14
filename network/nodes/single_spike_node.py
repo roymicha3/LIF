@@ -86,7 +86,7 @@ class SingleSpikeNode(Node):
             The difference between the maximum value of the input and the threshold for firing.
         """
         # Find the maximum value and its index along the appropriate dimension (supports batch processing).
-        max_val, max_idx = torch.max(input_, dim=-input_.dim() + 1, keepdim=True)
+        max_val, max_idx = torch.max(input_, dim=-input_.dim() + 1)
         
         # Save the index of the max value for use in the backward pass.
         self.saved_tensors = max_idx
@@ -115,4 +115,4 @@ class SingleSpikeNode(Node):
         max_idx = self.saved_tensors
         
         # Return the gradient of the input and the saved index (used for further backprop).
-        return GradWrapper(grad=output_grad, info={"max_idx": max_idx})
+        return GradWrapper(output_grad=output_grad, info={"max_idx": max_idx})

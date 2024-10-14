@@ -4,8 +4,8 @@ import torch
 from torch.nn import Module, Parameter
 
 from network.nodes.node import Node
-
 from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
+from network.learning.optimizers import MomentumOptimizer
 
 
 class AbstractConnection(ABC, Module):
@@ -70,7 +70,7 @@ class Connection(AbstractConnection):
         w: torch.Tensor = None,
         wmin: np.int32 = -np.inf,
         wmax: np.int32 = np.inf,
-        norm: np.int32 = None
+        norm: np.int32 = 1
     ) -> None:
         """
         :param source: A layer of nodes from which the connection originates.
@@ -87,6 +87,7 @@ class Connection(AbstractConnection):
         if self.w is None:
             if self.wmin == -np.inf or self.wmax == np.inf:
                 w = torch.clamp(torch.rand(source.n, target.n), self.wmin, self.wmax)
+                w *= 1 / w.abs().sum()
             else:
                 w = self.wmin + torch.rand(source.n, target.n) * (self.wmax - self.wmin)
         else:
@@ -94,6 +95,7 @@ class Connection(AbstractConnection):
                 w = torch.clamp(torch.as_tensor(w), self.wmin, self.wmax)
 
         self.w = Parameter(w, requires_grad=True)
+        self.optimizer = MomentumOptimizer(self.parameters(), lr=0.01, momentum=0.99)
 
     def forward(self, input_: torch.Tensor) -> torch.Tensor:
         """
@@ -123,37 +125,43 @@ class Connection(AbstractConnection):
         """
         input_ = self.saved_tensors
         
-        max_idx = output_grad.additional_info("max_idx")
-        grad = output_grad.get()
+        max_idx = output_grad.info["max_idx"]
+        grad = output_grad.output_grad
         
         # Check if input is a single sample or a batch
         if input_.dim() == 1:  # Single sample
             input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
 
-        # Use advanced indexing to select the input values based on max_idx
-        input_values = input_.gather(dim=0, index=max_idx.unsqueeze(-1).expand(-1, -1, input_.size(1)))
+        res = []
+        for i, idx in enumerate(max_idx):
+            res.append(grad[i] @ input_[i, idx, :])
+            
+        grad_weight = torch.stack(res).unsqueeze(-1)
 
         # Compute the gradient of the input
-        grad_input = grad @ self.w  # Backpropagate through weights
-        grad_weight = grad.t().mm(input_values.view(-1, input_values.size(-1)))  # Reshape for correct multiplication
-
+        grad_input = grad @ self.w.t()  # Backpropagate through weights
+        
         return ConnectionGradWrapper(grad_input, grad_weight)
 
-    def update(self, **kwargs) -> None:
+    def update(self, grad: ConnectionGradWrapper) -> None:
         """
         Compute connection's update rule.
         """
-        super().update(**kwargs)
+        if grad.weight_grad.dim() > self.w.dim():
+            grad.weight_grad = torch.sum(grad.weight_grad, dim=0)
+        
+        self.w.grad = grad.weight_grad
+        self.optimizer.step()
 
     def normalize(self) -> None:
         """
         Normalize weights so each target neuron has sum of connection weights equal to
         ``self.norm``.
         """
+        #TODO: fix, for now has a bug in it
         if self.norm is not None:
-            w_abs_sum = self.w.abs().sum(0).unsqueeze(0)
-            w_abs_sum[w_abs_sum == 0] = 1.0
-            self.w *= self.norm / w_abs_sum
+            w_abs_sum = self.w.abs().sum()
+            self.w.divide_(w_abs_sum)
 
     def reset_state_variables(self) -> None:
         """
