@@ -4,6 +4,7 @@ import torch.autograd
 
 from network.nodes.node import Node
 from common import ATTR, SPIKE_NS
+from network.learning.grad_wrapper import GradWrapper
 
 class SingleSpikeNode(Node):
     """
@@ -95,7 +96,7 @@ class SingleSpikeNode(Node):
         
         return threshold_diff
 
-    def backward(self, output_grad):
+    def backward(self, output_grad) -> GradWrapper:
         """
         Backward function for the layer. Computes the gradient of the output with respect to the input.
         This function uses the saved max index from the forward pass to help compute the gradient.
@@ -114,4 +115,4 @@ class SingleSpikeNode(Node):
         max_idx = self.saved_tensors
         
         # Return the gradient of the input and the saved index (used for further backprop).
-        return output_grad, max_idx
+        return GradWrapper(grad=output_grad, info={"max_idx": max_idx})

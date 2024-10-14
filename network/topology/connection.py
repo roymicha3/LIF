@@ -5,7 +5,7 @@ from torch.nn import Module, Parameter
 
 from network.nodes.node import Node
 
-from network.learning.learning_rule import MaxTimeConnectionGrad
+from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
 
 
 class AbstractConnection(ABC, Module):
@@ -109,10 +109,10 @@ class Connection(AbstractConnection):
         output = input_ @ self.w  # Matrix multiplication between input spikes and weights
         
         # Save the tensors for the backward pass
-        self.saved_tensors = (input_, output)
+        self.saved_tensors = input_
         return output
 
-    def backward(self, output_grad: torch.Tensor, max_idx: torch.Tensor) -> tuple:
+    def backward(self, output_grad: GradWrapper) -> tuple:
         """
         Backward function for the learning rule.
         Computes the gradient of the loss with respect to inputs and weights.
@@ -121,7 +121,10 @@ class Connection(AbstractConnection):
         :param max_idx: Indices of the selected maximum spikes.
         :return: Gradients with respect to the input and weights.
         """
-        input_, output = self.saved_tensors
+        input_ = self.saved_tensors
+        
+        max_idx = output_grad.additional_info("max_idx")
+        grad = output_grad.get()
         
         # Check if input is a single sample or a batch
         if input_.dim() == 1:  # Single sample
@@ -131,11 +134,10 @@ class Connection(AbstractConnection):
         input_values = input_.gather(dim=0, index=max_idx.unsqueeze(-1).expand(-1, -1, input_.size(1)))
 
         # Compute the gradient of the input
-        grad_input = output_grad @ self.w  # Backpropagate through weights
-        grad_weight = output_grad.t().mm(input_values.view(-1, input_values.size(-1)))  # Reshape for correct multiplication
+        grad_input = grad @ self.w  # Backpropagate through weights
+        grad_weight = grad.t().mm(input_values.view(-1, input_values.size(-1)))  # Reshape for correct multiplication
 
-        return grad_input, grad_weight
-
+        return ConnectionGradWrapper(grad_input, grad_weight)
 
     def update(self, **kwargs) -> None:
         """
