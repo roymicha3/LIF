@@ -163,7 +163,7 @@ class RandomSpikePattern:
         
         network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
         
-        criterion = BinaryLoss()
+        criterion = BinaryLoss
         
         optimizer = torch.optim.SGD(network.parameters(), lr=0.01)
         num_epochs = 10
@@ -183,7 +183,7 @@ class RandomSpikePattern:
                 outputs = network.forward(inputs)
 
                 # Calculate loss
-                loss = criterion(outputs, labels.unsqueeze(1).float())
+                loss = criterion.apply(outputs, labels.unsqueeze(1).float())
 
                 # Backward pass (autograd is triggered here)
                 loss.backward()

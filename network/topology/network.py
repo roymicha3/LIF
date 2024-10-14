@@ -107,6 +107,21 @@ class Network(torch.nn.Module):
                 return (source, target_name)
             
         return None
+    
+    def _get_prev_connection(self, next_connection: Tuple[str, str] = None) -> Tuple[str, str]:            
+        if Network.INPUT_LAYER_NAME not in self.layers.keys() or Network.OUTPUT_LAYER_NAME not in self.layers.keys():
+            raise Exception("missing Input and/or Output layer")
+        
+        target = Network.OUTPUT_LAYER_NAME
+        
+        if next_connection is not None:
+            target = next_connection[0]
+        
+        for (source_name, target_name), connection in self.connections.items():
+            if target_name == target:
+                return (source_name, target_name)
+            
+        return None
 
     def _get_output(self, data: torch.Tensor, layers: Iterable = None) -> Dict[str, torch.Tensor]:
         """
@@ -212,6 +227,17 @@ class Network(torch.nn.Module):
 
         data = self.layers[Network.OUTPUT_LAYER_NAME].forward(data)
         return data
+    
+    def backward(self, grad: torch.Tensor):
+        """
+        the backward function of the network
+        """
+        
+        current_connection = self._get_prev_connection()
+        
+        while current_connection:
+            _, target = current_connection
+            
 
     def reset_state_variables(self) -> None:
         """

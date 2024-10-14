@@ -7,6 +7,7 @@ from typing import List
 
 from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
+from common import ATTR, MODEL_NS
 
 class SpikeSample(DataSample):
     """
@@ -15,7 +16,7 @@ class SpikeSample(DataSample):
     """
     def __init__(self, data: List[SpikeData], seq_len = None, label = None) -> None:
         super().__init__(data, label)
-        self._num_of_neurons = len(data)
+        self._num_of_neurons = ATTR(MODEL_NS.NUM_INPUTS)
         self._seq_len = seq_len
         
     def get_seq_len(self):

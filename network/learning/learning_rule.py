@@ -3,7 +3,7 @@ from abc import ABC
 from typing import Optional, Sequence, Union
 import torch
 
-class MaxTimeGrad(torch.autograd.Function):
+class MaxTimeConnectionGrad(torch.autograd.Function):
     """
     Max time learning rule (simple learning rule for fully connected linear layer).
     """
@@ -22,7 +22,7 @@ class MaxTimeGrad(torch.autograd.Function):
         return output
 
     @staticmethod
-    def backward(ctx, grad_output, *args):
+    def backward(ctx, grad_output):
         """
         Backward function for the learning rule.
         Computes the gradient of the loss with respect to inputs and weights.
@@ -30,8 +30,10 @@ class MaxTimeGrad(torch.autograd.Function):
         # Retrieve saved tensors from the context
         input_, weight_, max_idx = ctx.saved_tensors
         
+        grad_output = grad_output.sum(dim=1)
+        
         # Compute the gradient of the input
-        grad_input = grad_output @ weight_  # Gradient w.r.t. input
+        grad_input = grad_output @ weight_  # Gradient w.r.t. input #TODO: fix the shape of the grad_output!!!
         # Use `max_idx` to compute the correct gradient for the weights
         grad_weight = grad_output.t().mm(input_.index_select(0, max_idx))  # Select input based on max_idx
 

@@ -5,7 +5,7 @@ from torch.nn import Module, Parameter
 
 from network.nodes.node import Node
 
-from network.learning.learning_rule import MaxTimeGrad
+from network.learning.learning_rule import MaxTimeConnectionGrad
 
 
 class AbstractConnection(ABC, Module):
@@ -24,11 +24,11 @@ class AbstractConnection(ABC, Module):
         self.target = target
 
     @abstractmethod
-    def forward(self, s: torch.Tensor) -> None:
+    def forward(self, input_: torch.Tensor) -> None:
         """
         Compute pre-activations of downstream neurons given spikes of upstream neurons.
 
-        :param s: Incoming spikes.
+        :param input_: Incoming spikes.
         """
 
     @abstractmethod
@@ -68,7 +68,6 @@ class Connection(AbstractConnection):
         source: Node,
         target: Node,
         w: torch.Tensor = None,
-        grad_function : torch.autograd.Function = MaxTimeGrad,
         wmin: np.int32 = -np.inf,
         wmax: np.int32 = np.inf,
         norm: np.int32 = None
@@ -84,8 +83,6 @@ class Connection(AbstractConnection):
         self.wmax = wmax
         self.norm = norm
         
-        self._grad_function = grad_function
-        
         # set w to random values
         if self.w is None:
             if self.wmin == -np.inf or self.wmax == np.inf:
@@ -98,15 +95,46 @@ class Connection(AbstractConnection):
 
         self.w = Parameter(w, requires_grad=True)
 
-    def forward(self, s: torch.Tensor) -> torch.Tensor:
+    def forward(self, input_: torch.Tensor) -> torch.Tensor:
         """
         Compute pre-activations given spikes using connection weights.
 
-        :param s: Incoming spikes.
-        :return: Incoming spikes multiplied by synaptic weights.
+        :param input_: Incoming spikes of shape (batch_size, n_inputs) or (n_inputs,).
+        :return: Incoming spikes multiplied by synaptic weights of shape (batch_size, n_outputs) or (n_outputs,).
         """
-        post = self._grad_function.apply(s, self.w)
-        return post
+        # Check if input is a single sample or a batch
+        if input_.dim() == 1:  # Single sample
+            input_ = input_.unsqueeze(0)  # Add a batch dimension
+
+        output = input_ @ self.w  # Matrix multiplication between input spikes and weights
+        
+        # Save the tensors for the backward pass
+        self.saved_tensors = (input_, output)
+        return output
+
+    def backward(self, output_grad: torch.Tensor, max_idx: torch.Tensor) -> tuple:
+        """
+        Backward function for the learning rule.
+        Computes the gradient of the loss with respect to inputs and weights.
+
+        :param output_grad: Gradient of the loss with respect to the output, shape (batch_size, n_outputs) or (n_outputs,).
+        :param max_idx: Indices of the selected maximum spikes.
+        :return: Gradients with respect to the input and weights.
+        """
+        input_, output = self.saved_tensors
+        
+        # Check if input is a single sample or a batch
+        if input_.dim() == 1:  # Single sample
+            input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
+
+        # Use advanced indexing to select the input values based on max_idx
+        input_values = input_.gather(dim=0, index=max_idx.unsqueeze(-1).expand(-1, -1, input_.size(1)))
+
+        # Compute the gradient of the input
+        grad_input = output_grad @ self.w  # Backpropagate through weights
+        grad_weight = output_grad.t().mm(input_values.view(-1, input_values.size(-1)))  # Reshape for correct multiplication
+
+        return grad_input, grad_weight
 
 
     def update(self, **kwargs) -> None:
