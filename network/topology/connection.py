@@ -5,7 +5,6 @@ from torch.nn import Module, Parameter
 
 from network.nodes.node import Node
 from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
-from network.learning.optimizers import MomentumOptimizer
 
 
 class AbstractConnection(ABC, Module):
@@ -95,8 +94,7 @@ class Connection(AbstractConnection):
                 w = torch.clamp(torch.as_tensor(w), self.wmin, self.wmax)
 
         self.w = Parameter(w, requires_grad=True)
-        self.optimizer = MomentumOptimizer(self.parameters(), lr=0.01, momentum=0.99)
-
+        
     def forward(self, input_: torch.Tensor) -> torch.Tensor:
         """
         Compute pre-activations given spikes using connection weights.
@@ -133,15 +131,21 @@ class Connection(AbstractConnection):
             input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
 
         res = []
+        
+        # enumerating over batch data
         for i, idx in enumerate(max_idx):
-            res.append(grad[i] @ input_[i, idx, :])
+            res.append((grad[i] @ input_[i, idx, :]).t())
             
-        grad_weight = torch.stack(res).unsqueeze(-1)
-
+        grad_weight = torch.stack(res)
+        
         # Compute the gradient of the input
         grad_input = grad @ self.w.t()  # Backpropagate through weights
         
-        return ConnectionGradWrapper(grad_input, grad_weight)
+        total_grad = ConnectionGradWrapper(grad_input, grad_weight)
+        
+        # update the gradient of the weights for optimizer.step()
+        self.update(total_grad)
+        return total_grad
 
     def update(self, grad: ConnectionGradWrapper) -> None:
         """
@@ -151,7 +155,6 @@ class Connection(AbstractConnection):
             grad.weight_grad = torch.sum(grad.weight_grad, dim=0)
         
         self.w.grad = grad.weight_grad
-        self.optimizer.step()
 
     def normalize(self) -> None:
         """

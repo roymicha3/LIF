@@ -40,11 +40,11 @@ class BinaryLoss(nn.Module):
         # Compute the gradient of the loss with respect to spike values
         grad_spike_values = torch.zeros_like(input_)
         
-        grad_spike_values[(input_ * target_) > 0] = 0
-        grad_spike_values[(input_ * target_) <= 0] = 1
+        grad_spike_values[(input_ * target_) >= 0] = 0
+        grad_spike_values[(input_ * target_) < 0] = 1
 
         # Grad with respect to input_
         grad_input = - target_ * grad_spike_values
         
-        return grad_input
+        return grad_input.unsqueeze(-1)
         

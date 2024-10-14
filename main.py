@@ -1,6 +1,8 @@
 """
 the main of the project
 """
+import os
+
 from common import init_model_attributes, MODEL_NS, SPIKE_NS
 from analysis.visualization import *
 
@@ -36,6 +38,8 @@ def main():
     init_model_attributes(MODEL_ATTRIBUTES)
     
     visualizer = RandomSpikePattern(ATTR(MODEL_NS.BATCH_SIZE))
+    
+    os.environ['RAY_TMPDIR'] = "D:\\"
     
     visualizer.train_max_time()
     
