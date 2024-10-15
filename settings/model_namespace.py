@@ -10,10 +10,4 @@ class ModelNamespace(object):
     NUM_INPUTS = "num_inputs"
     NUM_OUTPUTS = "num_outputs"
     
-    # data attributes
-    NUM_CLASSES = "num_classes"
-    BATCH_SIZE = "batch_size"
-    DATASET_SIZE = "data_set_size"
-    TRAINING_PERCENTAGE = "training_percentage"
-    VALIDATION_PERCENTAGE = "validation_percentage"
-    TESTING_PERCENTAGE = "testing_percentage"
+    LR = "lr"

@@ -2,13 +2,14 @@ import torch
 import torch.nn as nn
 
 from network.nodes.node import Node
-from common import ATTR, SPIKE_NS
+from common import Configuration, SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 
 # Define the LeakyNode class (assuming the class is provided as is)
 class LeakyNode(Node):
     def __init__(
         self,
+        config: Configuration,
         n,
         device=None,
         dtype=None,
@@ -18,6 +19,7 @@ class LeakyNode(Node):
     ):
         super(LeakyNode, self).__init__(n, (n, n), learning)
 
+        self._config = config
         self.rnn = nn.RNN(
             n,
             n,
@@ -31,8 +33,8 @@ class LeakyNode(Node):
         )
         self._n = n
 
-        self._dt = ATTR(SPIKE_NS.dt)
-        self._tau = tau if tau else ATTR(SPIKE_NS.tau)
+        self._dt = self._config[SPIKE_NS.dt]
+        self._tau = tau if tau else self._config[SPIKE_NS.tau]
         self._beta = 1 - self._dt / self._tau
         
         self._scale = scale
@@ -81,8 +83,8 @@ class LeakyNode(Node):
         """
         this function assimulate how the output of the model should behave
         """
-        seq_length = input_seq._seq_len 
-        input_size = input_seq.shape()[0]
+        seq_length = input_seq.seq_len 
+        input_size = input_seq.size
 
         # Initialize the response tensor
         response = torch.zeros(seq_length, input_size)

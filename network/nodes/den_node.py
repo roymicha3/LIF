@@ -3,13 +3,14 @@ import torch
 
 from network.nodes.node import Node
 from network.nodes.leaky_node import LeakyNode
-from common import ATTR, SPIKE_NS
+from common import Configuration, SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 
 # Define the DEN Node class (assuming the class is provided as is)
 class DENNode(Node):
     def __init__(
         self,
+        config: Configuration,
         n,
         device=None,
         dtype=None,
@@ -18,11 +19,12 @@ class DENNode(Node):
     ):
         super(DENNode, self).__init__(n, (n, n), learning)
         
-        tau_m = ATTR(SPIKE_NS.tau_m)
-        self._coductness = LeakyNode(n, device, dtype, scale=scale, learning=learning, tau=tau_m)
+        self._config = config
+        tau_m = self._config[SPIKE_NS.tau_m]
+        self._coductness = LeakyNode(self._config, n, device, dtype, scale=scale, learning=learning, tau=tau_m)
         
-        tau_s = ATTR(SPIKE_NS.tau_s)
-        self._voltage = LeakyNode(n, device, dtype, scale=False, learning=False, tau=tau_s)
+        tau_s = self._config[SPIKE_NS.tau_s]
+        self._voltage = LeakyNode(self._config, n, device, dtype, scale=False, learning=False, tau=tau_s)
         
     # @override
     def forward(self, x):
@@ -39,8 +41,8 @@ class DENNode(Node):
         """
         this function assimulate how the output of the model should behave
         """
-        seq_length = input_seq.get_seq_len() 
-        input_size = input_seq.shape()[0]
+        seq_length = input_seq.seq_len
+        input_size = input_seq.size
 
         # Initialize the response tensor
         response = torch.zeros(seq_length, input_size)

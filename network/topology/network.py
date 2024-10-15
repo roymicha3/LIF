@@ -3,7 +3,7 @@ from typing import Dict, Iterable, Optional, Type, Tuple
 
 import torch
 
-from common import ATTR, SPIKE_NS
+from common import Configuration
 from network.nodes.node import Node
 from network.topology.connection import Connection
 
@@ -18,19 +18,18 @@ class Network(torch.nn.Module):
 
     def __init__(
         self,
-        batch_size: int = 1,
+        config: Configuration,
         learning: bool = True
     ) -> None:
         """
         Initializes network object.
 
-        :param dt: Simulation timestep.
-        :param batch_size: Mini-batch size.
+        :param dt: Simulation timestep
         :param learning: Whether to allow connection updates. True by default.
         """
         super().__init__()
         
-        self.batch_size = batch_size
+        self.config = config
         self.learning = learning
 
         self.layers = {}

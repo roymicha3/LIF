@@ -3,7 +3,7 @@ import torch.autograd
 # from typing import override
 
 from network.nodes.node import Node
-from common import ATTR, SPIKE_NS
+from common import Configuration, SPIKE_NS
 from network.learning.grad_wrapper import GradWrapper
 
 class SingleSpikeNode(Node):
@@ -45,6 +45,7 @@ class SingleSpikeNode(Node):
     
     def __init__(
         self,
+        config : Configuration,
         n,
         device=None,
         dtype=None,
@@ -65,8 +66,10 @@ class SingleSpikeNode(Node):
             A flag indicating if the node should support learning (default: False).
         """
         super(SingleSpikeNode, self).__init__(n, (n, n), learning)
-        self._threshold = ATTR(SPIKE_NS.v_thr)  # Threshold for firing spikes
-        self._dt = ATTR(SPIKE_NS.dt)  # Time step for spike calculation
+        
+        self._config = config
+        self._threshold = self._config[SPIKE_NS.v_thr]  # Threshold for firing spikes
+        self._dt = self._config[SPIKE_NS.dt]  # Time step for spike calculation
         self.saved_tensors = None  # Placeholder for saving intermediate values (used for backward pass)
 
     def forward(self, input_):

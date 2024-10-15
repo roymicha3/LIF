@@ -9,23 +9,23 @@ from data.dataset.dataset import Dataset, DataType, OutputType
 from data.data_sample import DataSample
 from encoders.encoder import Encoder
 from encoders.identity_encoder import IdentityEncoder
+from common import Configuration, DATA_NS, MODEL_NS
 
 class RandomDataset(Dataset):
     """
     This class is responsible for loading the data .
     """
-    def __init__(self, 
-                input_size: int,
-                length: int,
+    def __init__(self,
+                config: Configuration,
                 data_type: DataType = DataType.TRAIN,
                 output_type: OutputType = OutputType.TORCH,
-                encoder: Encoder = ...,
-                root = os.path.join("data", "data")) -> None:
+                encoder: Encoder = ...) -> None:
 
         super().__init__(data_type, output_type, encoder)
-        self._input_size = input_size
-        self._len = length
-        self._root = root
+        self._config         = config
+        self._input_size     = self._config[MODEL_NS.NUM_INPUTS]
+        self._len            = self._config[DATA_NS.DATASET_SIZE]
+        self._root           = self._config[DATA_NS.ROOT]
         
         
     def __len__(self):

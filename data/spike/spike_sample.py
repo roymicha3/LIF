@@ -7,20 +7,26 @@ from typing import List
 
 from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
-from common import ATTR, MODEL_NS
+from common import Configuration, MODEL_NS
 
 class SpikeSample(DataSample):
     """
     This class represents a spike sample.
     It encapsulates a single spike item and provides a method to access it.
     """
-    def __init__(self, data: List[SpikeData], seq_len = None, label = None) -> None:
+    def __init__(self, config: Configuration, data: List[SpikeData], seq_len = None, label = None) -> None:
         super().__init__(data, label)
-        self._num_of_neurons = ATTR(MODEL_NS.NUM_INPUTS)
+        self._config = config
+        self._num_of_neurons = self._config[MODEL_NS.NUM_INPUTS]
         self._seq_len = seq_len
-        
-    def get_seq_len(self):
+    
+    @property
+    def seq_len(self):
         return self._seq_len
+    
+    @property
+    def size(self):
+        return self._num_of_neurons
         
     def to_torch(self):
         input_size = self._num_of_neurons

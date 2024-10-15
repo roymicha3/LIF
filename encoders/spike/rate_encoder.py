@@ -4,7 +4,7 @@ This class encodes the data into spike times - via rate encoding.
 import numpy as np
 from typing_extensions import override
 
-from common import ATTR, SPIKE_NS, MODEL_NS
+from common import Configuration, SPIKE_NS, MODEL_NS
 from encoders.encoder import Encoder
 from tools.utils import poisson_events, SEQ_LEN
 from data.spike.spike_data import SpikeData
@@ -22,6 +22,7 @@ class RateEncoder(Encoder):
     
     def __init__(
         self,
+        config: Configuration,
         firing_rate: int = 20,
         random: bool = True) -> None:
         """
@@ -30,9 +31,10 @@ class RateEncoder(Encoder):
         """
         super().__init__()
         
-        self._T              = ATTR(SPIKE_NS.T)
-        self._dt             = ATTR(SPIKE_NS.dt)
-        self._num_of_neurons = ATTR(MODEL_NS.NUM_INPUTS)
+        self._config = config
+        self._T              = self._config[SPIKE_NS.T]
+        self._dt             = self._config[SPIKE_NS.dt]
+        self._num_of_neurons = self._config[MODEL_NS.NUM_INPUTS]
         self._firing_rate    = firing_rate
         self._random         = random
 
@@ -62,9 +64,9 @@ class RateEncoder(Encoder):
             else:
                 continue
 
-            res.append(SpikeData(neuron_idx, spikes))
+            res.append(SpikeData(self._config, neuron_idx, spikes))
 
-        return SpikeSample(res, seq_len, sample.get_label())
+        return SpikeSample(self._config, res, seq_len, sample.get_label())
     
     @override
     def encode(self, sample: DataSample) -> SpikeSample:

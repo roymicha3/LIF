@@ -5,7 +5,7 @@ import numpy as np
 from typing_extensions import override
 
 from encoders.encoder import Encoder
-from common import ATTR, SPIKE_NS, MODEL_NS
+from common import Configuration, SPIKE_NS, MODEL_NS
 from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
@@ -22,15 +22,17 @@ class LatencyEncoder(Encoder):
     
     def __init__(
         self,
+        config: Configuration,
         max_value: int) -> None:
         """
         max_value: the maximum value of the input values
         """
         super().__init__()
         
-        self._T              = ATTR(SPIKE_NS.T)
-        self._dt             = ATTR(SPIKE_NS.dt)
-        self._num_of_neurons = ATTR(MODEL_NS.NUM_INPUTS)
+        self._config = config
+        self._T              = self._config[SPIKE_NS.T]
+        self._dt             = self._config[SPIKE_NS.dt]
+        self._num_of_neurons = self._config[MODEL_NS.NUM_INPUTS]
         self._max_value      = max_value
 
     def _encode_sample(self, sample: DataSample) -> SpikeSample:
@@ -53,9 +55,9 @@ class LatencyEncoder(Encoder):
             else:
                 continue
 
-            data.append(SpikeData(neuron_idx, spikes))
+            data.append(SpikeData(self._config, neuron_idx, spikes))
 
-        return SpikeSample(data, seq_len, sample.get_label())
+        return SpikeSample(self._config, data, seq_len, sample.get_label())
     
     @override
     def encode(self, data: DataSample) -> SpikeSample:

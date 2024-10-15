@@ -8,7 +8,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from typing_extensions import override
 
-from common import ATTR, SPIKE_NS
+from common import Configuration, SPIKE_NS
 
 class SpikeData:
     """
@@ -19,11 +19,12 @@ class SpikeData:
     spike_times (list of int): List of spike times of the neuron.
     """
 
-    def __init__(self, neuron_index, spike_times: list[int]):
+    def __init__(self, config: Configuration, neuron_index, spike_times: list[int]):
 
-        self.__neuron_index = neuron_index
-        self.__spike_times = spike_times
-        self.__T = ATTR(SPIKE_NS.T)
+        self._neuron_index = neuron_index
+        self._spike_times = spike_times
+        self._config = config
+        self._T = config[SPIKE_NS.T]
 
 
     def __copy__(self):
@@ -31,19 +32,19 @@ class SpikeData:
         Implement the copy operation.
         :return: A copy of the current SpikeData object.
         """
-        return SpikeData(self.__neuron_index, self.__spike_times)
+        return SpikeData(self._neuron_index, self._spike_times)
     
     def get_index(self):
-        return self.__neuron_index
+        return self._neuron_index
 
     def get_spike_times(self):
-        return self.__spike_times
+        return self._spike_times
 
     def mean_firing_rate(self) -> float:
         """
         Return the mean firing rate of the neuron.
         """
-        return len(self.__spike_times) / self.__T
+        return len(self._spike_times) / self._T
 
 
     def plot_spike_train(self) -> None:
@@ -51,9 +52,9 @@ class SpikeData:
         Plot the spike train for a single neuron.
         """
         plt.figure(figsize=(10, 6))
-        sns.rugplot(self.__spike_times, height=0.5)
-        plt.xlim([0, self.__T])  # set x-axis limits
-        plt.title(f'Spike Train for Neuron {self.__neuron_index}', fontsize=14)
+        sns.rugplot(self._spike_times, height=0.5)
+        plt.xlim([0, self._T])  # set x-axis limits
+        plt.title(f'Spike Train for Neuron {self._neuron_index}', fontsize=14)
         plt.xlabel('Time (s)', fontsize=12)
         plt.yticks([])
         plt.show()
