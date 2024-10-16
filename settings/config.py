@@ -19,6 +19,10 @@ class Configuration:
 
     def __len__(self):
         return len(self._attributes)
+    
+    @property
+    def dict(self):
+        return self._attributes
 
     def dump(self, filename):
         """

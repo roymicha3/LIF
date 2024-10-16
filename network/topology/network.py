@@ -1,7 +1,6 @@
-import tempfile
-from typing import Dict, Iterable, Optional, Type, Tuple
-
 import torch
+import tempfile
+from typing import Tuple
 
 from common import Configuration
 from network.nodes.node import Node
@@ -64,18 +63,6 @@ class Network(torch.nn.Module):
 
         connection.train(self.learning)
 
-    # TODO: see how to implement this monitor logic :)
-    # def add_monitor(self, monitor: AbstractMonitor, name: str) -> None:
-    #     """
-    #     Adds a monitor on a network object to the network.
-
-    #     :param monitor: An instance of class ``Monitor``.
-    #     :param name: Logical name of monitor object.
-    #     """
-    #     self.monitors[name] = monitor
-    #     monitor.network = self
-    #     monitor.dt = self.dt
-
     def save(self, file_name: str) -> None:
         """
         Serializes the network object to disk.
@@ -93,6 +80,7 @@ class Network(torch.nn.Module):
         return torch.load(virtual_file)
     
     def _get_next_connection(self, prev_connection: Tuple[str, str] = None) -> Tuple[str, str]:            
+        
         if Network.INPUT_LAYER_NAME not in self.layers.keys() or Network.OUTPUT_LAYER_NAME not in self.layers.keys():
             raise Exception("missing Input and/or Output layer")
         
@@ -108,6 +96,7 @@ class Network(torch.nn.Module):
         return None
     
     def _get_prev_connection(self, next_connection: Tuple[str, str] = None) -> Tuple[str, str]:            
+        
         if Network.INPUT_LAYER_NAME not in self.layers.keys() or Network.OUTPUT_LAYER_NAME not in self.layers.keys():
             raise Exception("missing Input and/or Output layer")
         
@@ -122,94 +111,6 @@ class Network(torch.nn.Module):
             
         return None
 
-    def _get_output(self, data: torch.Tensor, layers: Iterable = None) -> Dict[str, torch.Tensor]:
-        """
-        Fetches outputs from network layers to use as input to downstream layers.
-
-        :param layers: Layers to update inputs for. Defaults to all network layers.
-        :return: Inputs to all layers for the current iteration.
-        """
-
-        if layers is None:
-            layers = self.layers.keys()
-            
-        current_connection = self._get_next_connection()
-        
-        while current_connection:
-            source, target = current_connection
-            data = self.layers[source].forward(data)
-            data = self.connections[current_connection].forward(data)
-            data = self.layers[target].forward(data)
-            
-            current_connection = self._get_next_connection(current_connection)
-
-        return data
-
-
-    def run(
-        self, data: Dict[str, torch.Tensor], **kwargs) -> None:
-        """
-        Simulate network for given inputs and time.
-
-        :param inputs: Dictionary of ``Tensor``s of shape ``[time, *input_shape]`` or
-                      ``[time, batch_size, *input_shape]``.
-                      
-        Keyword arguments:
-        
-        :param Bool progress_bar: Show a progress bar while running the network.
-
-        **Example:**
-
-        .. code-block:: python
-
-            import torch
-            import matplotlib.pyplot as plt
-
-            from network import Network
-            from network.nodes import Input
-            from network.monitors import Monitor
-
-            # Build simple network.
-            network = Network()
-            network.add_layer(Input(500), name='I')
-            network.add_monitor(Monitor(network.layers['I'], state_vars=['s']), 'I')
-
-            # Generate spikes by running Bernoulli trials on Uniform(0, 0.5) samples.
-            spikes = torch.bernoulli(0.5 * torch.rand(500, 500))
-
-            # Run network simulation.
-            network.run(inputs={'I' : spikes})
-
-            # Look at input spiking activity.
-            spikes = network.monitors['I'].get('s')
-            plt.matshow(spikes, cmap='binary')
-            plt.xticks(()); plt.yticks(());
-            plt.xlabel('Time'); plt.ylabel('Neuron index')
-            plt.title('Input spiking')
-            plt.show()
-        """
-        
-        # Dynamic setting of batch size
-        # goal shape is [time, batch, n_0, ...]
-        for key, value in data.items():
-            if value.dim() == 1:
-                data[key] = value.unsqueeze(0).unsqueeze(0)
-                
-            elif value.dim() == 2:
-                data[key] = value.unsqueeze(1)
-                
-            elif value.dim() == 3:
-                pass
-            else:
-                raise Exception("Invalid input dimensions")
-            
-        outputs = {}
-        
-        # iterate over batches
-        for key, value in data.items():
-            outputs[key] = self._get_output(value)
-        
-        return outputs
     
     def forward(self, data: torch.Tensor) -> None:
         """
@@ -267,3 +168,15 @@ class Network(torch.nn.Module):
         """
         self.learning = mode
         return super().train(mode)
+
+    # TODO: see how to implement this monitor logic :)
+    # def add_monitor(self, monitor: AbstractMonitor, name: str) -> None:
+    #     """
+    #     Adds a monitor on a network object to the network.
+
+    #     :param monitor: An instance of class ``Monitor``.
+    #     :param name: Logical name of monitor object.
+    #     """
+    #     self.monitors[name] = monitor
+    #     monitor.network = self
+    #     monitor.dt = self.dt

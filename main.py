@@ -5,6 +5,8 @@ import os
 
 from common import MODEL_NS, SPIKE_NS, DATA_NS, Configuration
 from analysis.visualization import *
+from experiment.trial import Trial
+from experiment.experiment import simple_tempotron_tune_hyperparameters
 
 
 MODEL_ATTRIBUTES = \
@@ -12,21 +14,23 @@ MODEL_ATTRIBUTES = \
     # MODEL PARAMETERS:
     MODEL_NS.NUM_OUTPUTS             : 1,
     MODEL_NS.NUM_INPUTS              : 500,
-    MODEL_NS.LR                      : 0.01,
+    MODEL_NS.LR                      : 0.1,
+    MODEL_NS.MOMENTUM                : 0.0,
+    MODEL_NS.EPOCHS                  : 100,
     
     # DATA PARAMETERS:
-    DATA_NS.BATCH_SIZE               : 1,
+    DATA_NS.BATCH_SIZE               : 32,
     DATA_NS.DATASET_SIZE             : 640,
     DATA_NS.NUM_CLASSES              : 2,
     DATA_NS.TRAINING_PERCENTAGE      : 50,
     DATA_NS.TESTING_PERCENTAGE       : 25,
     DATA_NS.VALIDATION_PERCENTAGE    : 25,
-    DATA_NS.ROOT                     : os.path.join("D:", "data", "random"),
+    DATA_NS.ROOT                     : os.path.join(".", "data", "data", "random"),
     
     # SPIKE PARAMETERS:
     SPIKE_NS.T                       : 500,
     SPIKE_NS.dt                      : 1.0,
-    SPIKE_NS.tau: 10,
+    SPIKE_NS.tau                     : 10,
     
     SPIKE_NS.tau_m                   : 15,
     SPIKE_NS.tau_s                   : 15 / 4,
@@ -41,11 +45,13 @@ def main():
     
     config = Configuration(MODEL_ATTRIBUTES)
     
-    visualizer = RandomSpikePattern(config)
+    Trial.run(config, report=False)
     
-    # os.environ['RAY_TMPDIR'] = "D:\\"
+    # simple_tempotron_tune_hyperparameters()
     
-    visualizer.train_max_time()
+    # visualizer = RandomSpikePattern(config)
+    # visualizer.lif_response()
+    
     
 
 if __name__ == "__main__":

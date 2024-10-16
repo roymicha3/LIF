@@ -24,7 +24,7 @@ class DENNode(Node):
         self._coductness = LeakyNode(self._config, n, device, dtype, scale=scale, learning=learning, tau=tau_m)
         
         tau_s = self._config[SPIKE_NS.tau_s]
-        self._voltage = LeakyNode(self._config, n, device, dtype, scale=False, learning=False, tau=tau_s)
+        self._voltage = LeakyNode(self._config, n, device, dtype, scale=False, learning=False, tau=tau_m / 4) #TODO: change back
         
     # @override
     def forward(self, x):

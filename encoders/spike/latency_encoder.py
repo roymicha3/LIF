@@ -46,10 +46,10 @@ class LatencyEncoder(Encoder):
             spike_delay = int((neuron / self._max_value) * seq_len)
             
             # if the neuron is silent
-            if spike_delay == 0:
+            if spike_delay == -1:
                 continue
             
-            elif spike_delay > 0:
+            elif spike_delay >= 0:
                 spikes = np.array([spike_delay]).astype(int)
             # if no spikes were fired
             else:

@@ -47,4 +47,8 @@ class BinaryLoss(nn.Module):
         grad_input = - target_ * grad_spike_values
         
         return grad_input.unsqueeze(-1)
+    
+    def classify(self, data: torch.Tensor) -> torch.Tensor:
+        predicted = (data.squeeze() > 0) * 2 - 1
+        return predicted
         

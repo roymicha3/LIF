@@ -7,6 +7,9 @@ from data.spike.spike_sample import SpikeSample
 
 # Define the LeakyNode class (assuming the class is provided as is)
 class LeakyNode(Node):
+    
+    V0 = 10
+    
     def __init__(
         self,
         config: Configuration,
@@ -39,10 +42,6 @@ class LeakyNode(Node):
         
         self._scale = scale
         
-        # Placeholder methods and attributes
-        self.threshold = 0.5  # Arbitrary threshold for spike detection
-        self.spike_grad = lambda x: torch.where(x > self.threshold, torch.ones_like(x), torch.zeros_like(x))
-        
         self._beta_to_weight_hh()
         self._init_weights_hi(1 - self._beta)
                     
@@ -74,7 +73,7 @@ class LeakyNode(Node):
         mem = self.rnn(input_)
         
         if self._scale:
-            return mem[0] / self._dt
+            return LeakyNode.V0 * mem[0] / self._dt
         
         return mem[0]
     
@@ -99,4 +98,4 @@ class LeakyNode(Node):
                 exp = torch.exp(-(times[t:] - t) * dt / tau)
                 response[t:, i] += (1 / tau) * exp
 
-        return response
+        return LeakyNode.V0 * response

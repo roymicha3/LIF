@@ -10,7 +10,7 @@ from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
 class AbstractConnection(ABC, Module):
     # language=rst
     """
-    Abstract base method for connections between ``Nodes``.
+    Abstract base method for connections between `Nodes.
     """
 
     def __init__(
@@ -159,7 +159,7 @@ class Connection(AbstractConnection):
     def normalize(self) -> None:
         """
         Normalize weights so each target neuron has sum of connection weights equal to
-        ``self.norm``.
+        `self.norm.
         """
         #TODO: fix, for now has a bug in it
         if self.norm is not None:

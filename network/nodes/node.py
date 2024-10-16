@@ -43,13 +43,13 @@ class Node(torch.nn.Module):
 
         self.learning = learning
 
-    def forward(self, x: torch.Tensor) -> None:
+    def forward(self, input_: torch.Tensor) -> None:
         """
         Base class method for a single simulation step.
 
-        :param x: Inputs to the layer.
+        :param input_: Inputs to the layer.
         """
-        return x
+        return input_
 
     def reset_state_variables(self) -> None:
         """

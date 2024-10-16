@@ -10,4 +10,6 @@ class ModelNamespace(object):
     NUM_INPUTS = "num_inputs"
     NUM_OUTPUTS = "num_outputs"
     
+    EPOCHS = "epochs"
     LR = "lr"
+    MOMENTUM = "momentum"
