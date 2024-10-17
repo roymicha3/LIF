@@ -18,7 +18,7 @@ MODEL_ATTRIBUTES = \
     MODEL_NS.NUM_OUTPUTS             : 1,
     MODEL_NS.NUM_INPUTS              : 500,
     MODEL_NS.EPOCHS                  : 200,
-    MODEL_NS.LR                      : 5.0,
+    MODEL_NS.LR                      : 0.01,
     MODEL_NS.MOMENTUM                : 0.75,
     
     # DATA PARAMETERS:
@@ -48,22 +48,22 @@ def simple_tempotron_tune_hyperparameters():
     config = Configuration(MODEL_ATTRIBUTES)
     
     # tuned parameters:
-    config[SPIKE_NS.tau_m] = tune.sample_from(lambda _: np.random.randint(4, 25))
-    config[SPIKE_NS.tau_s] = lambda spec: spec.config[SPIKE_NS.tau_m] / 4
+    # config[SPIKE_NS.tau_m] = tune.sample_from(lambda _: np.random.randint(4, 25))
+    # config[SPIKE_NS.tau_s] = lambda spec: spec.config[SPIKE_NS.tau_m] / 4
     
-    config[MODEL_NS.LR] = tune.sample_from(lambda _: 10 ** (3 - np.random.randint(1, 8))) # tune.loguniform(1e-4, 1e-1)
-    config[MODEL_NS.MOMENTUM] = tune.sample_from(lambda _: np.random.randint(1, 10) / 10)
+    config[MODEL_NS.LR] = tune.sample_from(lambda _: 10 ** ( - np.random.randint(1, 4))) # tune.loguniform(1e-4, 1e-1)
+    # config[MODEL_NS.MOMENTUM] = tune.sample_from(lambda _: np.random.randint(1, 10) / 10)
     
-    config[DATA_NS.BATCH_SIZE] = tune.choice([1, 2, 4, 8, 16, 32])
+    config[DATA_NS.BATCH_SIZE] = tune.choice([1, 2, 4, 8, 16, 32, 64])
     
-    repeat = 10
+    repeat = 1
     
     # Trial.run(config, report=False)
     
     scheduler = ASHAScheduler(
         max_t=config[MODEL_NS.EPOCHS],
-        grace_period=5,
-        reduction_factor=10)
+        grace_period=10,
+        reduction_factor=2)
     
     tuner = tune.Tuner(
         tune.with_resources(
@@ -71,7 +71,7 @@ def simple_tempotron_tune_hyperparameters():
             resources={"cpu": 2, "gpu": 1}
         ),
         tune_config=tune.TuneConfig(
-            metric="accuracy",
+            metric="loss",
             mode="min",
             scheduler=scheduler,
             num_samples=repeat,

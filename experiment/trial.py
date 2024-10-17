@@ -50,11 +50,13 @@ class Trial:
         network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
 
         # Set up optimizer and loss function
-        optimizer = MomentumOptimizer(
-            connection.parameters(),
-            lr=config["lr"],
-            momentum=config["momentum"]
-        )
+        # optimizer = MomentumOptimizer(
+        #     connection.parameters(),
+        #     lr=config["lr"],
+        #     momentum=config["momentum"]
+        # )
+        
+        optimizer = torch.optim.Adam(connection.parameters(), lr=config["lr"])
         criterion = BinaryLoss()
 
         num_epochs = config[MODEL_NS.EPOCHS]

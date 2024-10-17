@@ -8,22 +8,21 @@ from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
 
 
 class AbstractConnection(ABC, Module):
-    # language=rst
     """
-    Abstract base method for connections between `Nodes.
+    Abstract base method for connections between ``Nodes``.
     """
 
     def __init__(
         self,
         source: Node,
         target: Node
-        ) -> None:
+    ) -> None:
         super().__init__()
         self.source = source
         self.target = target
 
     @abstractmethod
-    def forward(self, input_: torch.Tensor) -> None:
+    def forward(self, input_: torch.Tensor) -> torch.Tensor:
         """
         Compute pre-activations of downstream neurons given spikes of upstream neurons.
 
@@ -34,8 +33,6 @@ class AbstractConnection(ABC, Module):
     def update(self, **kwargs) -> None:
         """
         Compute connection's update rule.
-
-        Keyword arguments:
 
         :param bool learning: Whether to allow connection updates.
         :param ByteTensor mask: Boolean mask determining which weights to clamp to zero.
@@ -51,15 +48,14 @@ class AbstractConnection(ABC, Module):
 
     @abstractmethod
     def reset_state_variables(self) -> None:
-        # language=rst
         """
-        Contains resetting logic for the connection.
+        Reset logic for the connection.
         """
 
 
 class Connection(AbstractConnection):
     """
-    Specifies synapses between one or two populations of neurons.
+    Specifies synapses between one or two populations of neurons, with optional bias.
     """
 
     def __init__(
@@ -69,20 +65,22 @@ class Connection(AbstractConnection):
         w: torch.Tensor = None,
         wmin: np.int32 = -np.inf,
         wmax: np.int32 = np.inf,
-        norm: np.int32 = 1
+        norm: np.int32 = 1,
+        bias: bool = True  # Added bias argument
     ) -> None:
         """
         :param source: A layer of nodes from which the connection originates.
         :param target: A layer of nodes to which the connection connects.
+        :param bias: Whether to include a bias term in the connection.
         """
         super().__init__(source, target)
         self.w = w
-        
         self.wmin = wmin
         self.wmax = wmax
         self.norm = norm
+        self.bias = None  # Default to None, set later if bias is enabled
         
-        # set w to random values
+        # Set weights to random values if not provided
         if self.w is None:
             if self.wmin == -np.inf or self.wmax == np.inf:
                 w = torch.clamp(torch.rand(source.n, target.n), self.wmin, self.wmax)
@@ -94,32 +92,37 @@ class Connection(AbstractConnection):
                 w = torch.clamp(torch.as_tensor(w), self.wmin, self.wmax)
 
         self.w = Parameter(w, requires_grad=True)
-        
+
+        # Initialize bias if enabled
+        if bias:
+            bias_init = torch.ones(target.n) / target.n
+            self.bias = Parameter(bias_init, requires_grad=True)
+
     def forward(self, input_: torch.Tensor) -> torch.Tensor:
         """
-        Compute pre-activations given spikes using connection weights.
+        Compute pre-activations given spikes using connection weights and bias.
 
         :param input_: Incoming spikes of shape (batch_size, n_inputs) or (n_inputs,).
-        :return: Incoming spikes multiplied by synaptic weights of shape (batch_size, n_outputs) or (n_outputs,).
+        :return: Incoming spikes multiplied by synaptic weights and bias.
         """
-        # Check if input is a single sample or a batch
         if input_.dim() == 1:  # Single sample
             input_ = input_.unsqueeze(0)  # Add a batch dimension
 
         output = input_ @ self.w  # Matrix multiplication between input spikes and weights
         
-        # Save the tensors for the backward pass
-        self.saved_tensors = input_
+        if self.bias is not None:
+            output += self.bias  # Add bias if available
+
+        self.saved_tensors = input_  # Save for backward pass
         return output
 
     def backward(self, output_grad: GradWrapper) -> tuple:
         """
         Backward function for the learning rule.
-        Computes the gradient of the loss with respect to inputs and weights.
+        Computes the gradient of the loss with respect to inputs, weights, and bias.
 
-        :param output_grad: Gradient of the loss with respect to the output, shape (batch_size, n_outputs) or (n_outputs,).
-        :param max_idx: Indices of the selected maximum spikes.
-        :return: Gradients with respect to the input and weights.
+        :param output_grad: Gradient of the loss with respect to the output.
+        :return: Gradients with respect to the input, weights, and bias.
         """
         input_ = self.saved_tensors
         
@@ -140,34 +143,42 @@ class Connection(AbstractConnection):
         
         # Compute the gradient of the input
         grad_input = grad @ self.w.t()  # Backpropagate through weights
-        
+
+        # Compute gradient for bias
+        if self.bias is not None:
+            grad_bias = grad.sum(dim=0)  # Bias gradient is just the sum of the output gradient
+        else:
+            grad_bias = None
+
         total_grad = ConnectionGradWrapper(grad_input, grad_weight)
-        
-        # update the gradient of the weights for optimizer.step()
-        self.update(total_grad)
+        self.update(total_grad, grad_bias)  # Update weights and bias
+
         return total_grad
 
-    def update(self, grad: ConnectionGradWrapper) -> None:
+    def update(self, grad: ConnectionGradWrapper, grad_bias: torch.Tensor = None) -> None:
         """
-        Compute connection's update rule.
+        Update weights and bias based on gradients.
         """
+        batch_size = grad.weight_grad.size(0)
         if grad.weight_grad.dim() > self.w.dim():
-            grad.weight_grad = torch.sum(grad.weight_grad, dim=0)
-        
+            grad.weight_grad = torch.sum(grad.weight_grad, dim=0) / batch_size
+
         self.w.grad = grad.weight_grad
+        
+        if self.bias is not None and grad_bias is not None:
+            self.bias.grad = grad_bias.squeeze(-1) / batch_size
 
     def normalize(self) -> None:
         """
-        Normalize weights so each target neuron has sum of connection weights equal to
-        `self.norm.
+        Normalize weights so each target neuron has a sum of connection weights equal to
+        ``self.norm``.
         """
-        #TODO: fix, for now has a bug in it
         if self.norm is not None:
             w_abs_sum = self.w.abs().sum()
             self.w.divide_(w_abs_sum)
 
     def reset_state_variables(self) -> None:
         """
-        Contains resetting logic for the connection.
+        Reset the state variables of the connection.
         """
         super().reset_state_variables()
