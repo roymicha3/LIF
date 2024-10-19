@@ -8,7 +8,7 @@ from data.spike.spike_sample import SpikeSample
 # Define the LeakyNode class (assuming the class is provided as is)
 class LeakyNode(Node):
     
-    V0 = 10
+    V0 = 1
     
     def __init__(
         self,
@@ -29,7 +29,7 @@ class LeakyNode(Node):
             num_layers=1,
             nonlinearity="relu",
             bias=False,
-            batch_first=False,
+            batch_first=True,
             dropout=0.0,
             device=device,
             dtype=dtype

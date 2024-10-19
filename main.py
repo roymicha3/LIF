@@ -15,12 +15,12 @@ MODEL_ATTRIBUTES = \
     MODEL_NS.NUM_OUTPUTS             : 1,
     MODEL_NS.NUM_INPUTS              : 500,
     MODEL_NS.LR                      : 0.01,
-    MODEL_NS.MOMENTUM                : 0.0,
-    MODEL_NS.EPOCHS                  : 100,
+    MODEL_NS.MOMENTUM                : 0.99,
+    MODEL_NS.EPOCHS                  : 1000,
     
     # DATA PARAMETERS:
-    DATA_NS.BATCH_SIZE               : 1,
-    DATA_NS.DATASET_SIZE             : 640,
+    DATA_NS.BATCH_SIZE               : 32,
+    DATA_NS.DATASET_SIZE             : 1000,
     DATA_NS.NUM_CLASSES              : 2,
     DATA_NS.TRAINING_PERCENTAGE      : 50,
     DATA_NS.TESTING_PERCENTAGE       : 25,
@@ -50,7 +50,7 @@ def main():
     # simple_tempotron_tune_hyperparameters()
     
     # visualizer = RandomSpikePattern(config)
-    # visualizer.lif_response()
+    # visualizer.den_response()
     
     
 

@@ -80,6 +80,8 @@ class Connection(AbstractConnection):
         self.norm = norm
         self.bias = None  # Default to None, set later if bias is enabled
         
+        self.saved_tensors = None
+        
         # Set weights to random values if not provided
         if self.w is None:
             if self.wmin == -np.inf or self.wmax == np.inf:

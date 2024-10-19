@@ -31,8 +31,9 @@ class DENNode(Node):
         """
         forward function for the layer
         """
-        mem = self._coductness(x)
-        mem = self._voltage(mem)
+        with torch.no_grad():
+            mem = self._coductness(x)
+            mem = self._voltage(mem)
         
         return mem
     
