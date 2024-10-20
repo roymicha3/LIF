@@ -18,7 +18,8 @@ class Network(torch.nn.Module):
     def __init__(
         self,
         config: Configuration,
-        learning: bool = True
+        learning: bool = True,
+        device = None
     ) -> None:
         """
         Initializes network object.
@@ -34,7 +35,8 @@ class Network(torch.nn.Module):
         self.layers = {}
         self.connections = {}
         self.monitors = {}
-
+        
+        self.device = device
 
     def add_layer(self, layer: Node, name: str) -> None:
         """

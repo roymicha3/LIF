@@ -19,6 +19,7 @@ class DENNode(Node):
     ):
         super(DENNode, self).__init__(n, (n, n), learning)
         
+        self.device = device
         self._config = config
         tau_m = self._config[SPIKE_NS.tau_m]
         self._coductness = LeakyNode(self._config, n, device, dtype, scale=scale, learning=learning, tau=tau_m)
@@ -32,6 +33,7 @@ class DENNode(Node):
         forward function for the layer
         """
         with torch.no_grad():
+            x = x.to(self.device)  # Move input to the correct device
             mem = self._coductness(x)
             mem = self._voltage(mem)
         

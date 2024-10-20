@@ -17,18 +17,18 @@ MODEL_ATTRIBUTES = \
     # MODEL PARAMETERS:
     MODEL_NS.NUM_OUTPUTS             : 1,
     MODEL_NS.NUM_INPUTS              : 500,
-    MODEL_NS.EPOCHS                  : 200,
+    MODEL_NS.EPOCHS                  : 1000,
     MODEL_NS.LR                      : 0.01,
     MODEL_NS.MOMENTUM                : 0.75,
     
     # DATA PARAMETERS:
     DATA_NS.BATCH_SIZE               : 1,
-    DATA_NS.DATASET_SIZE             : 640,
+    DATA_NS.DATASET_SIZE             : 1000,
     DATA_NS.NUM_CLASSES              : 2,
     DATA_NS.TRAINING_PERCENTAGE      : 50,
     DATA_NS.TESTING_PERCENTAGE       : 25,
     DATA_NS.VALIDATION_PERCENTAGE    : 25,
-    DATA_NS.ROOT                     : os.path.join("C:\\", "Users", "roymi", "Workspace", "LIF", "data", "data", "random"),
+    DATA_NS.ROOT                     : os.path.join("D:\\", "data", "random"),
     
     # SPIKE PARAMETERS:
     SPIKE_NS.T                       : 500,
@@ -51,24 +51,24 @@ def simple_tempotron_tune_hyperparameters():
     # config[SPIKE_NS.tau_m] = tune.sample_from(lambda _: np.random.randint(4, 25))
     # config[SPIKE_NS.tau_s] = lambda spec: spec.config[SPIKE_NS.tau_m] / 4
     
-    config[MODEL_NS.LR] = tune.sample_from(lambda _: 10 ** ( - np.random.randint(1, 4))) # tune.loguniform(1e-4, 1e-1)
+    config[MODEL_NS.LR] = tune.sample_from(lambda _: 10 ** ( - np.random.randint(1, 5))) # tune.loguniform(1e-4, 1e-1)
     # config[MODEL_NS.MOMENTUM] = tune.sample_from(lambda _: np.random.randint(1, 10) / 10)
     
-    config[DATA_NS.BATCH_SIZE] = tune.choice([1, 2, 4, 8, 16, 32, 64])
+    config[DATA_NS.BATCH_SIZE] = tune.choice([1, 2, 4, 8, 16, 32, 64, 128])
     
-    repeat = 1
+    repeat = 5
     
     # Trial.run(config, report=False)
     
     scheduler = ASHAScheduler(
         max_t=config[MODEL_NS.EPOCHS],
-        grace_period=10,
+        grace_period=15,
         reduction_factor=2)
     
     tuner = tune.Tuner(
         tune.with_resources(
             tune.with_parameters(Trial.run),
-            resources={"cpu": 2, "gpu": 1}
+            resources={"cpu": 18, "gpu": 1}
         ),
         tune_config=tune.TuneConfig(
             metric="loss",

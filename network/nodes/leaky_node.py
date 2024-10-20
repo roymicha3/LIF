@@ -35,7 +35,7 @@ class LeakyNode(Node):
             dtype=dtype
         )
         self._n = n
-
+        self.device = device
         self._dt = self._config[SPIKE_NS.dt]
         self._tau = tau if tau else self._config[SPIKE_NS.tau]
         self._beta = 1 - self._dt / self._tau
@@ -70,6 +70,7 @@ class LeakyNode(Node):
             self.rnn.weight_ih_l0.copy_(new_weights)
 
     def forward(self, input_):
+        input_ = input_.to(self.device)  # Move input to the correct device
         mem = self.rnn(input_)
         
         if self._scale:
