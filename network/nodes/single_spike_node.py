@@ -6,6 +6,7 @@ from network.nodes.node import Node
 from common import Configuration, SPIKE_NS
 from network.learning.grad_wrapper import GradWrapper
 
+# PLASTICITY_INDUCTION = 1.0e-3
 class SingleSpikeNode(Node):
     """
     A class representing a node that produces a single spike.
@@ -116,6 +117,16 @@ class SingleSpikeNode(Node):
         """
         # Retrieve the max index saved during the forward pass.
         max_idx, max_val = self.saved_tensors
+        # plasticity_induction = torch.zeros_like(output_grad)
+        # if self.learning:
+        #     # Apply plasticity induction when neurons didn't fire and an error is present.
+        #     for i in range(max_val.size(0)):  # Iterate over the batch dimension
+        #         if output_grad[i].sum() != 0 and max_val[i] < 0:  # If the neuron didn't fire + error
+        #             plasticity_induction[i] += PLASTICITY_INDUCTION
         
         # Return the gradient of the input and the saved index (used for further backprop).
-        return GradWrapper(output_grad=output_grad, info={"max_idx": max_idx})
+        info = {
+            "max_idx": max_idx,
+            # "plasticity_induction": plasticity_induction
+            }
+        return GradWrapper(output_grad=output_grad, info=info)

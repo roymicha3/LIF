@@ -46,7 +46,7 @@ class Trial:
 
         # Initialize layers and connection, and move them to the correct device
         input_layer = DENNode(config, config[MODEL_NS.NUM_INPUTS], device=device)
-        output_layer = SingleSpikeNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device)
+        output_layer = SingleSpikeNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=True)
         connection = SimpleConnection(input_layer, output_layer, device=device)
 
         # Create a network with layers and connection
@@ -57,6 +57,8 @@ class Trial:
 
         # Set up optimizer and loss function
         optimizer = torch.optim.Adam(connection.parameters(), lr=config["lr"])
+        optimizer = MomentumOptimizer(connection.parameters(), lr=config["lr"], momentum=config["momentum"])
+        
         criterion = BinaryLoss(device=device)
 
         num_epochs = config[MODEL_NS.EPOCHS]
@@ -64,7 +66,7 @@ class Trial:
         
         valid_size = int(config[DATA_NS.DATASET_SIZE] * (config[DATA_NS.VALIDATION_PERCENTAGE] / 100))
         valid_dataset = torch.utils.data.Subset(dataset, np.arange(1, valid_size))
-        valid_dataloader = torch.utils.data.DataLoader(valid_dataset, batch_size=config["batch_size"])
+        valid_dataloader = torch.utils.data.DataLoader(valid_dataset, batch_size=64)#config["batch_size"])
 
         # Early stopping variables
         best_loss = np.inf
@@ -127,6 +129,8 @@ class Trial:
             if total_accuracy >= 99.9:
                 print(f"Early stopping at epoch {epoch + 1} due to 100% train accuracy.")
                 break
+            
+        connection.plot_weights_histogram(bins=50)
 
     @staticmethod
     def evaluate(network, criterion, dataloader):
@@ -166,7 +170,7 @@ class Trial:
                 for label in torch.unique(labels):  # Iterate over all unique labels
 
                     # Ensure we index correctly, handling batch-wise dimensions
-                    label_correct[label.item()] = label_correct.get(label.item(), 0) + (predicted == label).sum().item()
+                    label_correct[label.item()] = label_correct.get(label.item(), 0) + (predicted[labels == label] == labels[labels == label]).sum().item()
                     label_total[label.item()] = label_total.get(label.item(), 0) + (labels == label).sum().item()
 
         # Calculate average loss and overall accuracy

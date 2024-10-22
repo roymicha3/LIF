@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import matplotlib.pyplot as plt
 import torch
 from torch.nn import Module, Parameter
 
@@ -13,11 +14,13 @@ class Connection(ABC, Module):
 
     def __init__(
         self,
+        w: torch.Tensor,
         source: Node,
         target: Node,
         device=None
     ) -> None:
         super().__init__()
+        self.w = w
         self.source = source
         self.target = target
         self.device = device
@@ -53,3 +56,20 @@ class Connection(ABC, Module):
         Reset logic for the connection.
         """
 
+    def plot_weights_histogram(self, bins=25):
+        """
+        Plot a histogram of the weight values.
+        
+        :param bins: Number of bins to use for the histogram (default is 30).
+        """
+        # Convert the weights to a numpy array
+        weights = self.w.detach().cpu().numpy()
+        
+        # Plot the histogram
+        plt.figure(figsize=(8, 6))
+        plt.hist(weights.flatten(), bins=bins, color='blue', alpha=0.7)
+        plt.title("Histogram of Weight Values")
+        plt.xlabel("Weight Value")
+        plt.ylabel("Frequency")
+        plt.grid(True)
+        plt.show()

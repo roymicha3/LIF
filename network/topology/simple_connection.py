@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from torch.nn import Module, Parameter
 
+
 from network.nodes.node import Node
 from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
 from network.topology.connection import Connection
@@ -15,9 +16,6 @@ class SimpleConnection(Connection):
         self,
         source: Node,
         target: Node,
-        w: torch.Tensor = None,
-        wmin: np.int32 = -np.inf,
-        wmax: np.int32 = np.inf,
         norm: np.int32 = 1,
         device=None
     ) -> None:
@@ -26,26 +24,28 @@ class SimpleConnection(Connection):
         :param target: A layer of nodes to which the connection connects.
         :param bias: Whether to include a bias term in the connection.
         """
-        super().__init__(source, target, device=device)
-        self.w = w
-        self.wmin = wmin
-        self.wmax = wmax
+        super().__init__(SimpleConnection.sample_weights(source.n, target.n, device),
+                         source,
+                         target,
+                         device=device)
         self.norm = norm
         self.saved_tensors = None
-        
-        # Set weights to random values if not provided
-        if self.w is None:
-            if self.wmin == -np.inf or self.wmax == np.inf:
-                w = torch.clamp(torch.rand(source.n, target.n, device=device), self.wmin, self.wmax)
-                w *= 1 / w.abs().sum()
-            else:
-                w = self.wmin + torch.rand(source.n, target.n, device=device) * (self.wmax - self.wmin)
-        else:
-            w = torch.as_tensor(w, device=device)
-            if (self.wmin != -np.inf).any() or (self.wmax != np.inf).any():
-                w = torch.clamp(w, self.wmin, self.wmax)
 
-        self.w = Parameter(w, requires_grad=True)
+        self.w = Parameter(self.w, requires_grad=True)
+
+    @staticmethod
+    def sample_weights(input_size: int, output_size: int, device=None) -> torch.Tensor:
+        """
+        Samples weights from a normal distribution with mean 0.5 and standard deviation 1.
+
+        :param input_size: Number of inputs.
+        :param output_size: Number of outputs.
+        :param device: Device to store the weights (CPU or GPU).
+        :return: A tensor of sampled weights.
+        """
+        # Sample from Norm(0.5, 1)
+        weights = torch.normal(0.5, 1.0, size=(input_size, output_size), device=device)
+        return weights
 
     def forward(self, input_: torch.Tensor) -> torch.Tensor:
         """
@@ -82,6 +82,8 @@ class SimpleConnection(Connection):
             input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
 
         res = []
+        
+        # plasticity_induction = output_grad.info["plasticity_induction"]
         
         # enumerating over batch data
         for i, idx in enumerate(max_idx):
@@ -121,3 +123,4 @@ class SimpleConnection(Connection):
         Reset the state variables of the connection.
         """
         super().reset_state_variables()
+
