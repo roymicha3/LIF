@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from torch.nn import Module, Parameter
 
 
 from network.nodes.node import Node
@@ -9,7 +8,7 @@ from network.topology.connection import Connection
 
 class SimpleConnection(Connection):
     """
-    Specifies synapses between one or two populations of neurons, with optional bias.
+    Specifies synapses between one or two populations of neurons
     """
 
     def __init__(
@@ -24,28 +23,10 @@ class SimpleConnection(Connection):
         :param target: A layer of nodes to which the connection connects.
         :param bias: Whether to include a bias term in the connection.
         """
-        super().__init__(SimpleConnection.sample_weights(source.n, target.n, device),
-                         source,
-                         target,
-                         device=device)
+        super().__init__(None, source, target, device=device)
         self.norm = norm
         self.saved_tensors = None
 
-        self.w = Parameter(self.w, requires_grad=True)
-
-    @staticmethod
-    def sample_weights(input_size: int, output_size: int, device=None) -> torch.Tensor:
-        """
-        Samples weights from a normal distribution with mean 0.5 and standard deviation 1.
-
-        :param input_size: Number of inputs.
-        :param output_size: Number of outputs.
-        :param device: Device to store the weights (CPU or GPU).
-        :return: A tensor of sampled weights.
-        """
-        # Sample from Norm(0.5, 1)
-        weights = torch.normal(0.5, 1.0, size=(input_size, output_size), device=device)
-        return weights
 
     def forward(self, input_: torch.Tensor) -> torch.Tensor:
         """
@@ -61,7 +42,7 @@ class SimpleConnection(Connection):
 
         output = input_ @ self.w  # Matrix multiplication between input spikes and weights
 
-        self.saved_tensors = input_  # Save for backward pass
+        self.saved_tensors = input_, output  # Save for backward pass
         return output
 
     def backward(self, output_grad: GradWrapper) -> tuple:
@@ -72,7 +53,7 @@ class SimpleConnection(Connection):
         :param output_grad: Gradient of the loss with respect to the output.
         :return: Gradients with respect to the input, weights, and bias.
         """
-        input_ = self.saved_tensors
+        input_, _ = self.saved_tensors
         
         max_idx = output_grad.info["max_idx"]
         grad = output_grad.output_grad.to(self.device)

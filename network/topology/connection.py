@@ -21,6 +21,10 @@ class Connection(ABC, Module):
     ) -> None:
         super().__init__()
         self.w = w
+        
+        if self.w is None:
+            self.w = Parameter(Connection.sample_weights(source.n, target.n, device), requires_grad=True)
+        
         self.source = source
         self.target = target
         self.device = device
@@ -55,6 +59,20 @@ class Connection(ABC, Module):
         """
         Reset logic for the connection.
         """
+        
+    @staticmethod
+    def sample_weights(input_size: int, output_size: int, device=None) -> torch.Tensor:
+        """
+        Samples weights from a normal distribution with mean 0.5 and standard deviation 1.
+
+        :param input_size: Number of inputs.
+        :param output_size: Number of outputs.
+        :param device: Device to store the weights (CPU or GPU).
+        :return: A tensor of sampled weights.
+        """
+        # Sample from Norm(0.5, 1)
+        weights = torch.normal(0.5, 1.0, size=(input_size, output_size), device=device)
+        return weights
 
     def plot_weights_histogram(self, bins=25):
         """
