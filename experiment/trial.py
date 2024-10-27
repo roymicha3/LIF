@@ -13,6 +13,7 @@ from network.nodes.leaky_node import LeakyNode
 from network.nodes.den_node import DENNode
 from network.nodes.single_spike_node import SingleSpikeNode
 from network.topology.simple_connection import SimpleConnection
+from network.topology.voltage_conv_connection import VoltageConvConnection
 from network.topology.network import Network
 from network.learning.optimizers import MomentumOptimizer
 from network.loss.binary_loss import BinaryLoss
@@ -47,7 +48,7 @@ class Trial:
         # Initialize layers and connection, and move them to the correct device
         input_layer = DENNode(config, config[MODEL_NS.NUM_INPUTS], device=device)
         output_layer = SingleSpikeNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=True)
-        connection = SimpleConnection(input_layer, output_layer, device=device)
+        connection = VoltageConvConnection(input_layer, output_layer, beta=config[MODEL_NS.BETA], device=device)
 
         # Create a network with layers and connection
         network = Network(config[DATA_NS.BATCH_SIZE], False, device=device)
@@ -57,7 +58,7 @@ class Trial:
 
         # Set up optimizer and loss function
         optimizer = torch.optim.Adam(connection.parameters(), lr=config["lr"])
-        optimizer = MomentumOptimizer(connection.parameters(), lr=config["lr"], momentum=config["momentum"])
+        # optimizer = MomentumOptimizer(connection.parameters(), lr=config["lr"], momentum=config["momentum"])
         
         criterion = BinaryLoss(device=device)
 
@@ -130,7 +131,7 @@ class Trial:
                 print(f"Early stopping at epoch {epoch + 1} due to 100% train accuracy.")
                 break
             
-        connection.plot_weights_histogram(bins=50)
+        connection.plot_weights_histogram(bins=30)
 
     @staticmethod
     def evaluate(network, criterion, dataloader):

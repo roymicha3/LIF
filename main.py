@@ -17,6 +17,7 @@ MODEL_ATTRIBUTES = \
     MODEL_NS.LR                      : 0.01,
     MODEL_NS.MOMENTUM                : 0.99,
     MODEL_NS.EPOCHS                  : 1000,
+    MODEL_NS.BETA                    : 50,
     
     # DATA PARAMETERS:
     DATA_NS.BATCH_SIZE               : 1,

@@ -13,3 +13,6 @@ class ModelNamespace(object):
     EPOCHS = "epochs"
     LR = "lr"
     MOMENTUM = "momentum"
+    
+    BETA = "beta"
+    
