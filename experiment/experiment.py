@@ -20,6 +20,7 @@ MODEL_ATTRIBUTES = \
     MODEL_NS.EPOCHS                  : 1000,
     MODEL_NS.LR                      : 0.01,
     MODEL_NS.MOMENTUM                : 0.75,
+    MODEL_NS.BETA                    : 50,
     
     # DATA PARAMETERS:
     DATA_NS.BATCH_SIZE               : 1,
@@ -52,13 +53,12 @@ def simple_tempotron_tune_hyperparameters():
     # config[SPIKE_NS.tau_s] = lambda spec: spec.config[SPIKE_NS.tau_m] / 4
     
     config[MODEL_NS.LR] = tune.sample_from(lambda _: 10 ** ( - np.random.randint(1, 5))) # tune.loguniform(1e-4, 1e-1)
+    # config[MODEL_NS.BETA] = tune.choice([1, 2, 4, 8, 16, 32, 64, 128])
     # config[MODEL_NS.MOMENTUM] = tune.sample_from(lambda _: np.random.randint(1, 10) / 10)
     
     config[DATA_NS.BATCH_SIZE] = tune.choice([1, 2, 4, 8, 16, 32, 64, 128])
     
     repeat = 5
-    
-    # Trial.run(config, report=False)
     
     scheduler = ASHAScheduler(
         max_t=config[MODEL_NS.EPOCHS],
@@ -80,7 +80,7 @@ def simple_tempotron_tune_hyperparameters():
     )
     results = tuner.fit()
     
-    best_result = results.get_best_result("loss", "min")
+    best_result = results.get_best_result("accuracy", "min")
 
     best_config = best_result.config 
     print(f"Best trial config: {best_config}")

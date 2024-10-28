@@ -1,6 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 import torch
+import torch.utils.data.dataset
 from tqdm import tqdm
 from ray import train, tune
 
@@ -8,15 +9,11 @@ from encoders.spike.latency_encoder import LatencyEncoder
 from data.dataset.random_dataset import RandomDataset, DataType, OutputType
 from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
 
-from network.nodes.node import Node
-from network.nodes.leaky_node import LeakyNode
-from network.nodes.den_node import DENNode
-from network.nodes.single_spike_node import SingleSpikeNode
-from network.topology.simple_connection import SimpleConnection
-from network.topology.voltage_conv_connection import VoltageConvConnection
 from network.topology.network import Network
 from network.learning.optimizers import MomentumOptimizer
 from network.loss.binary_loss import BinaryLoss
+
+from network.network_factory import NetworkFactory
 
 import numpy as np
 
@@ -24,67 +21,43 @@ class Trial:
     """
     A class to run a trial of a spiking neural network with a defined configuration.
     """
-
     @staticmethod
-    def run(config: Configuration, report: bool = True, early_stopping_patience: int = 25):
-        """
-        Run the trial using the specified configuration with early stopping.
-
-        :param config: A Configuration object that holds the parameters for the trial.
-        :param report: Whether to report metrics for Ray Tune.
-        :param early_stopping_patience: Number of epochs to wait for improvement before stopping early.
-        """
-        # Set device to GPU if available, otherwise use CPU
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    def train(network: torch.nn.Module,
+              criterion : torch.nn.Module,
+              optimizer: torch.optim.Optimizer,
+              device: str,
+              network_config: dict,
+              train_dataset: torch.utils.data.Dataset,
+              val_dataset: torch.utils.data.Dataset,
+              early_stopping_patience: int = 25,
+              report : bool = False):
         
-        # Initialize dataset and move it to the correct device
-        dataset = RandomDataset(
-            config,
-            DataType.TRAIN,
-            OutputType.TORCH,
-            LatencyEncoder(config, 1)
-        )
-
-        # Initialize layers and connection, and move them to the correct device
-        input_layer = DENNode(config, config[MODEL_NS.NUM_INPUTS], device=device)
-        output_layer = SingleSpikeNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=True)
-        connection = VoltageConvConnection(input_layer, output_layer, beta=config[MODEL_NS.BETA], device=device)
-
-        # Create a network with layers and connection
-        network = Network(config[DATA_NS.BATCH_SIZE], False, device=device)
-        network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
-        network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
-        network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
-
-        # Set up optimizer and loss function
-        optimizer = torch.optim.Adam(connection.parameters(), lr=config["lr"])
-        # optimizer = MomentumOptimizer(connection.parameters(), lr=config["lr"], momentum=config["momentum"])
-        
-        criterion = BinaryLoss(device=device)
-
-        num_epochs = config[MODEL_NS.EPOCHS]
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=config["batch_size"], shuffle=True)
-        
-        valid_size = int(config[DATA_NS.DATASET_SIZE] * (config[DATA_NS.VALIDATION_PERCENTAGE] / 100))
-        valid_dataset = torch.utils.data.Subset(dataset, np.arange(1, valid_size))
-        valid_dataloader = torch.utils.data.DataLoader(valid_dataset, batch_size=64)#config["batch_size"])
-
         # Early stopping variables
         best_loss = np.inf
         patience_counter = 0
+        
+        num_epochs = network_config[MODEL_NS.EPOCHS]
+        
+        train_dataloader = torch.utils.data.DataLoader(
+            train_dataset,
+            batch_size=network_config["batch_size"],
+            shuffle=True)
 
+        optimizer.zero_grad() #TODO: figure out where to put it
+        
         for epoch in range(num_epochs):
-            running_loss = 0.0
             correct_predictions = 0
             total_predictions = 0
-
+ 
             # Training loop
-            progress_bar = tqdm(enumerate(dataloader), total=len(dataloader), desc=f"Epoch [{epoch+1}/{num_epochs}]")
+            progress_bar = tqdm(
+                enumerate(train_dataloader),
+                total=len(train_dataloader),
+                desc=f"Epoch [{epoch+1}/{num_epochs}]")
+            
             for i, (inputs, labels) in progress_bar:
                 inputs = inputs.to(device)  # Move inputs to the correct device
                 labels = labels.to(device)  # Move labels to the correct device
-                
-                optimizer.zero_grad()
 
                 # Forward pass
                 outputs = network.forward(inputs)
@@ -97,7 +70,7 @@ class Trial:
                 optimizer.step()
 
                 # Update running loss and accuracy
-                running_loss += torch.sum(loss).item()
+                running_loss = torch.sum(loss).item()
                 predicted = criterion.classify(outputs)
                 correct_predictions += (predicted == labels).sum().item()
                 total_predictions += labels.size(0)
@@ -107,7 +80,7 @@ class Trial:
                 progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
 
             # Compute full dataset loss and accuracy after each epoch
-            total_loss, total_accuracy = Trial.evaluate(network, criterion, valid_dataloader)
+            total_loss, total_accuracy = Trial.evaluate(network, criterion, val_dataset)
 
             # Print epoch summary
             print(f"[Epoch {epoch + 1}] Loss: {total_loss:.3f}, Accuracy: {total_accuracy:.2f}%")
@@ -130,11 +103,9 @@ class Trial:
             if total_accuracy >= 99.9:
                 print(f"Early stopping at epoch {epoch + 1} due to 100% train accuracy.")
                 break
-            
-        connection.plot_weights_histogram(bins=30)
 
     @staticmethod
-    def evaluate(network, criterion, dataloader):
+    def evaluate(network, criterion, dataset):
         """
         Compute the loss, overall accuracy, and accuracy per label type over the entire dataset.
 
@@ -143,6 +114,10 @@ class Trial:
         :param dataloader: The DataLoader for the dataset.
         :return: Tuple of (loss, overall accuracy, accuracy per label type).
         """
+        dataloader = torch.utils.data.DataLoader(
+            dataset,
+            batch_size=64)
+        
         total_loss = 0.0
         correct_predictions = 0
         total_predictions = 0
@@ -185,3 +160,45 @@ class Trial:
             print(f"The accuracy for label: {label} is: {accuracy_per_label[label]:.2f}%")
 
         return average_loss, accuracy
+    
+    @staticmethod
+    def run(config: Configuration, report: bool = True, early_stopping_patience: int = 25):
+        """
+        Run the trial using the specified configuration with early stopping.
+
+        :param config: A Configuration object that holds the parameters for the trial.
+        :param report: Whether to report metrics for Ray Tune.
+        :param early_stopping_patience: Number of epochs to wait for improvement before stopping early.
+        """
+        # Set device to GPU if available, otherwise use CPU
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
+        # Initialize dataset and move it to the correct device
+        dataset = RandomDataset(
+            config,
+            DataType.TRAIN,
+            OutputType.TORCH,
+            LatencyEncoder(config, 1)
+        )
+
+        val_size = int(config[DATA_NS.DATASET_SIZE] * (config[DATA_NS.VALIDATION_PERCENTAGE] / 100))
+        val_dataset = torch.utils.data.Subset(dataset, np.arange(1, val_size))
+        
+        network = NetworkFactory.build_simple_network(config.dict, device)
+
+        # Set up optimizer and loss function
+        optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
+        # optimizer = MomentumOptimizer(connection.parameters(), lr=config["lr"], momentum=config["momentum"])
+        
+        criterion = BinaryLoss(device=device)
+        
+        Trial.train(
+            network, 
+            criterion, 
+            optimizer, 
+            device, 
+            config, 
+            dataset, 
+            val_dataset, 
+            report=report,
+            early_stopping_patience = early_stopping_patience)

@@ -62,7 +62,6 @@ class Network(torch.nn.Module):
         """
         self.connections[(source, target)] = connection
         self.add_module(source + "_to_" + target, connection)
-
         connection.train(self.learning)
 
     def save(self, file_name: str) -> None:
