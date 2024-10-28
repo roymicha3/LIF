@@ -1,9 +1,7 @@
-import os
-import matplotlib.pyplot as plt
 import torch
 import torch.utils.data.dataset
 from tqdm import tqdm
-from ray import train, tune
+from ray import train
 
 from encoders.spike.latency_encoder import LatencyEncoder
 from data.dataset.random_dataset import RandomDataset, DataType, OutputType
@@ -14,6 +12,7 @@ from network.learning.optimizers import MomentumOptimizer
 from network.loss.binary_loss import BinaryLoss
 
 from network.network_factory import NetworkFactory
+from network.utils import EarlyStopping
 
 import numpy as np
 
@@ -33,8 +32,7 @@ class Trial:
               report : bool = False):
         
         # Early stopping variables
-        best_loss = np.inf
-        patience_counter = 0
+        early_stopping = EarlyStopping(patience=early_stopping_patience)
         
         num_epochs = network_config[MODEL_NS.EPOCHS]
         
@@ -90,13 +88,9 @@ class Trial:
                 train.report({"loss": total_loss, "accuracy": total_accuracy})
 
             # Early stopping logic
-            if total_loss < best_loss:
-                best_loss = total_loss
-                patience_counter = 0  # Reset patience if the loss improves
-            else:
-                patience_counter += 1
+            early_stopping(total_loss, network)
 
-            if patience_counter >= early_stopping_patience:
+            if early_stopping.early_stop:
                 print(f"Early stopping at epoch {epoch + 1} due to no improvement in validation loss.")
                 break
 
@@ -187,6 +181,7 @@ class Trial:
         network = NetworkFactory.build_simple_network(config.dict, device)
 
         # Set up optimizer and loss function
+        # optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
         optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
         # optimizer = MomentumOptimizer(connection.parameters(), lr=config["lr"], momentum=config["momentum"])
         
