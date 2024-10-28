@@ -1,8 +1,6 @@
 from torch import nn
 import torch
 
-from network.nodes.single_spike_node import SingleSpikeNode
-
 class BinaryLoss(nn.Module):
     
     def __init__(self, device=None, *args, **kwargs) -> None:

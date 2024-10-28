@@ -36,7 +36,6 @@ class VoltageConvConnection(SimpleConnection):
         :param output_grad: Gradient of the loss with respect to the output.
         :return: Gradients with respect to the input, weights.
         """
-        #TODO: implement this:
         # w_grad = zeros_like(self.w) -> (n, m)
         # output -> (b, T, n)
         # input -> (b, T, m)
@@ -53,15 +52,15 @@ class VoltageConvConnection(SimpleConnection):
         
         grad = output_grad.output_grad
         b = grad.size(0)
-        n = grad.size(1)
+        n = grad.size(-1)
         
-        a = torch.exp(self.beta * output)
+        exp = output_grad.info["exp"]
         for i in range(n):
-            a_i = a[:, :, i].unsqueeze(1)
-            l = torch.sum(a_i, dim=-1).squeeze()
-            res = grad[:, i].unsqueeze(-1) * torch.bmm(a_i, input_)
+            exp_i = exp[:, :, i].unsqueeze(1)
+            res = grad[:, i].unsqueeze(-1) * torch.bmm(exp_i, input_)
             
-            w_grad[:, i] = torch.sum(res / l.unsqueeze(-1).unsqueeze(-1), dim=0) / b
+            # summing over batch gradient
+            w_grad[:, i] = torch.sum(res, dim=0) / b
         
         # Compute the gradient of the input
         grad_input = output_grad.output_grad @ self.w.t()  # Backpropagate through weights

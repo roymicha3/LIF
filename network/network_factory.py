@@ -5,6 +5,7 @@ from network.nodes.den_node import DENNode
 from network.nodes.single_spike_node import SingleSpikeNode
 from network.topology.simple_connection import SimpleConnection
 from network.topology.voltage_conv_connection import VoltageConvConnection
+from network.nodes.exp_node import ExpNode
 
 from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
 
@@ -59,11 +60,11 @@ class NetworkFactory:
         """
         # Initialize input and output layers with specified configurations
         input_layer = DENNode(config, config[MODEL_NS.NUM_INPUTS], device=device)
-        output_layer = SingleSpikeNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=True)
+        output_layer = ExpNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=True)
         connection = VoltageConvConnection(input_layer, output_layer, beta=config[MODEL_NS.BETA], device=device)
 
         # Create the network and add layers and connection
-        network = Network(config[DATA_NS.BATCH_SIZE], use_spiking=False, device=device)
+        network = Network(config[DATA_NS.BATCH_SIZE], device=device)
         network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
         network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
         network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)

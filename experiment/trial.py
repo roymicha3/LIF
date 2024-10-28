@@ -178,7 +178,7 @@ class Trial:
         val_size = int(config[DATA_NS.DATASET_SIZE] * (config[DATA_NS.VALIDATION_PERCENTAGE] / 100))
         val_dataset = torch.utils.data.Subset(dataset, np.arange(1, val_size))
         
-        network = NetworkFactory.build_simple_network(config.dict, device)
+        network = NetworkFactory.build_voltage_convolution_network(config.dict, device)
 
         # Set up optimizer and loss function
         # optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
