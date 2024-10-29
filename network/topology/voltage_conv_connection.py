@@ -43,13 +43,12 @@ class VoltageConvConnection(SimpleConnection):
         b = grad.size(0)
         n = grad.size(-1)
         
+        mean_batch_input = torch.sum(input_, dim=0) / b
         exp = output_grad.info["exp"]
+        
         for i in range(n):
-            exp_i = exp[:, :, i].unsqueeze(1)
-            res = grad[:, i].unsqueeze(-1) * torch.bmm(exp_i, input_)
-            
-            # summing over batch gradient
-            w_grad[:, i] = torch.sum(res, dim=0) / b
+            exp_i = exp[:, :, i]
+            w_grad[:, i] = grad[:, i].unsqueeze(-1) * torch.mm(exp_i, mean_batch_input)
         
         # Compute the gradient of the input
         grad_input = output_grad.output_grad @ self.w.t()  # Backpropagate through weights

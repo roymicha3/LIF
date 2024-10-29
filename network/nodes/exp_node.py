@@ -55,7 +55,7 @@ class ExpNode(Node):
         res = torch.sum(exp, dim=-2) * self._dt
         
         if torch.is_grad_enabled():
-            self.saved_tensors = exp
+            self.saved_tensors = exp.detach()
         
         return torch.log(res) - self._threshold
 
@@ -82,6 +82,8 @@ class ExpNode(Node):
         
         for i in range(n):
             exp[:, :, i] = exp[:, :, i] / torch.sum(exp[:, :, i], dim=-1, keepdim=True)
+        
+        self.saved_tensors = None
         
         info = {"exp": exp}
         return GradWrapper(output_grad=output_grad, info=info)

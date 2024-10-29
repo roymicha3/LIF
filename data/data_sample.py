@@ -67,7 +67,10 @@ class DataSample:
         """
         Returns the label.
         """
-        return torch.tensor(self._label)
+        if not isinstance(self._label, torch.Tensor):
+            self._label = torch.tensor(self._label)
+        
+        return self._label.clone().detach()
     
     def __getitem__(self, index):
         """
