@@ -42,7 +42,9 @@ class SimpleConnection(Connection):
 
         output = input_ @ self.w  # Matrix multiplication between input spikes and weights
 
-        self.saved_tensors = input_, output  # Save for backward pass
+        if torch.is_grad_enabled():
+            self.saved_tensors = input_, output  # Save for backward pass
+        
         return output
 
     def backward(self, output_grad: GradWrapper) -> tuple:

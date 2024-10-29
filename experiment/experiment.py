@@ -80,7 +80,7 @@ def simple_tempotron_tune_hyperparameters():
     )
     results = tuner.fit()
     
-    best_result = results.get_best_result("accuracy", "min")
+    best_result = results.get_best_result("accuracy", "max")
 
     best_config = best_result.config 
     print(f"Best trial config: {best_config}")

@@ -54,7 +54,9 @@ class ExpNode(Node):
         exp = torch.exp(self._beta * input_)
         res = torch.sum(exp, dim=-2) * self._dt
         
-        self.saved_tensors = (input_, exp)
+        if torch.is_grad_enabled():
+            self.saved_tensors = exp
+        
         return torch.log(res) - self._threshold
 
     
@@ -74,9 +76,9 @@ class ExpNode(Node):
             Gradients of the loss with respect to the input and the saved max index.
         """
         # Retrieve the max index saved during the forward pass.
-        input_, exp = self.saved_tensors
+        exp = self.saved_tensors
         
-        n = input_.size(2)
+        n = output_grad.size(-1)
         
         for i in range(n):
             exp[:, :, i] = exp[:, :, i] / torch.sum(exp[:, :, i], dim=-1, keepdim=True)

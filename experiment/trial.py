@@ -77,6 +77,8 @@ class Trial:
                 accuracy = 100 * correct_predictions / total_predictions
                 progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
 
+            torch.cuda.empty_cache()
+            
             # Compute full dataset loss and accuracy after each epoch
             total_loss, total_accuracy = Trial.evaluate(network, criterion, val_dataset)
 
@@ -178,7 +180,7 @@ class Trial:
         val_size = int(config[DATA_NS.DATASET_SIZE] * (config[DATA_NS.VALIDATION_PERCENTAGE] / 100))
         val_dataset = torch.utils.data.Subset(dataset, np.arange(1, val_size))
         
-        network = NetworkFactory.build_voltage_convolution_network(config.dict, device)
+        network = NetworkFactory.build_simple_network(config, device)
 
         # Set up optimizer and loss function
         # optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])

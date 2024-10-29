@@ -36,17 +36,6 @@ class VoltageConvConnection(SimpleConnection):
         :param output_grad: Gradient of the loss with respect to the output.
         :return: Gradients with respect to the input, weights.
         """
-        # w_grad = zeros_like(self.w) -> (n, m)
-        # output -> (b, T, n)
-        # input -> (b, T, m)
-        # grad -> (b, n)
-        
-        # for i in range(n):
-        #     a = exp(beta * output[:,:,i]) ->(b, T)
-        #     l = sum(a, dim=1) -> (b)
-        #     res = grad[:, i] * bmm(a, input) -> (b, m)
-            
-        #     w_grad[i,:] = sum(res / l) / b
         w_grad = torch.zeros_like(self.w)
         input_, output = self.saved_tensors
         
