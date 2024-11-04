@@ -1,10 +1,10 @@
-import numpy as np
 import torch
-
+import numpy as np
+from typing import Tuple, Optional
 
 from network.nodes.node import Node
-from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
 from network.topology.connection import Connection
+from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
 
 class SimpleConnection(Connection):
     """
@@ -13,17 +13,16 @@ class SimpleConnection(Connection):
 
     def __init__(
         self,
-        source: Node,
-        target: Node,
-        norm: np.int32 = 1,
-        device=None
-    ) -> None:
+        w: Optional[torch.Tensor] = None,
+        dim: Optional[Tuple[int, int]] = None,
+        device: Optional[str] = None,
+        norm: np.int32 = 1) -> None:
         """
         :param source: A layer of nodes from which the connection originates.
         :param target: A layer of nodes to which the connection connects.
         :param bias: Whether to include a bias term in the connection.
         """
-        super().__init__(None, source, target, device=device)
+        super().__init__(w, dim, device=device)
         self.norm = norm
         self.saved_tensors = None
 
@@ -65,8 +64,6 @@ class SimpleConnection(Connection):
             input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
 
         res = []
-        
-        # plasticity_induction = output_grad.info["plasticity_induction"]
         
         # enumerating over batch data
         for i, idx in enumerate(max_idx):
