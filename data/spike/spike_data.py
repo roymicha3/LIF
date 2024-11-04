@@ -45,6 +45,12 @@ class SpikeData:
         Return the mean firing rate of the neuron.
         """
         return len(self._spike_times) / self._T
+    
+    def silence(self, cutoff: int):
+        """
+        Silence all spikes above the given cutoff
+        """
+        self._spike_times = [t for t in self._spike_times if t <= cutoff]
 
 
     def plot_spike_train(self) -> None:

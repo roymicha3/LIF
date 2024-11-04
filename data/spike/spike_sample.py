@@ -27,6 +27,13 @@ class SpikeSample(DataSample):
     @property
     def size(self):
         return self._num_of_neurons
+    
+    def silence(self, cutoff: int):
+        """
+        Silence all the spikes above the given cutoff
+        """
+        for spike_seq in self._data:
+            spike_seq.silence(cutoff)
         
     def to_torch(self):
         input_size = self._num_of_neurons
