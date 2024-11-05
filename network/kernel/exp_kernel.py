@@ -2,6 +2,8 @@ import torch
 import torch.autograd
 # from typing import override
 
+# TODO: DELETE this class after copying the logic into the neuron class!!!!!
+
 from network.nodes.node import Node
 from common import Configuration, SPIKE_NS, MODEL_NS
 from network.learning.grad_wrapper import GradWrapper

@@ -1,11 +1,11 @@
 from network.topology.network import Network
-from network.nodes.node import Node
-from network.nodes.leaky_node import LeakyNode
-from network.nodes.den_node import DENNode
-from network.nodes.single_spike_node import SingleSpikeNode
+from network.kernel.kernel import Kernel
+from network.kernel.leaky_kernel import LeakyKernel
+from network.kernel.den_kernel import DENKernel
+from network.kernel.single_spike_node import SingleSpikeNode
 from network.topology.simple_connection import SimpleConnection
 from network.topology.voltage_conv_connection import VoltageConvConnection
-from network.nodes.exp_node import ExpNode
+# from network.kernel.exp_node import ExpNode # TODO: fix this!
 
 from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
 

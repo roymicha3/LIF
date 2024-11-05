@@ -1,8 +1,9 @@
 import torch
 import matplotlib.pyplot as plt
-from network.nodes.node import Node
+from network.kernel.kernel import Kernel
 from network.topology.connection import Connection
 from play.neuron import Neuron
+from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
 
 class SingleSpikeNeuron(Neuron):
@@ -12,7 +13,7 @@ class SingleSpikeNeuron(Neuron):
     recomputes the voltage based on these spike times.
     """
 
-    def __init__(self, kernel: Node, connection: Connection, threshold: float = 1.0):
+    def __init__(self, config, kernel: Kernel, connection: Connection, threshold: float = 1.0):
         """
         Initialize the SingleSpikeNeuron.
 
@@ -21,12 +22,12 @@ class SingleSpikeNeuron(Neuron):
             connection (Connection): The connection object for signal propagation.
             threshold (float): The voltage threshold for spike generation. Default is 1.0.
         """
-        super().__init__()
+        super().__init__(config)
         self._kernel = kernel
         self._connection = connection
         self._threshold = threshold
         
-    def forward(self, input_spikes):
+    def forward(self, input_spikes: SpikeSample):
         """
         Perform the forward pass of the neuron.
 
@@ -36,7 +37,21 @@ class SingleSpikeNeuron(Neuron):
         Returns:
             The result of the forward pass.
         """
-        return super().forward(input_spikes)
+        initial_voltage = self._compute_initial_voltage(input_spikes)
+        spike_times = self.first_spike_index(initial_voltage, self._threshold)
+        final_voltage = self._recompute_voltage(input_spikes, spike_times)
+        
+        self.saved_tensors = initial_voltage, final_voltage, spike_times
+        
+        data = []
+        for neuron_idx in range(self._connection.size[1]):
+            data.append(
+                SpikeData(
+                    self._config,
+                    neuron_idx,
+                    spike_times[neuron_idx]))
+        
+        return SpikeSample(self._config, data, input_spikes.get_label())
     
     def backward(self, output_grad):
         """
@@ -48,22 +63,7 @@ class SingleSpikeNeuron(Neuron):
         Returns:
             The result of the backward pass.
         """
-        return super().backward(output_grad)
-    
-    def _prepare(self, input_spikes: SpikeSample):
-        """
-        Prepare the neuron's response to input spikes.
-
-        Args:
-            input_spikes (SpikeSample): The input spike sample.
-
-        Returns:
-            torch.Tensor: The final voltage after processing.
-        """
-        initial_voltage = self._compute_initial_voltage(input_spikes)
-        spike_times = self.first_spike_index(initial_voltage, self._threshold)
-        final_voltage = self._recompute_voltage(input_spikes, spike_times)
-        return final_voltage
+        raise NotImplementedError
 
     def _compute_initial_voltage(self, input_spikes: SpikeSample) -> torch.Tensor:
         """

@@ -4,7 +4,7 @@ import torch.utils.data.dataset
 
 from encoders.spike.latency_encoder import LatencyEncoder
 from data.dataset.random_dataset import RandomDataset, DataType, OutputType
-from network.nodes.den_node import DENNode
+from network.kernel.den_kernel import DENKernel
 from network.topology.simple_connection import SimpleConnection
 from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
 
@@ -46,7 +46,6 @@ ERROR = 1
 def main():
     print("Playing with pytorch :)")
     
-    IDX = 87
     
     # Set device to GPU if available, otherwise use CPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -58,14 +57,17 @@ def main():
         OutputType.TORCH,
         LatencyEncoder(MODEL_ATTRIBUTES, 1))
     
-    raw_data = dataset.get_raw(IDX)
-    
-    kernel = DENNode(MODEL_ATTRIBUTES, MODEL_ATTRIBUTES[MODEL_NS.NUM_INPUTS], device)
+    kernel = DENKernel(MODEL_ATTRIBUTES, MODEL_ATTRIBUTES[MODEL_NS.NUM_INPUTS], device)
     connection = SimpleConnection(
         dim=(MODEL_ATTRIBUTES[MODEL_NS.NUM_INPUTS], MODEL_ATTRIBUTES[MODEL_NS.NUM_OUTPUTS]),
         device=device)
     
     neuron = SingleSpikeNeuron(kernel, connection)
+    
+    IDX = 0
+    
+    raw_data = dataset.get_raw(IDX)
+    
     
     neuron.plot_voltages(raw_data)
     
