@@ -5,6 +5,7 @@ import torch.autograd
 from network.nodes.node import Node
 from common import Configuration, SPIKE_NS
 from network.learning.grad_wrapper import GradWrapper
+from network.utils import find_spike
 
 # PLASTICITY_INDUCTION = 1.0e-3
 class SingleSpikeNode(Node):
@@ -90,13 +91,33 @@ class SingleSpikeNode(Node):
             The difference between the maximum value of the input and the threshold for firing.
         """
         # Find the maximum value and its index along the appropriate dimension (supports batch processing).
-        max_val, max_idx = torch.max(input_, dim=-input_.dim() + 1)
+        # max_val, max_idx = torch.max(input_, dim=-input_.dim() + 1)
         
+        batch = input_.size(0)
+        n = input_.size(-1)
+        
+        voltages = [0] * batch
+        indices = [0] * batch
+        
+        for b in range(batch):
+            indices[b] = []
+            voltages[b] = []
+            for i in range(n):
+                idx = find_spike(input_[b, :, i].squeeze(), self._threshold)
+                if idx > 0:
+                    voltage = input_[b, idx, i]
+                else:
+                    voltage = torch.max(input_[b, :, i]).item()
+                
+                indices[b].append(idx)
+                voltages[b].append(voltage)
+        
+        voltages = torch.tensor(voltages)
         # Save the index of the max value for use in the backward pass.
-        self.saved_tensors = max_idx, max_val
+        self.saved_tensors = indices, voltages
         
         # Compute the difference between the max value and the threshold.
-        threshold_diff = max_val - self._threshold
+        threshold_diff = voltages - self._threshold
         
         return threshold_diff
 

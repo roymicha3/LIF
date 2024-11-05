@@ -1,12 +1,14 @@
-"""
-the main of the project
-"""
 import os
+import torch
+import torch.utils.data.dataset
 
-from common import MODEL_NS, SPIKE_NS, DATA_NS, Configuration
-from analysis.visualization import *
-from experiment.trial import Trial
-from experiment.experiment import simple_tempotron_tune_hyperparameters
+from encoders.spike.latency_encoder import LatencyEncoder
+from data.dataset.random_dataset import RandomDataset, DataType, OutputType
+from network.nodes.den_node import DENNode
+from network.topology.simple_connection import SimpleConnection
+from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
+
+from play.single_spike_neuron import SingleSpikeNeuron
 
 
 MODEL_ATTRIBUTES = \
@@ -38,22 +40,36 @@ MODEL_ATTRIBUTES = \
     SPIKE_NS.v_thr                   : 1,
 }
 
-def main():
-    """
-    runs the main logic
-    """
-    print("This is the thesis main!")
-    
-    config = Configuration(MODEL_ATTRIBUTES)
-    
-    Trial.run(config, report=False)
-    
-    # simple_tempotron_tune_hyperparameters()
-    
-    # visualizer = RandomSpikePattern(config)
-    # visualizer.den_response()
-    
-    
+SUCCESS = 0
+ERROR = 1
 
-if __name__ == "__main__":
+def main():
+    print("Playing with pytorch :)")
+    
+    IDX = 87
+    
+    # Set device to GPU if available, otherwise use CPU
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
+    # Initialize dataset and move it to the correct device
+    dataset = RandomDataset(
+        MODEL_ATTRIBUTES,
+        DataType.TRAIN,
+        OutputType.TORCH,
+        LatencyEncoder(MODEL_ATTRIBUTES, 1))
+    
+    raw_data = dataset.get_raw(IDX)
+    
+    kernel = DENNode(MODEL_ATTRIBUTES, MODEL_ATTRIBUTES[MODEL_NS.NUM_INPUTS], device)
+    connection = SimpleConnection(
+        dim=(MODEL_ATTRIBUTES[MODEL_NS.NUM_INPUTS], MODEL_ATTRIBUTES[MODEL_NS.NUM_OUTPUTS]),
+        device=device)
+    
+    neuron = SingleSpikeNeuron(kernel, connection)
+    
+    neuron.plot_voltages(raw_data)
+    
+    return SUCCESS
+
+if __name__ == '__main__':
     main()

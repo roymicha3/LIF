@@ -27,6 +27,7 @@ class SimpleConnection(Connection):
         self.saved_tensors = None
 
 
+
     def forward(self, input_: torch.Tensor) -> torch.Tensor:
         """
         Compute pre-activations given spikes using connection weights and bias.

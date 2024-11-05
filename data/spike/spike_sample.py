@@ -47,6 +47,9 @@ class SpikeSample(DataSample):
             cutoff: Time threshold above which spikes will be silenced.
         """
         new_sample = self.__copy__()
+        if cutoff <= 0:
+            return new_sample
+        
         for spike_seq in new_sample._data:
             spike_seq.silence(cutoff)
             

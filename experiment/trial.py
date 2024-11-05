@@ -184,8 +184,8 @@ class Trial:
 
         # Set up optimizer and loss function
         # optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
-        optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
-        # optimizer = MomentumOptimizer(connection.parameters(), lr=config["lr"], momentum=config["momentum"])
+        # optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
+        optimizer = MomentumOptimizer(network.parameters(), lr=config["lr"], momentum=config["momentum"])
         
         criterion = BinaryLoss(device=device)
         

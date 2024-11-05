@@ -37,6 +37,7 @@ class Connection(ABC, Module):
             self.w = Parameter(w, requires_grad=True)
         
         self.device = device
+        self.w.to(self.device)
         
     @property
     def size(self) -> Tuple[int, int]:
@@ -119,6 +120,9 @@ class Connection(ABC, Module):
         """
         assert 0 <= k < self.w.size(1), f"k must be between 0 and {self.w.size(1) - 1}"
         
+        if input_.dim() < 3:
+            input_ = input_.unsqueeze(0) # add batch dimension
+            
         # Compute the dot product of input with only the k-th column of weights
         result = torch.einsum('bti,i->bt', input_, self.w[:, k])
         

@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 
 class EarlyStopping:
     """
@@ -42,3 +43,38 @@ class EarlyStopping:
                 self.early_stop = True
                 if self.verbose:
                     print("Early stopping triggered")
+
+import torch
+import torch.nn.functional as F
+
+def find_spike(tensor, threshold):
+    # Ensure tensor has at least 3 elements to find a local minimum
+    if tensor.numel() < 3:
+        return -1
+
+    # Add singleton dimension and reshape for convolution
+    tensor = tensor.view(1, 1, -1)
+
+    # Create a kernel to detect local minima by checking neighbors
+    kernel = torch.tensor([1.0, -2.0, 1.0], device=tensor.device).view(1, 1, -1)
+    
+    # Apply 1D convolution with padding to keep dimensions the same
+    convolved = F.conv1d(tensor, kernel, padding=1)
+
+    # Find indices of local minima
+    local_minima_mask = (convolved < 0).squeeze()
+
+    # Filter local minima that are above the threshold
+    tensor_flat = tensor.squeeze()
+    valid_minima_mask = local_minima_mask & (tensor_flat > threshold)
+    valid_indices = torch.nonzero(valid_minima_mask).squeeze()
+
+    # Return the index of the first valid local minimum, or None if none found
+    if valid_indices.numel() <= 0:
+        return -1
+    
+    if valid_indices.numel() == 1:
+        return valid_indices.item()
+    
+    return valid_indices[0].item()
+
