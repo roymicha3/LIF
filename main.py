@@ -8,7 +8,7 @@ from network.kernel.den_kernel import DENKernel
 from network.topology.simple_connection import SimpleConnection
 from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
 
-from play.single_spike_neuron import SingleSpikeNeuron
+from play.single_spike_neuron import SingleSpikeNeuron, NeuronOutputType
 
 
 MODEL_ATTRIBUTES = \
@@ -62,11 +62,15 @@ def main():
         dim=(MODEL_ATTRIBUTES[MODEL_NS.NUM_INPUTS], MODEL_ATTRIBUTES[MODEL_NS.NUM_OUTPUTS]),
         device=device)
     
-    neuron = SingleSpikeNeuron(kernel, connection)
+    neuron = SingleSpikeNeuron(MODEL_ATTRIBUTES, kernel, connection, type_=NeuronOutputType.VALUE)
     
-    IDX = 0
+    
+    IDX = 5
+    
+    # data, label = dataset[IDX] # TODO: fix return type
     
     raw_data = dataset.get_raw(IDX)
+    res = neuron.forward(raw_data)
     
     
     neuron.plot_voltages(raw_data)

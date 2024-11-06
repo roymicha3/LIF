@@ -2,9 +2,10 @@ import torch
 import matplotlib.pyplot as plt
 from network.kernel.kernel import Kernel
 from network.topology.connection import Connection
-from play.neuron import Neuron
+from play.neuron import Neuron, NeuronOutputType
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
+from common import SPIKE_NS
 
 class SingleSpikeNeuron(Neuron):
     """
@@ -13,7 +14,12 @@ class SingleSpikeNeuron(Neuron):
     recomputes the voltage based on these spike times.
     """
 
-    def __init__(self, config, kernel: Kernel, connection: Connection, threshold: float = 1.0):
+    def __init__(self,
+                config,
+                kernel: Kernel,
+                connection: Connection,
+                threshold: float = 1.0,
+                type_: NeuronOutputType = NeuronOutputType.SPIKE):
         """
         Initialize the SingleSpikeNeuron.
 
@@ -22,10 +28,12 @@ class SingleSpikeNeuron(Neuron):
             connection (Connection): The connection object for signal propagation.
             threshold (float): The voltage threshold for spike generation. Default is 1.0.
         """
-        super().__init__(config)
+        super().__init__(config, type_)
         self._kernel = kernel
         self._connection = connection
-        self._threshold = threshold
+        self._threshold = threshold if threshold else config[SPIKE_NS.v_thr]
+        
+        self.saved_tensors = None
         
     def forward(self, input_spikes: SpikeSample):
         """
@@ -43,13 +51,17 @@ class SingleSpikeNeuron(Neuron):
         
         self.saved_tensors = initial_voltage, final_voltage, spike_times
         
+        if self._type is NeuronOutputType.VALUE:
+            return torch.max(final_voltage, dim=-2)[0] - self._threshold
+            
         data = []
         for neuron_idx in range(self._connection.size[1]):
+            spike = spike_times[neuron_idx]
+            if spike == 0:
+                continue
+            
             data.append(
-                SpikeData(
-                    self._config,
-                    neuron_idx,
-                    spike_times[neuron_idx]))
+                SpikeData(self._config, neuron_idx, [spike * self._config[SPIKE_NS.dt]]))
         
         return SpikeSample(self._config, data, input_spikes.get_label())
     

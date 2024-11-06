@@ -2,7 +2,6 @@ import torch
 import numpy as np
 from typing import Tuple, Optional
 
-from network.nodes.node import Node
 from network.topology.connection import Connection
 from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
 
