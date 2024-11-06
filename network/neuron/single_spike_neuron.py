@@ -2,7 +2,7 @@ import torch
 import matplotlib.pyplot as plt
 from network.kernel.kernel import Kernel
 from network.topology.connection import Connection
-from play.neuron import Neuron, NeuronOutputType
+from network.neuron.neuron import Neuron, NeuronOutputType
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
 from common import SPIKE_NS
