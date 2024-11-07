@@ -2,9 +2,8 @@ from network.topology.network import Network
 from network.kernel.kernel import Kernel
 from network.kernel.leaky_kernel import LeakyKernel
 from network.kernel.den_kernel import DENKernel
-from network.kernel.single_spike_node import SingleSpikeNode
+from network.neuron.single_spike_neuron import SingleSpikeNeuron, NeuronOutputType
 from network.topology.simple_connection import SimpleConnection
-from network.topology.voltage_conv_connection import VoltageConvConnection
 # from network.kernel.exp_node import ExpNode # TODO: fix this!
 
 from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
@@ -34,39 +33,37 @@ class NetworkFactory:
             Network: A configured network with input and output layers connected by a SimpleConnection.
         """
         # Initialize input and output layers with specified configurations
-        input_layer = DENNode(config, config[MODEL_NS.NUM_INPUTS], device=device)
-        output_layer = SingleSpikeNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=True)
-        connection = SimpleConnection(input_layer, output_layer, device=device)
+        kernel = DENKernel(config, config[MODEL_NS.NUM_INPUTS], device=device)
+        connection = SimpleConnection(dim=(config[MODEL_NS.NUM_INPUTS], config[MODEL_NS.NUM_OUTPUTS]), device=device)
+        neuron = SingleSpikeNeuron(config, kernel, connection, type_=NeuronOutputType.VALUE)
 
         # Create the network and add layers and connection
         network = Network(config[DATA_NS.BATCH_SIZE], device=device)
-        network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
-        network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
-        network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
+        network.add_layer(neuron, "neuron")
         
         return network
 
-    @staticmethod
-    def build_voltage_convolution_network(config: dict, device: str) -> Network:
-        """
-        Constructs a network with a voltage-based convolutional connection between input and output layers.
+    # @staticmethod
+    # def build_voltage_convolution_network(config: dict, device: str) -> Network:
+    #     """
+    #     Constructs a network with a voltage-based convolutional connection between input and output layers.
 
-        Args:
-            config (dict): Configuration dictionary containing model parameters.
-            device (str): Device to which the network components are moved (e.g., 'cpu' or 'cuda').
+    #     Args:
+    #         config (dict): Configuration dictionary containing model parameters.
+    #         device (str): Device to which the network components are moved (e.g., 'cpu' or 'cuda').
 
-        Returns:
-            Network: A configured network with input and output layers connected by a VoltageConvConnection.
-        """
-        # Initialize input and output layers with specified configurations
-        input_layer = DENNode(config, config[MODEL_NS.NUM_INPUTS], device=device)
-        output_layer = ExpNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=True)
-        connection = VoltageConvConnection(input_layer, output_layer, beta=config[MODEL_NS.BETA], device=device)
+    #     Returns:
+    #         Network: A configured network with input and output layers connected by a VoltageConvConnection.
+    #     """
+    #     # Initialize input and output layers with specified configurations
+    #     input_layer = DENNode(config, config[MODEL_NS.NUM_INPUTS], device=device)
+    #     output_layer = ExpNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=True)
+    #     connection = VoltageConvConnection(input_layer, output_layer, beta=config[MODEL_NS.BETA], device=device)
 
-        # Create the network and add layers and connection
-        network = Network(config[DATA_NS.BATCH_SIZE], device=device)
-        network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
-        network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
-        network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
+    #     # Create the network and add layers and connection
+    #     network = Network(config[DATA_NS.BATCH_SIZE], device=device)
+    #     network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
+    #     network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
+    #     network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
         
-        return network
+    #     return network

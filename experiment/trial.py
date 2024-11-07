@@ -39,7 +39,8 @@ class Trial:
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=network_config["batch_size"],
-            shuffle=True)
+            shuffle=True,
+            collate_fn=lambda batch: ([sample[0] for sample in batch], [sample[1] for sample in batch]))
 
         optimizer.zero_grad() #TODO: figure out where to put it
         
@@ -54,8 +55,8 @@ class Trial:
                 desc=f"Epoch [{epoch+1}/{num_epochs}]")
             
             for i, (inputs, labels) in progress_bar:
-                inputs = inputs.to(device)  # Move inputs to the correct device
-                labels = labels.to(device)  # Move labels to the correct device
+                # inputs = inputs.to(device)  # Move inputs to the correct device
+                labels = torch.tensor(labels).to(device)  # Move labels to the correct device
 
                 # Forward pass
                 outputs = network.forward(inputs)
@@ -112,7 +113,8 @@ class Trial:
         """
         dataloader = torch.utils.data.DataLoader(
             dataset,
-            batch_size=64)
+            batch_size=64, 
+            collate_fn=lambda batch: ([sample[0] for sample in batch], [sample[1] for sample in batch]))
         
         total_loss = 0.0
         correct_predictions = 0
@@ -123,8 +125,8 @@ class Trial:
 
         with torch.no_grad():
             for inputs, labels in dataloader:
-                inputs = inputs.to(network.device)  # Ensure inputs are moved to the correct device
-                labels = labels.to(network.device)  # Move labels to the correct device
+                # inputs = inputs.to(network.device)  # Ensure inputs are moved to the correct device
+                labels = torch.tensor(labels).to(network.device)  # Move labels to the correct device
 
                 # Forward pass
                 outputs = network.forward(inputs)
@@ -173,7 +175,7 @@ class Trial:
         dataset = RandomDataset(
             config,
             DataType.TRAIN,
-            OutputType.TORCH,
+            OutputType.NORMAL,
             LatencyEncoder(config, 1)
         )
 
@@ -184,8 +186,8 @@ class Trial:
 
         # Set up optimizer and loss function
         # optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
-        # optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
-        optimizer = MomentumOptimizer(network.parameters(), lr=config["lr"], momentum=config["momentum"])
+        optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
+        # optimizer = MomentumOptimizer(network.parameters(), lr=config["lr"], momentum=config["momentum"])
         
         criterion = BinaryLoss(device=device)
         

@@ -9,6 +9,7 @@ from network.topology.simple_connection import SimpleConnection
 from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
 
 from network.neuron.single_spike_neuron import SingleSpikeNeuron, NeuronOutputType
+from experiment.trial import Trial
 
 
 MODEL_ATTRIBUTES = \
@@ -22,12 +23,12 @@ MODEL_ATTRIBUTES = \
     MODEL_NS.BETA                    : 50,
     
     # DATA PARAMETERS:
-    DATA_NS.BATCH_SIZE               : 16,
+    DATA_NS.BATCH_SIZE               : 1,
     DATA_NS.DATASET_SIZE             : 1000,
     DATA_NS.NUM_CLASSES              : 2,
     DATA_NS.TRAINING_PERCENTAGE      : 50,
     DATA_NS.TESTING_PERCENTAGE       : 25,
-    DATA_NS.VALIDATION_PERCENTAGE    : 100,
+    DATA_NS.VALIDATION_PERCENTAGE    : 50,
     DATA_NS.ROOT                     : os.path.join(".", "data", "data", "random"),
     
     # SPIKE PARAMETERS:
@@ -50,28 +51,30 @@ def main():
     # Set device to GPU if available, otherwise use CPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    # Initialize dataset and move it to the correct device
-    dataset = RandomDataset(
-        MODEL_ATTRIBUTES,
-        DataType.TRAIN,
-        OutputType.NORMAL,
-        LatencyEncoder(MODEL_ATTRIBUTES, 1))
+    Trial.run(MODEL_ATTRIBUTES,False, early_stopping_patience = 25)
     
-    kernel = DENKernel(MODEL_ATTRIBUTES, MODEL_ATTRIBUTES[MODEL_NS.NUM_INPUTS], device)
-    connection = SimpleConnection(
-        dim=(MODEL_ATTRIBUTES[MODEL_NS.NUM_INPUTS], MODEL_ATTRIBUTES[MODEL_NS.NUM_OUTPUTS]),
-        device=device)
+    # # Initialize dataset and move it to the correct device
+    # dataset = RandomDataset(
+    #     MODEL_ATTRIBUTES,
+    #     DataType.TRAIN,
+    #     OutputType.NORMAL,
+    #     LatencyEncoder(MODEL_ATTRIBUTES, 1))
     
-    neuron = SingleSpikeNeuron(MODEL_ATTRIBUTES, kernel, connection, type_=NeuronOutputType.VALUE)
+    # kernel = DENKernel(MODEL_ATTRIBUTES, MODEL_ATTRIBUTES[MODEL_NS.NUM_INPUTS], device)
+    # connection = SimpleConnection(
+    #     dim=(MODEL_ATTRIBUTES[MODEL_NS.NUM_INPUTS], MODEL_ATTRIBUTES[MODEL_NS.NUM_OUTPUTS]),
+    #     device=device)
     
-    IDX = 5
+    # neuron = SingleSpikeNeuron(MODEL_ATTRIBUTES, kernel, connection, type_=NeuronOutputType.VALUE)
     
-    data, label = dataset[IDX]
+    # IDX = 5
     
-    res = neuron.forward(data)
+    # data, label = dataset[IDX]
+    
+    # res = neuron.forward(data)
     
     
-    neuron.plot_voltages(data)
+    # neuron.plot_voltages(data)
     
     return SUCCESS
 

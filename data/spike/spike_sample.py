@@ -39,6 +39,11 @@ class SpikeSample(DataSample):
         """Return the number of neurons."""
         return self._num_of_neurons
     
+    @property
+    def label(self) -> int:
+        """Return the number of neurons."""
+        return self._label
+    
     def silence(self, cutoff: int):
         """
         Silence all spikes above the given cutoff.

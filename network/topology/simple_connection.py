@@ -51,10 +51,6 @@ class SimpleConnection(Connection):
         """
         grad = output_grad.grad.to(self.device)
         
-        # Check if input is a single sample or a batch
-        if input_.dim() == 1:  # Single sample
-            input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
-
         weight_grad = output_grad.weight_grad
         
         # Compute the gradient of the input

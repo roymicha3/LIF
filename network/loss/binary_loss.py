@@ -21,7 +21,7 @@ class BinaryLoss(nn.Module):
 
         # Ensure input and target are at least 2D (batch-wise)
         if input_.dim() == 1:
-            input_ = input_.unsqueeze(0)  # Add batch dimension
+            input_ = input_.unsqueeze(-1)  # Add batch dimension
         if input_.dim() == 3:
             input_ = input_.squeeze(1)
         

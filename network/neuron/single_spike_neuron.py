@@ -1,12 +1,13 @@
 import torch
 import matplotlib.pyplot as plt
+from typing import List
 from network.kernel.kernel import Kernel
 from network.topology.connection import Connection
 from network.neuron.neuron import Neuron, NeuronOutputType
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
 from common import SPIKE_NS
-from learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
+from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
 
 class SingleSpikeNeuron(Neuron):
     """
@@ -36,7 +37,7 @@ class SingleSpikeNeuron(Neuron):
         
         self.saved_tensors = None
         
-    def forward(self, input_spikes: SpikeSample):
+    def forward(self, input_spikes: List[SpikeSample]):
         """
         Perform the forward pass of the neuron.
 
@@ -46,14 +47,33 @@ class SingleSpikeNeuron(Neuron):
         Returns:
             The result of the forward pass.
         """
-        spike_tensor = input_spikes.to_torch()
-        input_voltage = self._kernel.forward(spike_tensor)
+        self.saved_tensors = [], [], []
+        res = []
+        for sample in input_spikes:
+            current_res = self.single_forward(sample)
+            res.append(current_res)
+        
+        input_voltage, final_voltage, spike_times = self.saved_tensors
+        
+        self.saved_tensors = torch.stack(input_voltage, dim=0), torch.stack(final_voltage, dim=0), torch.stack(spike_times, dim=0)
+        
+        if self._type is NeuronOutputType.VALUE:
+            return torch.tensor(res)
+            
+        return res
+    
+    def single_forward(self, input_spikes: SpikeSample):
+        input_spikes_tensor = input_spikes.to_torch()
+        
+        input_voltage = self._kernel.forward(input_spikes_tensor)
         initial_voltage = self._connection.forward(input_voltage)
         
         spike_times = self.first_spike_index(initial_voltage, self._threshold)
         final_voltage = self._recompute_voltage(input_spikes, spike_times)
         
-        self.saved_tensors = input_voltage, final_voltage, spike_times
+        self.saved_tensors[0].append(input_voltage)
+        self.saved_tensors[1].append(final_voltage)
+        self.saved_tensors[2].append(spike_times)
         
         if self._type is NeuronOutputType.VALUE:
             return torch.max(final_voltage, dim=-2)[0] - self._threshold
@@ -85,9 +105,11 @@ class SingleSpikeNeuron(Neuron):
         indices = res.indices
         voltage = res.values
         
-        weight_grads = torch.bmm(output_grad.grad, input_voltage[:, indices, :].t())
+        weight_grads = []
+        for input_, grad, index in zip(input_voltage, output_grad.grad, indices):
+            weight_grads.append(torch.mm(grad, input_[index, :]).t())
         
-        grad = ConnectionGradWrapper(output_grad, weight_grads)
+        grad = ConnectionGradWrapper(output_grad.grad, torch.stack(weight_grads, dim=0))
         input_grad = self._connection.backward(grad)
         
         return GradWrapper(input_grad)

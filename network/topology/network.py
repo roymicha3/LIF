@@ -6,7 +6,7 @@ from common import Configuration
 from network.kernel.kernel import Kernel
 from network.topology.connection import Connection
 from network.neuron.neuron import Neuron, NeuronOutputType
-from learning.grad_wrapper import GradWrapper
+from network.learning.grad_wrapper import GradWrapper
 
 
 class Network(torch.nn.Module):
@@ -68,7 +68,6 @@ class Network(torch.nn.Module):
         """
         forward function of the network
         """
-        data = GradWrapper(data)
         for layer in self.layers:
             data = layer.forward(data)
         
@@ -78,6 +77,7 @@ class Network(torch.nn.Module):
         """
         the backward function of the network
         """
+        grad = GradWrapper(grad)
         for layer in self.layers[::-1]:
             grad = layer.backward(grad)
 
