@@ -10,18 +10,18 @@ class GradWrapper:
     """
 
     def __init__(self, output_grad: torch.Tensor, info: dict = {}):
-        self._output_grad = output_grad
+        self.grad = output_grad
         self._info = info
 
     @property
-    def output_grad(self) -> torch.Tensor:
+    def grad(self) -> torch.Tensor:
         """
         Gets the underlying gradient tensor.
         """
         return self._output_grad
 
-    @output_grad.setter
-    def output_grad(self, new_output_grad: torch.Tensor):
+    @grad.setter
+    def grad(self, new_output_grad: torch.Tensor):
         """
         Sets the underlying gradient tensor.
         """

@@ -6,6 +6,7 @@ from network.neuron.neuron import Neuron, NeuronOutputType
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
 from common import SPIKE_NS
+from learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
 
 class SingleSpikeNeuron(Neuron):
     """
@@ -45,11 +46,14 @@ class SingleSpikeNeuron(Neuron):
         Returns:
             The result of the forward pass.
         """
-        initial_voltage = self._compute_initial_voltage(input_spikes)
+        spike_tensor = input_spikes.to_torch()
+        input_voltage = self._kernel.forward(spike_tensor)
+        initial_voltage = self._connection.forward(input_voltage)
+        
         spike_times = self.first_spike_index(initial_voltage, self._threshold)
         final_voltage = self._recompute_voltage(input_spikes, spike_times)
         
-        self.saved_tensors = initial_voltage, final_voltage, spike_times
+        self.saved_tensors = input_voltage, final_voltage, spike_times
         
         if self._type is NeuronOutputType.VALUE:
             return torch.max(final_voltage, dim=-2)[0] - self._threshold
@@ -65,7 +69,7 @@ class SingleSpikeNeuron(Neuron):
         
         return SpikeSample(self._config, data, input_spikes.get_label())
     
-    def backward(self, output_grad):
+    def backward(self, output_grad: GradWrapper) -> GradWrapper:
         """
         Perform the backward pass of the neuron.
 
@@ -75,7 +79,19 @@ class SingleSpikeNeuron(Neuron):
         Returns:
             The result of the backward pass.
         """
-        raise NotImplementedError
+        input_voltage, final_voltage, spike_times = self.saved_tensors
+        res = torch.max(final_voltage, dim=-2)
+        
+        indices = res.indices
+        voltage = res.values
+        
+        weight_grads = torch.bmm(output_grad.grad, input_voltage[:, indices, :].t())
+        
+        grad = ConnectionGradWrapper(output_grad, weight_grads)
+        input_grad = self._connection.backward(grad)
+        
+        return GradWrapper(input_grad)
+        
 
     def _compute_initial_voltage(self, input_spikes: SpikeSample) -> torch.Tensor:
         """

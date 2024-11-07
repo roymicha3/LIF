@@ -17,8 +17,6 @@ class SimpleConnection(Connection):
         device: Optional[str] = None,
         norm: np.int32 = 1) -> None:
         """
-        :param source: A layer of nodes from which the connection originates.
-        :param target: A layer of nodes to which the connection connects.
         :param bias: Whether to include a bias term in the connection.
         """
         super().__init__(w, dim, device=device)
@@ -40,13 +38,10 @@ class SimpleConnection(Connection):
             input_ = input_.unsqueeze(0)  # Add a batch dimension
 
         output = input_ @ self.w  # Matrix multiplication between input spikes and weights
-
-        if torch.is_grad_enabled():
-            self.saved_tensors = input_, output  # Save for backward pass
         
         return output
 
-    def backward(self, output_grad: GradWrapper) -> tuple:
+    def backward(self, output_grad: ConnectionGradWrapper) -> tuple:
         """
         Backward function for the learning rule.
         Computes the gradient of the loss with respect to inputs, weights, and bias.
@@ -54,40 +49,31 @@ class SimpleConnection(Connection):
         :param output_grad: Gradient of the loss with respect to the output.
         :return: Gradients with respect to the input, weights, and bias.
         """
-        input_, _ = self.saved_tensors
-        
-        max_idx = output_grad.info["max_idx"]
-        grad = output_grad.output_grad.to(self.device)
+        grad = output_grad.grad.to(self.device)
         
         # Check if input is a single sample or a batch
         if input_.dim() == 1:  # Single sample
             input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
 
-        res = []
-        
-        # enumerating over batch data
-        for i, idx in enumerate(max_idx):
-            res.append((grad[i] @ input_[i, idx, :]).t())
-            
-        grad_weight = torch.stack(res)
+        weight_grad = output_grad.weight_grad
         
         # Compute the gradient of the input
-        grad_input = grad @ self.w.t()  # Backpropagate through weights
+        input_grad = grad @ self.w.t()  # Backpropagate through weights
 
-        total_grad = ConnectionGradWrapper(grad_input, grad_weight)
-        self.update(total_grad)  # Update weights and bias
+        total_grad = GradWrapper(input_grad)
+        self.update(weight_grad)
 
         return total_grad
 
-    def update(self, grad: ConnectionGradWrapper) -> None:
+    def update(self, grad: torch.Tensor) -> None:
         """
-        Update weights and bias based on gradients.
+        Update weights based on gradients.
         """
-        batch_size = grad.weight_grad.size(0)
-        if grad.weight_grad.dim() > self.w.dim():
-            grad.weight_grad = torch.sum(grad.weight_grad, dim=0) / batch_size
+        batch_size = grad.size(0)
+        if grad.dim() > self.w.dim():
+            grad = torch.sum(grad, dim=0) / batch_size
 
-        self.w.grad = grad.weight_grad
+        self.w.grad = grad
 
     def normalize(self) -> None:
         """
