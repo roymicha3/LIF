@@ -8,19 +8,22 @@ from analysis.visualization import *
 from experiment.trial import Trial
 from experiment.experiment import simple_tempotron_tune_hyperparameters
 
+from analysis.results import RandomSpikePattern
+
 
 MODEL_ATTRIBUTES = \
 {
     # MODEL PARAMETERS:
     MODEL_NS.NUM_OUTPUTS             : 1,
     MODEL_NS.NUM_INPUTS              : 500,
-    MODEL_NS.LR                      : 0.01,
+    MODEL_NS.LR                      : 100.0
+    ,
     MODEL_NS.MOMENTUM                : 0.99,
     MODEL_NS.EPOCHS                  : 1000,
     MODEL_NS.BETA                    : 50,
     
     # DATA PARAMETERS:
-    DATA_NS.BATCH_SIZE               : 16,
+    DATA_NS.BATCH_SIZE               : 64,
     DATA_NS.DATASET_SIZE             : 1000,
     DATA_NS.NUM_CLASSES              : 2,
     DATA_NS.TRAINING_PERCENTAGE      : 50,
@@ -33,8 +36,8 @@ MODEL_ATTRIBUTES = \
     SPIKE_NS.dt                      : 1.0,
     SPIKE_NS.tau                     : 10,
     
-    SPIKE_NS.tau_m                   : 15,
-    SPIKE_NS.tau_s                   : 15 / 4,
+    SPIKE_NS.tau_m                   : 10,
+    SPIKE_NS.tau_s                   : 10 / 4,
     SPIKE_NS.v_thr                   : 1,
 }
 
@@ -42,7 +45,7 @@ def main():
     """
     runs the main logic
     """
-    print("This is the thesis main!")
+    # print("This is the thesis main!")
     
     config = Configuration(MODEL_ATTRIBUTES)
     
@@ -52,6 +55,8 @@ def main():
     
     # visualizer = RandomSpikePattern(config)
     # visualizer.den_response()
+    
+    # RandomSpikePattern.results_b()
     
     
 

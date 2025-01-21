@@ -59,12 +59,13 @@ class SpikeSample(DataSample):
         # Create a subplot for the new neuron's raster plot
         ax = plot.add_subplot(111)
         
+        ax.set_title("Spike Raster plot")
+        
         for data in self.get():
             data.plot(ax)
             
         # Customize the plot (you can adjust these settings as needed)
         ax.set_xlabel("Time (ms)")
         ax.set_ylabel("Neuron Index")
-        ax.set_yticks([])  # Hide y-axis ticks
             
         plt.show()

@@ -170,6 +170,22 @@ class Network(torch.nn.Module):
         self.learning = mode
         return super().train(mode)
 
+    def parameters(self, recurse: bool = True):
+        """
+        Returns an iterator over module parameters that are trainable.
+        """
+        for name, param in super().named_parameters(recurse=recurse):
+            if param.requires_grad:
+                yield param
+
+    def named_parameters(self, prefix: str = '', recurse: bool = True):
+        """
+        Returns an iterator over module named parameters that are trainable.
+        """
+        for name, param in super().named_parameters(prefix=prefix, recurse=recurse):
+            if param.requires_grad:
+                yield name, param
+
     # TODO: see how to implement this monitor logic :)
     # def add_monitor(self, monitor: AbstractMonitor, name: str) -> None:
     #     """
