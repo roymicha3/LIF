@@ -35,7 +35,7 @@ class NetworkFactory:
         """
         # Initialize input and output layers with specified configurations
         input_layer = DENNode(config, config[MODEL_NS.NUM_INPUTS], device=device)
-        output_layer = SingleSpikeNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=True)
+        output_layer = SingleSpikeNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=False)
         connection = SimpleConnection(input_layer, output_layer, device=device)
 
         # Create the network and add layers and connection
@@ -43,6 +43,9 @@ class NetworkFactory:
         network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
         network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
         network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
+        
+        for name, param in network.named_parameters():
+            print(name, param.size())
         
         return network
 

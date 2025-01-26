@@ -32,8 +32,8 @@ class LeakyNode(Node):
             batch_first=True,
             dropout=0.0,
             device=device,
-            dtype=dtype
         )
+        
         self._n = n
         self.device = device
         self._dt = self._config[SPIKE_NS.dt]
@@ -44,6 +44,9 @@ class LeakyNode(Node):
         
         self._beta_to_weight_hh()
         self._init_weights_hi(1 - self._beta)
+        
+        # Freeze the RNN parameters by setting them to not require gradients
+        self.rnn.requires_grad_(learning)
                     
     def _beta_to_weight_hh(self):
         with torch.no_grad():

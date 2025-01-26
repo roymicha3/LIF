@@ -3,6 +3,8 @@ import torch.utils.data.dataset
 from tqdm import tqdm
 from ray import train
 
+from torch.optim.lr_scheduler import StepLR
+
 from encoders.spike.latency_encoder import LatencyEncoder
 from data.dataset.random_dataset import RandomDataset, DataType, OutputType
 from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
@@ -42,6 +44,8 @@ class Trial:
             shuffle=True)
 
         optimizer.zero_grad() #TODO: figure out where to put it
+        # Learning rate scheduler: Decrease LR by 10% every 10 epochs
+        scheduler = StepLR(optimizer, step_size=50, gamma=0.5)
         
         for epoch in range(num_epochs):
             correct_predictions = 0
@@ -66,6 +70,7 @@ class Trial:
                 # Backward pass
                 network.backward(criterion.backward())
                 optimizer.step()
+                scheduler.step()
 
                 # Update running loss and accuracy
                 running_loss = torch.sum(loss).item()
@@ -184,8 +189,12 @@ class Trial:
 
         # Set up optimizer and loss function
         # optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
-        optimizer = torch.optim.Adam(network.parameters(), lr=config["lr"])
-        # optimizer = MomentumOptimizer(connection.parameters(), lr=config["lr"], momentum=config["momentum"])
+        # optimizer = torch.optim.Adam(network.parameters(),
+        #                              lr=config["lr"])
+        
+        optimizer = MomentumOptimizer(network.parameters(),
+                                      lr=config["lr"],
+                                      momentum=config["momentum"])
         
         criterion = BinaryLoss(device=device)
         

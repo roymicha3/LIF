@@ -50,9 +50,9 @@ class Connection(ABC, Module):
         if learning:
             self.update_rule.update(**kwargs)
 
-        mask = kwargs.get("mask", None)
-        if mask is not None:
-            self.w.masked_fill_(mask, 0)
+        # mask = kwargs.get("mask", None)
+        # if mask is not None:
+        #     self.w.masked_fill_(mask, 0)
 
     @abstractmethod
     def reset_state_variables(self) -> None:
