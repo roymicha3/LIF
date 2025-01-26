@@ -4,15 +4,32 @@ a module that provides common functionality for the model.
 from abc import ABC, abstractmethod
 import yaml
 
-from settings.spike.spike_namespace import SpikeNamespace
-from settings.model_namespace import ModelNamespace
-from settings.data_namespace import DataNamespace
+class ComponentRegistry:
+    """
+    A static class that serves as a registry for layers, optimizers, loss functions...
+    """
 
-from settings.config import Configuration
+    REGISTRIES = {
+        'layer': {},
+        'optimizer': {},
+        'loss': {}
+    }
 
-SPIKE_NS = SpikeNamespace
-MODEL_NS = ModelNamespace
-DATA_NS = DataNamespace
+    @staticmethod
+    def register(name, component_class, registry_type):
+        """
+        Register a component class in the specified registry.
+
+        Args:
+            name (str): The name of the component.
+            component_class (type): The class of the component.
+            registry_type (str): The type of the registry ('layer', 'optimizer', 'loss').
+        """
+        ComponentRegistry.REGISTRIES[registry_type][name] = component_class
+
+    @staticmethod
+    def get(registry_type):
+        return ComponentRegistry.REGISTRIES.get(registry_type, {})
 
 
 class YamlSerializable(ABC):
