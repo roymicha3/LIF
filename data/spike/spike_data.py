@@ -10,6 +10,8 @@ from typing_extensions import override
 
 from common import Configuration, SPIKE_NS
 
+# TODO: add spike values to the data as optional!
+
 class SpikeData:
     """
     Initialize a SpikeData object.
