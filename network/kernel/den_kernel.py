@@ -3,14 +3,14 @@ import torch
 
 from network.kernel.kernel import Kernel
 from network.kernel.leaky_kernel import LeakyKernel
-from common import Configuration, SPIKE_NS
+from common import SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 
 # Define the DEN Node class (assuming the class is provided as is)
 class DENKernel(Kernel):
     def __init__(
         self,
-        config: Configuration,
+        config,
         n,
         device=None,
         dtype=None,

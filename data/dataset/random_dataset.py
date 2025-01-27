@@ -9,14 +9,14 @@ from data.dataset.dataset import Dataset, DataType, OutputType
 from data.data_sample import DataSample
 from encoders.encoder import Encoder
 from encoders.identity_encoder import IdentityEncoder
-from common import Configuration, DATA_NS, MODEL_NS
+from common import DATA_NS, MODEL_NS
 
 class RandomDataset(Dataset):
     """
     This class is responsible for loading the data .
     """
     def __init__(self,
-                config: Configuration,
+                config,
                 data_type: DataType = DataType.TRAIN,
                 output_type: OutputType = OutputType.TORCH,
                 encoder: Encoder = ...) -> None:

@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import StepLR
 
 from encoders.spike.latency_encoder import LatencyEncoder
 from data.dataset.random_dataset import RandomDataset, DataType, OutputType
-from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
+from common import SPIKE_NS, MODEL_NS, DATA_NS
 
 from network.topology.network import Network
 from network.learning.optimizers import MomentumOptimizer
@@ -163,7 +163,7 @@ class Trial:
         return average_loss, accuracy
     
     @staticmethod
-    def run(config: Configuration, report: bool = True, early_stopping_patience: int = 25):
+    def run(config, report: bool = True, early_stopping_patience: int = 25):
         """
         Run the trial using the specified configuration with early stopping.
 

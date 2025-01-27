@@ -10,7 +10,7 @@ import numpy as np
 
 from data.loaders.data_loader import DataLoader, DataType
 from data.data_sample import DataSample
-from common import Configuration, MODEL_NS, DATA_NS
+from common import MODEL_NS, DATA_NS
 
 MAX_SAMPLES = 10000
 
@@ -18,7 +18,7 @@ class RandomDataLoader(DataLoader):
     """
     this class is reposible for loading random data in a given range
     """
-    def __init__(self, config: Configuration, batch_size, encoder, max_value: int):
+    def __init__(self, config, batch_size, encoder, max_value: int):
         super().__init__(batch_size, encoder)
         self._config = config
         self._max_value        = max_value

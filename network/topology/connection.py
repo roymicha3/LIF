@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
-import numpy as np
 import matplotlib.pyplot as plt
 import torch
 from torch.nn import Module, Parameter
 
-from network.nodes.node import Node
+from network.learning.learning_rule import LearningRule
 
 
 class Connection(ABC, Module):
@@ -12,22 +11,19 @@ class Connection(ABC, Module):
     Abstract base method for connections between ``Nodes``.
     """
 
-    def __init__(
-        self,
-        w: torch.Tensor,
-        source: Node,
-        target: Node,
-        device=None
-    ) -> None:
+    def __init__(self, lr: LearningRule, shape: tuple = None, w: torch.Tensor = None, device=None) -> None:
         super().__init__()
-        self.w = w
-        
-        if self.w is None:
-            self.w = Parameter(Connection.sample_weights(source.n, target.n, device), requires_grad=True)
-        
-        self.source = source
-        self.target = target
         self.device = device
+        self.learning_rule = lr
+        
+        if w is not None:
+            if not isinstance(w, torch.Tensor):
+                raise TypeError("w must be a torch.Tensor")
+            self.w = Parameter(w, requires_grad=True)
+        elif shape is not None:
+            self.w = Parameter(Connection.sample_weights(*shape, device), requires_grad=True)
+        else:
+            raise ValueError("Either n or w must be provided")
 
     @abstractmethod
     def forward(self, input_: torch.Tensor) -> torch.Tensor:
@@ -43,16 +39,11 @@ class Connection(ABC, Module):
         Compute connection's update rule.
 
         :param bool learning: Whether to allow connection updates.
-        :param ByteTensor mask: Boolean mask determining which weights to clamp to zero.
         """
         learning = kwargs.get("learning", True)
 
         if learning:
             self.update_rule.update(**kwargs)
-
-        # mask = kwargs.get("mask", None)
-        # if mask is not None:
-        #     self.w.masked_fill_(mask, 0)
 
     @abstractmethod
     def reset_state_variables(self) -> None:

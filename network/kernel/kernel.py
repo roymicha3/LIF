@@ -48,6 +48,14 @@ class Kernel(torch.nn.Module):
         :param input_: Inputs to the layer.
         """
         return input_
+    
+    def backward(self, E: torch.Tensor) -> torch.Tensor:
+        """
+        Base class method for backpropagation.
+
+        :param E: Error tensor.
+        """
+        return E
 
     def train(self, mode: bool = True) -> "Node":
         """

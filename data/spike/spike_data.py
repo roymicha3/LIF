@@ -8,7 +8,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from typing_extensions import override
 
-from common import Configuration, SPIKE_NS
+from common import SPIKE_NS
 
 # TODO: add spike values to the data as optional!
 
@@ -21,7 +21,7 @@ class SpikeData:
     spike_times (list of int): List of spike times of the neuron.
     """
 
-    def __init__(self, config: Configuration, neuron_index, spike_times: list[int]):
+    def __init__(self, config, neuron_index, spike_times: list[int]):
 
         self._neuron_index = neuron_index
         self._spike_times = spike_times

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from network.kernel.kernel import Kernel
-from common import Configuration, SPIKE_NS
+from common import SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 
 # Define the LeakyNode class (assuming the class is provided as is)
@@ -12,7 +12,7 @@ class LeakyKernel(Kernel):
     
     def __init__(
         self,
-        config: Configuration,
+        config,
         n,
         device=None,
         dtype=None,

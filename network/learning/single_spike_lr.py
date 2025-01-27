@@ -1,6 +1,7 @@
 import torch
 from typing import Tuple
 
+from common import SPIKE_NS
 from network.learning.learning_rule import LearningRule
 
 class SingleSpikeLR(LearningRule):
@@ -8,8 +9,8 @@ class SingleSpikeLR(LearningRule):
     Single Spike Learning Rule
     """
     def __init__(self, config, **kwargs):
-        super().__init__(config, **kwargs)
-        self._threshold = config["threshold"]
+        super().__init__(**kwargs)
+        self._threshold = config[SPIKE_NS.v_thr]
         self.saved_tensors = None
     
     def forward(self, input_):
@@ -23,8 +24,10 @@ class SingleSpikeLR(LearningRule):
         # Compute the difference between the max value and the threshold.
         threshold_diff = max_val - self._threshold
         
-        return threshold_diff
-    def backward(self, input_data, output_data, E: torch.Tensor, **kwargs) -> Tuple[torch.Tensor, torch.Tensor]:
+        return threshold_diff # TODO: make it return a spike data
+    
+    
+    def backward(self, input_, E: torch.Tensor, **kwargs) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Backward function for the layer. Computes the gradient of the output with respect to the input.
         This function uses the saved max index from the forward pass to help compute the gradient.
@@ -34,9 +37,19 @@ class SingleSpikeLR(LearningRule):
         E : torch.Tensor
             The gradient of the loss with respect to the output of the layer.
         """
-        # Retrieve the max index saved during the forward pass.
-        max_idx, max_val = self.saved_tensors
         
-        # TODO: implement me!
+        spike_indices, max_vals = self.saved_tensors
         
-        raise NotImplementedError("Implement this function")
+        # Check if input is a single sample or a batch
+        if input_.dim() == 1:  # Single sample
+            input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
+
+        res = []
+        
+        # enumerating over batch data
+        for i, idx in enumerate(spike_indices):
+            res.append((E[i] @ input_[i, idx, :]).t())
+            
+        weight_grad = torch.stack(res)
+
+        return weight_grad
