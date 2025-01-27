@@ -2,12 +2,12 @@ import torch
 import tempfile
 from typing import Tuple
 
-from common import Configuration
+from common import YamlSerializable
 from network.nodes.node import Node
 from network.topology.connection import Connection
 
 
-class Network(torch.nn.Module):
+class Network(torch.nn.Module, YamlSerializable):
     """
     Responsible for the simulation and interaction of nodes and connections.
     """
@@ -17,7 +17,7 @@ class Network(torch.nn.Module):
 
     def __init__(
         self,
-        config: Configuration,
+        config: dict,
         learning: bool = True,
         device = None
     ) -> None:

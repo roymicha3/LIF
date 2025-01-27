@@ -1,0 +1,53 @@
+# Neural Network Configuration
+
+# Model Architecture
+model:
+  name: "SingleSpikeTempotron"
+  layers:
+    - type: "Dense"
+      activation: "Single Spike"
+      input_shape: [784]
+      output_shape: [64]
+      kernel: "DEN"
+
+# Optimizer
+optimizer:
+  type: "Momentum"
+  learning_rate: 1.0
+  mu: 0.99
+
+# Loss Function
+loss:
+  type: "SingleSpike"
+
+# Training Parameters
+training:
+  epochs: 20
+  batch_size: 32
+  validation_split: 0.2  # 20% of the training data used for validation
+  shuffle: True
+  verbose: 1
+
+# Dataset
+dataset:
+  name: "Random Dataset"
+  path: "./data/random"  # Path to the dataset
+  normalize: False  # Normalize pixel values to [0, 1]
+  flatten: True
+
+  - encoder:
+      name: "Single Spike Latency Encoder"
+      tau: 1.0
+
+# Callbacks (Optional)
+callbacks:
+  - type: "EarlyStopping"
+    monitor: "val_loss"
+    patience: 3
+    restore_best_weights: True
+  - type: "ModelCheckpoint"
+    filepath: "./checkpoints/model_{epoch}.pkl"
+    save_best_only: True
+  - type: "MLFlowLogger"
+    log_dir: "./logs"
+    histogram_freq: 1
