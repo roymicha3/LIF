@@ -1,31 +1,31 @@
 import torch
 # from typing import override
 
-from network.nodes.node import Node
-from network.nodes.leaky_node import LeakyNode
-from common import Configuration, SPIKE_NS
+from network.kernel.kernel import Kernel
+from network.kernel.leaky_kernel import LeakyKernel
+from common import SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 
 # Define the DEN Node class (assuming the class is provided as is)
-class DENNode(Node):
+class DENKernel(Kernel):
     def __init__(
         self,
-        config: Configuration,
+        config,
         n,
         device=None,
         dtype=None,
         scale = False,
         learning = False
     ):
-        super(DENNode, self).__init__(n, (n, n), learning)
+        super(DENKernel, self).__init__(n, (n, n), learning)
         
         self.device = device
         self._config = config
         tau_m = self._config[SPIKE_NS.tau_m]
-        self._coductness = LeakyNode(self._config, n, device, dtype, scale=scale, learning=learning, tau=tau_m)
+        self._coductness = LeakyKernel(self._config, n, device, dtype, scale=scale, learning=learning, tau=tau_m)
         
         tau_s = self._config[SPIKE_NS.tau_s]
-        self._voltage = LeakyNode(self._config, n, device, dtype, scale=False, learning=learning, tau=tau_m / 4) #TODO: change back
+        self._voltage = LeakyKernel(self._config, n, device, dtype, scale=False, learning=learning, tau=tau_m / 4) #TODO: change back
         
     # @override
     def forward(self, x):

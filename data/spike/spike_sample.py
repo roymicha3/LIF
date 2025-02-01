@@ -7,14 +7,14 @@ from typing import List
 
 from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
-from common import Configuration, MODEL_NS
+from common import MODEL_NS
 
 class SpikeSample(DataSample):
     """
     This class represents a spike sample.
     It encapsulates a single spike item and provides a method to access it.
     """
-    def __init__(self, config: Configuration, data: List[SpikeData], seq_len = None, label = None) -> None:
+    def __init__(self, config, data: List[SpikeData], seq_len = None, label = None) -> None:
         super().__init__(data, label)
         self._config = config
         self._num_of_neurons = self._config[MODEL_NS.NUM_INPUTS]

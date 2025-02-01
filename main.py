@@ -3,12 +3,10 @@ the main of the project
 """
 import os
 
-from common import MODEL_NS, SPIKE_NS, DATA_NS, Configuration
-from analysis.visualization import *
+from common import MODEL_NS, SPIKE_NS, DATA_NS
+# from analysis.visualization import *
 from experiment.trial import Trial
 from experiment.experiment import simple_tempotron_tune_hyperparameters
-
-from analysis.results import RandomSpikePattern
 
 
 MODEL_ATTRIBUTES = \
@@ -47,7 +45,7 @@ def main():
     """
     # print("This is the thesis main!")
     
-    config = Configuration(MODEL_ATTRIBUTES)
+    config = MODEL_ATTRIBUTES
     
     Trial.run(config, report=False)
     

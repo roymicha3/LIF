@@ -5,7 +5,7 @@ import numpy as np
 from typing_extensions import override
 
 from encoders.encoder import Encoder
-from common import Configuration, SPIKE_NS, MODEL_NS
+from common import SPIKE_NS, MODEL_NS
 from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
@@ -22,7 +22,7 @@ class LatencyEncoder(Encoder):
     
     def __init__(
         self,
-        config: Configuration,
+        config,
         max_value: int) -> None:
         """
         max_value: the maximum value of the input values

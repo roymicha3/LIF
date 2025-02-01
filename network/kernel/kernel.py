@@ -5,7 +5,7 @@ from typing import Iterable, Optional
 import torch
 
 
-class Node(torch.nn.Module):
+class Kernel(torch.nn.Module):
     """
     Base class for groups of neurons.
     """
@@ -14,7 +14,7 @@ class Node(torch.nn.Module):
         self,
         n: Optional[int] = None,
         shape: Optional[Iterable[int]] = None,
-        learning: bool = True
+        learning: bool = False
     ) -> None:
         """
         Base class constructor.
@@ -39,8 +39,6 @@ class Node(torch.nn.Module):
         else:
             self.shape = shape  # Shape is passed in as an argument.
 
-        self.register_buffer("s", torch.ByteTensor())  # Spike occurrences.
-
         self.learning = learning
 
     def forward(self, input_: torch.Tensor) -> None:
@@ -50,12 +48,14 @@ class Node(torch.nn.Module):
         :param input_: Inputs to the layer.
         """
         return input_
+    
+    def backward(self, E: torch.Tensor) -> torch.Tensor:
+        """
+        Base class method for backpropagation.
 
-    def reset_state_variables(self) -> None:
+        :param E: Error tensor.
         """
-        Base class method for resetting state variables.
-        """
-        self.s.zero_()
+        return E
 
     def train(self, mode: bool = True) -> "Node":
         """

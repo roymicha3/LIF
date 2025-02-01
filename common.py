@@ -5,8 +5,6 @@ from settings.spike.spike_namespace import SpikeNamespace
 from settings.model_namespace import ModelNamespace
 from settings.data_namespace import DataNamespace
 
-from settings.config import Configuration
-
 SPIKE_NS = SpikeNamespace
 MODEL_NS = ModelNamespace
 DATA_NS = DataNamespace

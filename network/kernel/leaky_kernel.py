@@ -1,18 +1,18 @@
 import torch
 import torch.nn as nn
 
-from network.nodes.node import Node
-from common import Configuration, SPIKE_NS
+from network.kernel.kernel import Kernel
+from common import SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 
 # Define the LeakyNode class (assuming the class is provided as is)
-class LeakyNode(Node):
+class LeakyKernel(Kernel):
     
     V0 = 1
     
     def __init__(
         self,
-        config: Configuration,
+        config,
         n,
         device=None,
         dtype=None,
@@ -20,7 +20,7 @@ class LeakyNode(Node):
         learning = False,
         tau = None
     ):
-        super(LeakyNode, self).__init__(n, (n, n), learning)
+        super(LeakyKernel, self).__init__(n, (n, n), learning)
 
         self._config = config
         self.rnn = nn.RNN(
@@ -77,7 +77,7 @@ class LeakyNode(Node):
         mem = self.rnn(input_)
         
         if self._scale:
-            return LeakyNode.V0 * mem[0] / self._dt
+            return LeakyKernel.V0 * mem[0] / self._dt
         
         return mem[0]
     
@@ -102,4 +102,4 @@ class LeakyNode(Node):
                 exp = torch.exp(-(times[t:] - t) * dt / tau)
                 response[t:, i] += (1 / tau) * exp
 
-        return LeakyNode.V0 * response
+        return LeakyKernel.V0 * response
