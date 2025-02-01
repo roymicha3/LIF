@@ -48,7 +48,7 @@ class SingleSpikeLR(LearningRule):
         
         # enumerating over batch data
         for i, idx in enumerate(spike_indices):
-            res.append((E[i] @ input_[i, idx, :]).t())
+            res.append((E[i] @ input_[i, idx, :]).t()) #TODO: check if we can use max_vals[i] instead of input_[i, idx, :]
             
         weight_grad = torch.stack(res)
 

@@ -2,13 +2,11 @@
 In this file, we define the Dataset class.
 """
 import os
-import torch
 import numpy as np
 
 from data.dataset.dataset import Dataset, DataType, OutputType
 from data.data_sample import DataSample
 from encoders.encoder import Encoder
-from encoders.identity_encoder import IdentityEncoder
 from common import DATA_NS, MODEL_NS
 
 class RandomDataset(Dataset):

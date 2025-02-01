@@ -2,7 +2,7 @@ from network.topology.network import Network
 from network.topology.neuron import NeuronLayer
 from network.kernel.den_kernel import DENKernel
 from network.learning.single_spike_lr import SingleSpikeLR
-from network.topology.simple_connection import SimpleConnection
+from network.topology.fully_connected_connection import SimpleConnection
 
 from common import SPIKE_NS, MODEL_NS, DATA_NS
 

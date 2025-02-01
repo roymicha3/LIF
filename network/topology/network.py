@@ -1,6 +1,5 @@
 import torch
 import tempfile
-from typing import Tuple
 
 from network.topology.neuron import NeuronLayer
 
