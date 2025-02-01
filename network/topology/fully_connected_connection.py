@@ -1,10 +1,8 @@
 import numpy as np
 import torch
 
-
-from network.nodes.node import Node
-from network.learning.grad_wrapper import GradWrapper, ConnectionGradWrapper
 from network.topology.connection import Connection
+from network.learning.learning_rule import LearningRule
 
 class SimpleConnection(Connection):
     """
@@ -13,17 +11,18 @@ class SimpleConnection(Connection):
 
     def __init__(
         self,
-        source: Node,
-        target: Node,
-        norm: np.int32 = 1,
-        device=None
-    ) -> None:
+        lr: LearningRule,
+        n: int = None,
+        w: torch.Tensor = None,
+        device=None,
+        norm: np.int32 = 1) -> None:
+        
         """
         :param source: A layer of nodes from which the connection originates.
         :param target: A layer of nodes to which the connection connects.
         :param bias: Whether to include a bias term in the connection.
         """
-        super().__init__(None, source, target, device=device)
+        super().__init__(lr, n, w, device)
         self.norm = norm
         self.saved_tensors = None
 
@@ -41,13 +40,15 @@ class SimpleConnection(Connection):
             input_ = input_.unsqueeze(0)  # Add a batch dimension
 
         output = input_ @ self.w  # Matrix multiplication between input spikes and weights
+        
+        spikes = self.learning_rule.forward(output)  # Forward pass of the learning rule
 
         if torch.is_grad_enabled():
             self.saved_tensors = input_, output  # Save for backward pass
         
-        return output
+        return spikes
 
-    def backward(self, output_grad: GradWrapper) -> tuple:
+    def backward(self, E):
         """
         Backward function for the learning rule.
         Computes the gradient of the loss with respect to inputs, weights, and bias.
@@ -57,40 +58,30 @@ class SimpleConnection(Connection):
         """
         input_, _ = self.saved_tensors
         
-        max_idx = output_grad.info["max_idx"]
-        grad = output_grad.output_grad.to(self.device)
+        grad = E.to(self.device)
         
         # Check if input is a single sample or a batch
         if input_.dim() == 1:  # Single sample
             input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
 
-        res = []
-        
-        # plasticity_induction = output_grad.info["plasticity_induction"]
-        
-        # enumerating over batch data
-        for i, idx in enumerate(max_idx):
-            res.append((grad[i] @ input_[i, idx, :]).t())
-            
-        grad_weight = torch.stack(res)
+        weight_grad = self.learning_rule.backward(input_, grad)
         
         # Compute the gradient of the input
-        grad_input = grad @ self.w.t()  # Backpropagate through weights
+        input_grad = grad @ self.w.t()  # Backpropagate through weights
+        
+        self.update(weight_grad)  # Update weights and bias
 
-        total_grad = ConnectionGradWrapper(grad_input, grad_weight)
-        self.update(total_grad)  # Update weights and bias
+        return input_grad
 
-        return total_grad
-
-    def update(self, grad: ConnectionGradWrapper) -> None:
+    def update(self, grad) -> None:
         """
         Update weights and bias based on gradients.
         """
-        batch_size = grad.weight_grad.size(0)
-        if grad.weight_grad.dim() > self.w.dim():
-            grad.weight_grad = torch.sum(grad.weight_grad, dim=0) / batch_size
+        batch_size = grad.size(0)
+        if grad.dim() > self.w.dim():
+            grad = torch.sum(grad, dim=0) / batch_size
 
-        self.w.grad = grad.weight_grad
+        self.w.grad = grad
 
     def normalize(self) -> None:
         """

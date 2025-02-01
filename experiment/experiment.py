@@ -8,7 +8,7 @@ from ray import train, tune
 from ray.train import Checkpoint
 from ray.tune.schedulers import ASHAScheduler
 
-from common import MODEL_NS, SPIKE_NS, DATA_NS, Configuration
+from common import MODEL_NS, SPIKE_NS, DATA_NS
 from experiment.trial import Trial
 
 
@@ -46,7 +46,7 @@ def simple_tempotron_tune_hyperparameters():
     test the accuracy of different values of the hyperparameters of the simple tempotron model
     """
     
-    config = Configuration(MODEL_ATTRIBUTES)
+    config = MODEL_ATTRIBUTES
     
     # tuned parameters:
     # config[SPIKE_NS.tau_m] = tune.sample_from(lambda _: np.random.randint(4, 25))
