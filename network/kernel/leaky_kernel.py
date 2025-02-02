@@ -115,4 +115,4 @@ class LeakyKernel(Kernel, YAMLSerializable):
                 exp = torch.exp(-(times[t:] - t) * dt / tau)
                 response[t:, i] += (1 / tau) * exp
 
-        return self.v_0 * response
+        return response
