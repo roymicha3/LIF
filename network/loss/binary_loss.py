@@ -1,3 +1,4 @@
+from omegaconf import DictConfig
 from torch import nn
 import torch
 
@@ -61,5 +62,5 @@ class BinaryLoss(nn.Module):
         return predicted
     
     @classmethod
-    def from_config(cls, config):
-        return cls(config.device)
+    def from_config(cls, config: DictConfig, env_config: DictConfig):
+        return cls(env_config.device)

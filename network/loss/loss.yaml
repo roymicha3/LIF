@@ -1,1 +1,1 @@
-device: "cpu"
+type: "BinaryLoss"
