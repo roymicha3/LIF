@@ -20,7 +20,7 @@ class LeakyKernel(Kernel, YAMLSerializable):
         device=None,
         learning = False
     ):
-        super(Kernel, self).__init__(n, (n, n), learning)
+        super(LeakyKernel, self).__init__(n, (n, n), learning)
         super(YAMLSerializable, self).__init__()
 
         self.rnn = nn.RNN(

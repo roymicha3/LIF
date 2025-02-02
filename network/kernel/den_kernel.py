@@ -1,30 +1,50 @@
 import torch
+from omegaconf import DictConfig
 
 from network.kernel.kernel import Kernel
 from network.kernel.leaky_kernel import LeakyKernel
 from common import SPIKE_NS
 from data.spike.spike_sample import SpikeSample
+from settings.serializable import YAMLSerializable
 
-
-class DENKernel(Kernel):
+@YAMLSerializable.register("DENKernel")
+class DENKernel(Kernel, YAMLSerializable):
     def __init__(
         self,
-        config,
         n,
+        dt,
+        tau_m,
+        tau_s,
+        v_0 = 1,
         device=None,
-        dtype=None,
-        scale = False,
         learning = False
     ):
         super(DENKernel, self).__init__(n, (n, n), learning)
+        super(YAMLSerializable, self).__init__()
+        
+        self.n = n
+        self.dt = dt
+        self.tau_m = tau_m
+        self.tau_s = tau_s
+        self.v_0 = v_0
         
         self.device = device
-        self._config = config
-        tau_m = self._config[SPIKE_NS.tau_m]
-        self._coductness = LeakyKernel(self._config, n, device, dtype, scale=scale, learning=learning, tau=tau_m)
+
+        self._coductness = LeakyKernel(self.n,
+                                       self.dt,
+                                       self.tau_m,
+                                       v_0 = self.v_0,
+                                       scale = True,
+                                       device = device,
+                                       learning=learning) 
         
-        tau_s = self._config[SPIKE_NS.tau_s]
-        self._voltage = LeakyKernel(self._config, n, device, dtype, scale=False, learning=learning, tau=tau_m / 4) #TODO: change back
+        self._voltage = LeakyKernel(self.n,
+                                    self.dt,
+                                    self.tau_s,
+                                    v_0 = self.v_0,
+                                    scale = False,
+                                    device = device,
+                                    learning=learning)
     
     
     def forward(self, x):
@@ -67,4 +87,10 @@ class DENKernel(Kernel):
         """
         Create an instance from a DictConfig.
         """
-        return 
+        return cls(config.n,
+                   config.dt,
+                   config.tau_m,
+                   config.tau_s,
+                   v_0=config.v_0,
+                   device=config.device,
+                   learning=config.learning)

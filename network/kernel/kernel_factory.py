@@ -1,6 +1,3 @@
-from typing import Type, Dict
-from omegaconf import DictConfig
-
 from settings.factory import Factory
 
 # import the kernel classes
