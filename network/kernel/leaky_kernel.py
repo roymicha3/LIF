@@ -12,12 +12,10 @@ class LeakyKernel(Kernel, YAMLSerializable):
     
     def __init__(
         self,
+        env_config : DictConfig,
         n,
-        dt,
         tau,
-        v_0 = 1,
         scale = False,
-        device=None,
         learning = False
     ):
         super(LeakyKernel, self).__init__(n, (n, n), learning)
@@ -31,15 +29,16 @@ class LeakyKernel(Kernel, YAMLSerializable):
             bias=False,
             batch_first=True,
             dropout=0.0,
-            device=device,
+            device=env_config.device,
         )
         
+        self.env_config = env_config
         self.n = n
-        self.dt = dt
+        self.dt = env_config.dt
         self.tau = tau
-        self.v_0 = v_0
+        self.v_0 = env_config.v_0
         self.scale = scale
-        self.device = device
+        self.device = env_config.device
         
         self._beta = 1 - self.dt / self.tau
         
@@ -83,14 +82,12 @@ class LeakyKernel(Kernel, YAMLSerializable):
         return mem[0]
     
     @classmethod
-    def from_config(cls, config: DictConfig):
+    def from_config(cls, config: DictConfig, env_config: DictConfig):
         return cls(
+            env_config,
             config.n,
-            config.dt,
             config.tau,
-            v_0=config.v_0,
             scale=config.scale,
-            device=config.device,
             learning=config.learning,
         )
     

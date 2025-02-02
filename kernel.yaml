@@ -1,0 +1,6 @@
+type: "DENKernel"
+n: 784
+tau_s: 15
+tau_m: 3.75
+learning: False
+

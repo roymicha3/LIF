@@ -10,7 +10,7 @@ from data.dataset.random_dataset import RandomDataset, DataType, OutputType
 from common import SPIKE_NS, MODEL_NS, DATA_NS
 
 from network.topology.network import Network
-from network.learning.optimizers import MomentumOptimizer
+from network.optimizer.momentum_opt import MomentumOptimizer
 from network.loss.binary_loss import BinaryLoss
 
 from network.network_factory import NetworkFactory

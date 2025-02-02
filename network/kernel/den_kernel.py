@@ -11,39 +11,34 @@ from settings.serializable import YAMLSerializable
 class DENKernel(Kernel, YAMLSerializable):
     def __init__(
         self,
+        env_config : DictConfig,
         n,
-        dt,
         tau_m,
         tau_s,
-        v_0 = 1,
-        device=None,
         learning = False
     ):
         super(DENKernel, self).__init__(n, (n, n), learning)
         super(YAMLSerializable, self).__init__()
         
+        self.env_config = env_config
         self.n = n
-        self.dt = dt
+        self.dt = env_config.dt
         self.tau_m = tau_m
         self.tau_s = tau_s
-        self.v_0 = v_0
+        self.v_0 = env_config.v_0
         
-        self.device = device
+        self.device = env_config.device
 
-        self._coductness = LeakyKernel(self.n,
-                                       self.dt,
+        self._coductness = LeakyKernel(env_config,
+                                       self.n,
                                        self.tau_m,
-                                       v_0 = self.v_0,
                                        scale = True,
-                                       device = device,
                                        learning=learning) 
         
-        self._voltage = LeakyKernel(self.n,
-                                    self.dt,
+        self._voltage = LeakyKernel(env_config,
+                                    self.n,
                                     self.tau_s,
-                                    v_0 = self.v_0,
                                     scale = False,
-                                    device = device,
                                     learning=learning)
     
     
@@ -83,14 +78,13 @@ class DENKernel(Kernel, YAMLSerializable):
         return response
     
     @classmethod
-    def from_config(cls, config: DictConfig):
+    def from_config(cls, config: DictConfig, env_config: DictConfig):
         """
         Create an instance from a DictConfig.
         """
-        return cls(config.n,
-                   config.dt,
+        return cls(
+                   env_config,
+                   config.n,
                    config.tau_m,
                    config.tau_s,
-                   v_0=config.v_0,
-                   device=config.device,
                    learning=config.learning)

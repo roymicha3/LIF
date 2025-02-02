@@ -8,7 +8,7 @@ class BinaryLoss(nn.Module):
         
         self.relu = nn.ReLU()
         self.saved_tensors = None
-        self.device = device  # Device can be passed during initialization
+        self.device = device
     
     def forward(self, input_, target_) -> torch.Tensor:
         """
@@ -59,3 +59,7 @@ class BinaryLoss(nn.Module):
         # Classify based on whether values are greater than 0 or not
         predicted = (data.squeeze() > 0) * 2 - 1
         return predicted
+    
+    @classmethod
+    def from_config(cls, config):
+        return cls(config.device)
