@@ -24,8 +24,7 @@ class RateEncoder(Encoder, YAMLSerializable):
     
     def __init__(
         self,
-        dt,
-        T,
+        env_config: DictConfig,
         num_of_neurons: int,
         firing_rate: int = 20,
         random: bool = True) -> None:
@@ -36,8 +35,9 @@ class RateEncoder(Encoder, YAMLSerializable):
         super().__init__()
         super(YAMLSerializable, self).__init__()
         
-        self.T              = T
-        self.dt             = dt
+        self.env_config     = env_config
+        self.T              = env_config.T
+        self.dt             = env_config.dt
         self.num_of_neurons = num_of_neurons
         self.firing_rate    = firing_rate
         self.random         = random
@@ -68,9 +68,9 @@ class RateEncoder(Encoder, YAMLSerializable):
             else:
                 continue
 
-            res.append(SpikeData(self._config, neuron_idx, spikes))
+            res.append(SpikeData(self.env_config, neuron_idx, spikes))
 
-        return SpikeSample(self._config, res, seq_len, sample.get_label())
+        return SpikeSample(self.env_config, res, self.num_of_neurons, seq_len, sample.get_label())
     
     @override
     def encode(self, sample: DataSample) -> SpikeSample:
@@ -78,4 +78,8 @@ class RateEncoder(Encoder, YAMLSerializable):
         encode the data into spike times
         """
         return self._encode_sample(sample)
+    
+    @staticmethod
+    def from_config(cls, config: DictConfig, env_config: DictConfig):
+        return cls(env_config, config.num_of_neurons, config.firing_rate, config.random)
     
