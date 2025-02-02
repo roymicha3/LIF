@@ -1,30 +1,28 @@
 import torch
 import torch.nn as nn
+from omegaconf import DictConfig
 
 from network.kernel.kernel import Kernel
-from common import SPIKE_NS
 from data.spike.spike_sample import SpikeSample
+from settings.serializable import YAMLSerializable
 
-from network.kernel.kernel_factory import KernelFactory
 
-@KernelFactory.register("LeakyKernel")
-class LeakyKernel(Kernel):
-    
-    V0 = 1
+@YAMLSerializable.register("LeakyKernel")
+class LeakyKernel(Kernel, YAMLSerializable):
     
     def __init__(
         self,
-        config,
         n,
-        device=None,
-        dtype=None,
+        dt,
+        tau,
+        v_0 = 1,
         scale = False,
-        learning = False,
-        tau = None
+        device=None,
+        learning = False
     ):
-        super(LeakyKernel, self).__init__(n, (n, n), learning)
+        super(Kernel, self).__init__(n, (n, n), learning)
+        super(YAMLSerializable, self).__init__()
 
-        self._config = config
         self.rnn = nn.RNN(
             n,
             n,
@@ -36,13 +34,14 @@ class LeakyKernel(Kernel):
             device=device,
         )
         
-        self._n = n
+        self.n = n
+        self.dt = dt
+        self.tau = tau
+        self.v_0 = v_0
+        self.scale = scale
         self.device = device
-        self._dt = self._config[SPIKE_NS.dt]
-        self._tau = tau if tau else self._config[SPIKE_NS.tau]
-        self._beta = 1 - self._dt / self._tau
         
-        self._scale = scale
+        self._beta = 1 - self.dt / self.tau
         
         self._beta_to_weight_hh()
         self._init_weights_hi(1 - self._beta)
@@ -78,10 +77,22 @@ class LeakyKernel(Kernel):
         input_ = input_.to(self.device)  # Move input to the correct device
         mem = self.rnn(input_)
         
-        if self._scale:
-            return LeakyKernel.V0 * mem[0] / self._dt
+        if self.scale:
+            return self.v_0 * mem[0] / self.dt
         
         return mem[0]
+    
+    @classmethod
+    def from_config(cls, config: DictConfig):
+        return cls(
+            config.n,
+            config.dt,
+            config.tau,
+            v_0=config.v_0,
+            scale=config.scale,
+            device=config.device,
+            learning=config.learning,
+        )
     
     @staticmethod    
     def assimulate_response(input_seq : SpikeSample, tau, dt):
@@ -104,4 +115,4 @@ class LeakyKernel(Kernel):
                 exp = torch.exp(-(times[t:] - t) * dt / tau)
                 response[t:, i] += (1 / tau) * exp
 
-        return LeakyKernel.V0 * response
+        return self.v_0 * response

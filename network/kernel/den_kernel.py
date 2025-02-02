@@ -1,12 +1,11 @@
 import torch
-# from typing import override
 
 from network.kernel.kernel import Kernel
 from network.kernel.leaky_kernel import LeakyKernel
 from common import SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 
-# Define the DEN Node class (assuming the class is provided as is)
+
 class DENKernel(Kernel):
     def __init__(
         self,
@@ -26,8 +25,8 @@ class DENKernel(Kernel):
         
         tau_s = self._config[SPIKE_NS.tau_s]
         self._voltage = LeakyKernel(self._config, n, device, dtype, scale=False, learning=learning, tau=tau_m / 4) #TODO: change back
-        
-    # @override
+    
+    
     def forward(self, x):
         """
         forward function for the layer
@@ -62,3 +61,10 @@ class DENKernel(Kernel):
                 response[t:, i] += (1 / (tau_m - tau_s)) * (exp_rise - exp_decay)
 
         return response
+    
+    @classmethod
+    def from_config(cls, config: DictConfig):
+        """
+        Create an instance from a DictConfig.
+        """
+        return 

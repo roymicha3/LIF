@@ -1,13 +1,35 @@
 from omegaconf import OmegaConf, DictConfig
+from typing import Type, Dict
 
 
 class YAMLSerializable:
     """
     Base class for YAML serialization support.
     """
-    
+    _registry: Dict[str, Type] = {}
+
     def __init__(self, config: DictConfig = None):
         self.config = config
+
+    @classmethod
+    def register(cls, name: str):
+        """
+        Decorator to register a serializable class with a given name.
+        """
+        def decorator(class_ : Type):
+            cls._registry[name] = class_
+            return class_
+        return decorator
+    
+    @classmethod
+    def get_by_name(cls, name: str):
+        """
+        return an instance of a registered serializable object.
+        """
+        if name not in cls._registry:
+            raise ValueError(f"'{name}' is not registered.")
+        return cls._registry[name]
+    
 
     def save(self, file_path):
         """

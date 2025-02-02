@@ -2,11 +2,13 @@
 the main of the project
 """
 import os
+from omegaconf import OmegaConf, DictConfig
 
 from common import MODEL_NS, SPIKE_NS, DATA_NS
 # from analysis.visualization import *
 from experiment.trial import Trial
 from experiment.experiment import simple_tempotron_tune_hyperparameters
+from network.kernel.kernel_factory import KernelFactory
 
 
 MODEL_ATTRIBUTES = \
@@ -43,11 +45,14 @@ def main():
     """
     runs the main logic
     """
-    # print("This is the thesis main!")
+    print("This is the thesis main!")
     
-    config = MODEL_ATTRIBUTES
+    # config = MODEL_ATTRIBUTES
     
-    Trial.run(config, report=False)
+    # Trial.run(config, report=False)
+    
+    config = OmegaConf.load("kernel.yaml")
+    kernel = KernelFactory.create(config.type, config)
     
     # simple_tempotron_tune_hyperparameters()
     
