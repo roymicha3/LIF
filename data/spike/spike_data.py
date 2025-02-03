@@ -32,7 +32,7 @@ class SpikeData:
         Implement the copy operation.
         :return: A copy of the current SpikeData object.
         """
-        return SpikeData(self.neuron_index, self.spike_times)
+        return SpikeData(self.env_config, self.neuron_index, self.spike_times)
     
     def get_index(self):
         return self.neuron_index

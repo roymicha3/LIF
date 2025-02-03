@@ -11,7 +11,7 @@ from data.dataset.random_dataset import RandomDataset
 
 class DatasetFactory(Factory):
     """
-    Factory class for creating kernels.
+    Factory class for creating datasets.
     """
     
     @staticmethod
