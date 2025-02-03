@@ -5,8 +5,9 @@ from network.kernel.kernel_factory import KernelFactory
 
 def test_kernel_factory():
     config = OmegaConf.load("kernel.yaml")
-    config = OmegaConf.merge(config.kernel, config.env)
-    kernel = KernelFactory.create(config.type, config)
+    env_config = OmegaConf.load("env.yaml")
+    
+    kernel = KernelFactory.create(config.type, config, env_config)
     assert kernel is not None
     
 

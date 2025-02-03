@@ -2,17 +2,19 @@
 This class encodes the data into spike times - via rate encoding.
 """
 import numpy as np
+from omegaconf import DictConfig
 from typing_extensions import override
 
-from common import SPIKE_NS, MODEL_NS
 from encoders.encoder import Encoder
-from tools.utils import poisson_events, SEQ_LEN
+from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
-from data.data_sample import DataSample
+from tools.utils import poisson_events, SEQ_LEN
+from settings.serializable import YAMLSerializable
 
 
-class RateEncoder(Encoder):
+@YAMLSerializable.register("RateEncoder")
+class RateEncoder(Encoder, YAMLSerializable):
     """
     This class encodes the data into spike times - via rate encoding.
     """
@@ -22,7 +24,8 @@ class RateEncoder(Encoder):
     
     def __init__(
         self,
-        config,
+        env_config: DictConfig,
+        num_of_neurons: int,
         firing_rate: int = 20,
         random: bool = True) -> None:
         """
@@ -30,23 +33,24 @@ class RateEncoder(Encoder):
         random: If True, spikes are generated randomly. If False, spikes are generated uniformly.
         """
         super().__init__()
+        super(YAMLSerializable, self).__init__()
         
-        self._config = config
-        self._T              = self._config[SPIKE_NS.T]
-        self._dt             = self._config[SPIKE_NS.dt]
-        self._num_of_neurons = self._config[MODEL_NS.NUM_INPUTS]
-        self._firing_rate    = firing_rate
-        self._random         = random
+        self.env_config     = env_config
+        self.T              = env_config.T
+        self.dt             = env_config.dt
+        self.num_of_neurons = num_of_neurons
+        self.firing_rate    = firing_rate
+        self.random         = random
 
     def _encode_sample(self, sample: DataSample) -> SpikeSample:
         MS_IN_SECOND = 1000
-        max_spikes_in_trial = self._firing_rate * (self._T / MS_IN_SECOND)
-        seq_len = SEQ_LEN(self._T, self._dt)
+        max_spikes_in_trial = self.firing_rate * (self.T / MS_IN_SECOND)
+        seq_len = SEQ_LEN(self.T, self.dt)
         
         if len(data.shape) == 3:
-            assert self._num_of_neurons == data.shape[1] * data.shape[2]
+            assert self.num_of_neurons == data.shape[1] * data.shape[2]
             normalize_factor = max(np.max(sample.get()), 1.0e-6)
-            data = data.reshape((len(data), self._num_of_neurons)) / normalize_factor
+            data = data.reshape((len(data), self.num_of_neurons)) / normalize_factor
         
         res = []
 
@@ -56,17 +60,17 @@ class RateEncoder(Encoder):
                 continue
             
             num_of_spikes = int(neuron * max_spikes_in_trial)
-            if self._random and num_of_spikes > 0:
+            if self.random and num_of_spikes > 0:
                 spikes = poisson_events(num_of_spikes, seq_len)
             elif num_of_spikes > 0:
-                spikes = np.arange(0, self._T, self._T / num_of_spikes).astype(int)
+                spikes = np.arange(0, self.T, self.T / num_of_spikes).astype(int)
             # if no spikes were fired
             else:
                 continue
 
-            res.append(SpikeData(self._config, neuron_idx, spikes))
+            res.append(SpikeData(self.env_config, neuron_idx, spikes))
 
-        return SpikeSample(self._config, res, seq_len, sample.get_label())
+        return SpikeSample(self.env_config, res, self.num_of_neurons, seq_len, sample.get_label())
     
     @override
     def encode(self, sample: DataSample) -> SpikeSample:
@@ -74,4 +78,8 @@ class RateEncoder(Encoder):
         encode the data into spike times
         """
         return self._encode_sample(sample)
+    
+    @staticmethod
+    def from_config(cls, config: DictConfig, env_config: DictConfig):
+        return cls(env_config, config.num_of_neurons, config.firing_rate, config.random)
     

@@ -1,16 +1,21 @@
 import torch
 from typing import Tuple
+from omegaconf import DictConfig
 
-from common import SPIKE_NS
+from settings.serializable import YAMLSerializable
 from network.learning.learning_rule import LearningRule
 
-class SingleSpikeLR(LearningRule):
+
+@YAMLSerializable.register("SingleSpikeLR")
+class SingleSpikeLR(LearningRule, YAMLSerializable):
     """
     Single Spike Learning Rule
     """
-    def __init__(self, config, **kwargs):
-        super().__init__(**kwargs)
-        self._threshold = config[SPIKE_NS.v_thr]
+    
+    def __init__(self, threshold: float = 1.0):
+        super().__init__()
+        super(SingleSpikeLR, self).__init__()
+        self._threshold = threshold
         self.saved_tensors = None
     
     def forward(self, input_):
@@ -53,3 +58,7 @@ class SingleSpikeLR(LearningRule):
         weight_grad = torch.stack(res)
 
         return weight_grad
+    
+    @classmethod
+    def from_config(cls, config: DictConfig):
+        return cls(config.threshold)
