@@ -1,5 +1,10 @@
 from omegaconf import DictConfig
 
+from settings.factory import Factory
+
+from network.kernel.kernel_factory import KernelFactory
+from learning.lr_factory import LearningRuleFactory
+
 from network.kernel.den_kernel import DENKernel
 from network.learning.single_spike_lr import SingleSpikeLR
 
@@ -9,7 +14,7 @@ from network.topology.fully_connected_connection import SimpleConnection
 
 from common import MODEL_NS, DATA_NS
 
-class NetworkFactory:
+class NetworkFactory(Factory):
     """
     A factory class to build different types of neural network models with specified configurations.
     Currently supports:
@@ -22,18 +27,24 @@ class NetworkFactory:
     """
     
     @staticmethod
-    def build_network(config: DictConfig, device: str) -> Network:
-        network = Network(config.data.batch_size, device=device)
+    def build_network(config: DictConfig, env_config: DictConfig) -> Network:
+        """
+        builds a network out of a config file
+        """
+        network = Network(config, env_config, learning=True)
+        
         for layer in config.arch.layers:
-            kernel = KernelFactory.build_kernel(layer.kernel, device) # TODO: Implement KernelFactory
-            connection = ConnectionFactory.build_connection(layer.connection, device) # TODO: Implement ConnectionFactory
-            neuron_layer = NeuronLayer(config, kernel, connection)
+            kernel = KernelFactory.create(layer.kernel.type, layer.kernel, env_config)
+            learning_rule = LearningRuleFactory.create(layer.learning_rule.type, layer.learning_rule)()
+            connection = SimpleConnection(learning_rule, layer.input_size, layer.output_size, env_config.device)
+            neuron_layer = NeuronLayer(kernel, connection)
             network.add_layer(neuron_layer, layer.name)
-            
-        for name, param in network.named_parameters():
-            print(name, param.size())
         
         return network
+    
+    @classmethod
+    def from_config(cls, config: DictConfig, env_config: DictConfig):
+        return cls.build_network(config, env_config)
 
     @staticmethod
     def build_simple_network(config: dict, device: str) -> Network:

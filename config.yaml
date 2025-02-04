@@ -2,13 +2,20 @@
 
 # Model Architecture
 model:
-  name: "SingleSpikeTempotron"
   layers:
-    - type: "Dense"
-      activation: "Single Spike"
-      input_shape: [784]
-      output_shape: [64]
-      kernel: "DEN"
+    - name: "input layer"
+      input_size: 784
+      output_size: 1
+      kernel:
+        type: "DENKernel"
+        n: 784
+        tau_s: 15
+        tau_m: 3.75
+        learning: False
+      
+      learning_rule:
+        type: "SingleSpikeLR"
+        threshould: 0.5
 
 # Optimizer
 optimizer:
@@ -18,7 +25,7 @@ optimizer:
 
 # Loss Function
 loss:
-  type: "SingleSpike"
+  type: "BinaryLoss"
 
 # Training Parameters
 training:
@@ -26,18 +33,17 @@ training:
   batch_size: 32
   validation_split: 0.2  # 20% of the training data used for validation
   shuffle: True
-  verbose: 1
 
 # Dataset
 dataset:
-  name: "Random Dataset"
-  path: "./data/random"  # Path to the dataset
-  normalize: False  # Normalize pixel values to [0, 1]
+  name: "RandomDataset"
+  path: "./outputs/data/random"  # Path to the dataset
+  normalize: False  # Normalize values to [0, 1]
   flatten: True
 
   - encoder:
-      name: "Single Spike Latency Encoder"
-      tau: 1.0
+      name: "LatencyEncoder"
+      max_value: 1.0
 
 # Callbacks (Optional)
 callbacks:
@@ -46,7 +52,7 @@ callbacks:
     patience: 3
     restore_best_weights: True
   - type: "ModelCheckpoint"
-    filepath: "./checkpoints/model_{epoch}.pkl"
+    filepath: ".outputs/checkpoints/model_{epoch}.pkl"
     save_best_only: True
   - type: "MLFlowLogger"
     log_dir: "./logs"
