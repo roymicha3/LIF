@@ -5,6 +5,7 @@ from network.topology.neuron import NeuronLayer
 from settings.serializable import YAMLSerializable
 
 
+@YAMLSerializable.register("Network")
 class Network(torch.nn.Module, YAMLSerializable):
     """
     Responsible for the simulation and interaction of nodes and connections.

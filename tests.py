@@ -1,15 +1,16 @@
 from omegaconf import DictConfig, OmegaConf
 
-from network.kernel.kernel_factory import KernelFactory
+from network.network_factory import NetworkFactory
 
 
-def test_kernel_factory():
-    config = OmegaConf.load("kernel.yaml")
+def test_network_factory():
+    config = OmegaConf.load("config.yaml")
     env_config = OmegaConf.load("env.yaml")
     
-    kernel = KernelFactory.create(config.type, config, env_config)
-    assert kernel is not None
+    model_config = config.model
+    network = NetworkFactory.create(model_config.type, model_config, env_config)
+    assert network is not None
     
 
-test_kernel_factory()
+test_network_factory()
     

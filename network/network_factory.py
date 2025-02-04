@@ -1,9 +1,10 @@
 from omegaconf import DictConfig
 
 from settings.factory import Factory
+from settings.serializable import YAMLSerializable
 
 from network.kernel.kernel_factory import KernelFactory
-from learning.lr_factory import LearningRuleFactory
+from network.learning.lr_factory import LearningRuleFactory
 
 from network.kernel.den_kernel import DENKernel
 from network.learning.single_spike_lr import SingleSpikeLR
@@ -31,20 +32,20 @@ class NetworkFactory(Factory):
         """
         builds a network out of a config file
         """
-        network = Network(config, env_config, learning=True)
+        network = Network(config, learning=True)
         
-        for layer in config.arch.layers:
+        for layer in config.layers:
             kernel = KernelFactory.create(layer.kernel.type, layer.kernel, env_config)
-            learning_rule = LearningRuleFactory.create(layer.learning_rule.type, layer.learning_rule)()
-            connection = SimpleConnection(learning_rule, layer.input_size, layer.output_size, env_config.device)
+            learning_rule = LearningRuleFactory.create(layer.learning_rule.type, layer.learning_rule)
+            connection = SimpleConnection(learning_rule, layer.input_size, layer.output_size, device=env_config.device)
             neuron_layer = NeuronLayer(kernel, connection)
             network.add_layer(neuron_layer, layer.name)
         
         return network
     
-    @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
-        return cls.build_network(config, env_config)
+    @staticmethod
+    def create(name: str, config: DictConfig, env_config: DictConfig):
+        return NetworkFactory.build_network(config, env_config)
 
     @staticmethod
     def build_simple_network(config: dict, device: str) -> Network:

@@ -2,6 +2,7 @@
 
 # Model Architecture
 model:
+  type: "Network"
   layers:
     - name: "input layer"
       input_size: 784
@@ -15,7 +16,7 @@ model:
       
       learning_rule:
         type: "SingleSpikeLR"
-        threshould: 0.5
+        threshold: 0.5
 
 # Optimizer
 optimizer:
@@ -41,9 +42,9 @@ dataset:
   normalize: False  # Normalize values to [0, 1]
   flatten: True
 
-  - encoder:
-      name: "LatencyEncoder"
-      max_value: 1.0
+  encoder:
+    name: "LatencyEncoder"
+    max_value: 1.0
 
 # Callbacks (Optional)
 callbacks:
