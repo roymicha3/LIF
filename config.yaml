@@ -5,11 +5,11 @@ model:
   type: "Network"
   layers:
     - name: "input layer"
-      input_size: 784
+      input_size: 500
       output_size: 1
       kernel:
         type: "DENKernel"
-        n: 784
+        n: 500
         tau_s: 15
         tau_m: 3.75
         learning: False
@@ -20,31 +20,45 @@ model:
 
 # Optimizer
 optimizer:
-  type: "Momentum"
-  learning_rate: 1.0
-  mu: 0.99
+  type: "MomentumOptimizer"
+  lr: 1.0
+  momentum: 0.99
+
+# LR Scheduler
+lr_scheduler:
+  type: "StepLR"
+  args:
+    step_size: 50  # step_size
+    gamma: 0.9 # gamma
 
 # Loss Function
 loss:
   type: "BinaryLoss"
 
-# Training Parameters
-training:
-  epochs: 20
-  batch_size: 32
-  validation_split: 0.2  # 20% of the training data used for validation
-  shuffle: True
-
 # Dataset
 dataset:
-  name: "RandomDataset"
-  path: "./outputs/data/random"  # Path to the dataset
+  type: "RandomDataset"
+  input_size: 500
+  len: 1000
+  root: "./outputs/data/random"  # Path to the dataset
   normalize: False  # Normalize values to [0, 1]
   flatten: True
 
   encoder:
-    name: "LatencyEncoder"
+    type: "LatencyEncoder"
+    size: 500
     max_value: 1.0
+
+# Pipeline
+pipeline:
+  type: "TrainingPipeline"
+  epochs: 100
+  batch_size: 64
+  validation_split: 0.2
+  test_split: 0.2
+  early_stopping_patience: 15
+  shuffle: True
+
 
 # Callbacks (Optional)
 callbacks:

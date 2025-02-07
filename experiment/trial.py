@@ -208,3 +208,127 @@ class Trial:
             val_dataset, 
             report=report,
             early_stopping_patience = early_stopping_patience)
+
+
+import os
+import torch
+from omegaconf import OmegaConf, DictConfig
+
+# add factories here:
+
+# TODO: replace with training pipeline
+def train(model, dataset, criterion, optimizer, device, epochs=5):
+    """
+    Train an MLP model on the MNIST dataset.
+
+    Args:
+        model: The neural network model.
+        train_loader: DataLoader for training.
+        criterion: Loss function.
+        optimizer: Optimizer.
+        device: 'cuda' or 'cpu'.
+        epochs: Number of training epochs.
+
+    Returns:
+        Trained model.
+    """
+    model.to(device)
+    model.train()
+    
+    dataloader = torch.utils.data.DataLoader(
+            dataset,
+            batch_size=64)
+
+    for epoch in range(epochs):
+        total_loss = 0.0
+        correct = 0
+        total = 0
+
+        for images, labels in dataloader:
+            images, labels = images.view(images.size(0), -1).to(device), labels.to(device)
+
+            # Forward pass
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+
+            # Backward pass
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            # Track loss and accuracy
+            total_loss += loss.item()
+            _, predicted = torch.max(outputs, 1)
+            correct += (predicted == labels).sum().item()
+            total += labels.size(0)
+
+        avg_loss = total_loss / len(dataloader)
+        accuracy = 100 * correct / total
+        print(f"Epoch [{epoch+1}/{epochs}], Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%")
+
+    return model
+
+class Trial:
+    """
+    Trial class is the trial in the experiment.
+    """
+    TRIAL_CONFIG = "trial_config.yaml"
+
+    def __init__(self, base_dir: str, base_conf: DictConfig, trial_conf: DictConfig, repeat: int = 1):
+        self.base_dir = base_dir
+        self.trial_name = trial_conf.name
+        self.repeat = repeat
+
+        self.trial_dir = os.path.join(self.base_dir, self.trial_name)
+
+        if not os.path.exists(self.base_dir):
+            raise FileNotFoundError(f"Base directory '{self.base_dir}' does not exist.")
+
+        self.trial_conf = Trial.setup_trial(self.trial_dir, base_conf, trial_conf)
+
+    @staticmethod
+    def setup_trial(trial_dir: str, base_conf: DictConfig, trial_conf: DictConfig) -> DictConfig:
+        """
+        Setup the trial directory and save the configuration.
+        """
+        os.makedirs(trial_dir, exist_ok=True)
+
+        # Save the trial configuration
+        trial_config_path = os.path.join(trial_dir, Trial.TRIAL_CONFIG)
+        merged_config = OmegaConf.merge(base_conf, trial_conf)
+        OmegaConf.save(merged_config, trial_config_path)
+
+        return merged_config
+        
+
+    def run_single(self, tag: str) -> None:
+        """
+        Run a single trial.
+        """
+        repeat_path = os.path.join(self.trial_dir, tag)
+        os.makedirs(repeat_path, exist_ok=True)
+
+        # Create model
+        model_config = OmegaConf.create(self.trial_conf.model)
+        model = eval(model_config.type)(model_config)
+        
+        # Create data loader
+        data_config = OmegaConf.create(self.trial_conf.data)
+        data_loader = eval(data_config.type)(data_config)
+        
+            # Define Loss Function and Optimizer
+        criterion = torch.nn.CrossEntropyLoss()
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        
+        # Train model
+        model = train(model, data_loader.train_loader, criterion, optimizer, "cpu", epochs=5)
+        
+        model.save(os.path.join(repeat_path, "model.yaml"))
+        
+
+    def run(self) -> None:
+        """
+        Run the trial.
+        """
+        for i in range(self.repeat):
+            self.run_single(f"repeat_{i}")

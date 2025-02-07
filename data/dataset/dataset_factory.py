@@ -20,8 +20,7 @@ class DatasetFactory(Factory):
                output_type: OutputType, 
                encoder: Encoder):
         
-        return YAMLSerializable.get_by_name(name).from_config(name,
-                                                              config,
+        return YAMLSerializable.get_by_name(name).from_config(config,
                                                               data_type,
                                                               output_type,
                                                               encoder)

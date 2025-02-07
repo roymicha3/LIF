@@ -6,8 +6,8 @@ import numpy as np
 from omegaconf import DictConfig
 
 from data.dataset.dataset import Dataset, DataType, OutputType
-from settings.serializable import YAMLSerializable
 from data.data_sample import DataSample
+from settings.serializable import YAMLSerializable
 from encoders.encoder import Encoder
 
 @YAMLSerializable.register("RandomDataset")
@@ -61,16 +61,15 @@ class RandomDataset(Dataset):
         sample = self.get_raw(idx)
         return Dataset.get(sample, self._output_type), sample.get_label()
     
-    @classmethod
-    def from_config(cls, 
-                    config: DictConfig, 
+    @staticmethod
+    def from_config(config: DictConfig, 
                     data_type: DataType, 
                     output_type: OutputType, 
                     encoder: Encoder):
         
-        return cls(config.input_size,
-                   config.len,
-                   config.root,
-                   data_type=data_type,
-                   output_type=output_type,
-                   encoder=encoder) 
+        return RandomDataset(config.input_size,
+                            config.len,
+                            config.root,
+                            data_type=data_type,
+                            output_type=output_type,
+                            encoder=encoder) 

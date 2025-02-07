@@ -1,6 +1,7 @@
 from omegaconf import DictConfig, OmegaConf
 
 from network.network_factory import NetworkFactory
+from pipeline.training_pipeline import TrainingPipeline
 
 
 def test_network_factory():
@@ -12,5 +13,13 @@ def test_network_factory():
     assert network is not None
     
 
-test_network_factory()
+def test_training_pipeline():
+    config = OmegaConf.load("config.yaml")
+    env_config = OmegaConf.load("env.yaml")
     
+    pipeline = TrainingPipeline.from_config(config.pipeline)
+    
+    pipeline.run(config, env_config)
+    
+
+test_training_pipeline()

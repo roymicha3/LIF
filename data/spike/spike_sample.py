@@ -21,10 +21,6 @@ class SpikeSample(DataSample):
         self.seq_len = seq_len
     
     @property
-    def seq_len(self):
-        return self.seq_len
-    
-    @property
     def size(self):
         return self.num_of_neurons
     

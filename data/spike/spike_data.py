@@ -37,7 +37,7 @@ class SpikeData:
     def get_index(self):
         return self.neuron_index
 
-    def getspike_times(self):
+    def get_spike_times(self):
         return self.spike_times
 
     def mean_firing_rate(self) -> float:

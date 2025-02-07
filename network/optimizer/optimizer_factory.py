@@ -11,7 +11,7 @@ class OptimizerFactory(Factory):
     Factory class for creating optimizers.
     """
 
-    @classmethod
+    @staticmethod
     def create(name: str, config: DictConfig, params):
         """
         Create an instance of a registered optimizer.
