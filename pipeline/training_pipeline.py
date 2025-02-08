@@ -135,7 +135,10 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             
             # Compute full dataset loss and accuracy after each epoch
             total_loss, total_accuracy = self.evaluate(network, criterion, val_dataset)
-
+            epoch_res = {"val_loss": total_loss, "val_acc": total_accuracy}
+            
+            self.on_epoch_end(epoch_res)
+            
             # Print epoch summary
             print(f"[Epoch {epoch + 1}] Loss: {total_loss:.3f}, Accuracy: {total_accuracy:.2f}%")
 
@@ -149,6 +152,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             if total_accuracy >= 99.9:
                 print(f"Early stopping at epoch {epoch + 1} due to 100% train accuracy.")
                 break
+        
+        self.on_end({})
 
     def evaluate(self, network, criterion, dataset):
         """
@@ -200,7 +205,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
 
         # Calculate per-label accuracy
         accuracy_per_label = {}
-        for label in label_correct.items():
+        for label in label_correct:
             accuracy_per_label[label] = 100 * label_correct[label] / label_total[label]
             print(f"The accuracy for label: {label} is: {accuracy_per_label[label]:.2f}%")
 

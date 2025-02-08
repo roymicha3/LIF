@@ -18,11 +18,15 @@ class Pipeline(ABC):
         self.callbacks.append(callback)
         
     def on_epoch_end(self, metrics):
-        ret_val = True
+        retval = True
         for callback in self.callbacks:
             retval &= callback.on_epoch_end(metrics)
             
-        return ret_val
+        return retval
+    
+    def on_end(self, metrics):
+        for callback in self.callbacks:
+            callback.on_train_end(metrics)
             
     
     @abstractmethod
