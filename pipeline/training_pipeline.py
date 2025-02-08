@@ -12,6 +12,7 @@ from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
 from network.loss.loss_factory import LossFactory
 from network.utils import EarlyStopping
 from pipeline.pipline import Pipeline
+from pipeline.callback.callback_factory import CallbackFactory
 from settings.serializable import YAMLSerializable
 
 
@@ -38,13 +39,20 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         self.shuffle = shuffle
         
     @classmethod
-    def from_config(cls, config: DictConfig):
-        return cls(config.epochs,
-                   config.batch_size, 
-                   config.validation_split,
-                   config.test_split,
-                   config.early_stopping_patience,
-                   config.shuffle)
+    def from_config(cls, config: DictConfig, env_config: DictConfig):
+        pipeline = cls(
+            config.epochs,
+            config.batch_size, 
+            config.validation_split,
+            config.test_split,
+            config.early_stopping_patience,
+            config.shuffle)
+        
+        for callback_config in config.callbacks:
+            callback = CallbackFactory.create(callback_config.type, callback_config, env_config)
+            pipeline.register_callback(callback)
+            
+        return pipeline
         
     def load_dataset(self, 
                      dataset_config: DictConfig, 
@@ -60,6 +68,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             encoder)
         
         return dataset
+    
     
     def run(self, config: DictConfig, env_config: DictConfig):
         """
@@ -191,7 +200,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
 
         # Calculate per-label accuracy
         accuracy_per_label = {}
-        for label in label_correct:
+        for label in label_correct.items():
             accuracy_per_label[label] = 100 * label_correct[label] / label_total[label]
             print(f"The accuracy for label: {label} is: {accuracy_per_label[label]:.2f}%")
 

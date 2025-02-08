@@ -17,7 +17,7 @@ def test_training_pipeline():
     config = OmegaConf.load("config.yaml")
     env_config = OmegaConf.load("env.yaml")
     
-    pipeline = TrainingPipeline.from_config(config.pipeline)
+    pipeline = TrainingPipeline.from_config(config.pipeline, env_config)
     
     pipeline.run(config, env_config)
     

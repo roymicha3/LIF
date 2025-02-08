@@ -13,6 +13,8 @@ model:
         tau_s: 15
         tau_m: 3.75
         learning: False
+        # tau: 10
+        # scale: False
       
       learning_rule:
         type: "SingleSpikeLR"
@@ -21,7 +23,7 @@ model:
 # Optimizer
 optimizer:
   type: "MomentumOptimizer"
-  lr: 1.0
+  lr: 100.0
   momentum: 0.99
 
 # LR Scheduler
@@ -59,16 +61,16 @@ pipeline:
   early_stopping_patience: 15
   shuffle: True
 
-
-# Callbacks (Optional)
-callbacks:
-  - type: "EarlyStopping"
-    monitor: "val_loss"
-    patience: 3
-    restore_best_weights: True
-  - type: "ModelCheckpoint"
-    filepath: ".outputs/checkpoints/model_{epoch}.pkl"
-    save_best_only: True
-  - type: "MLFlowLogger"
-    log_dir: "./logs"
-    histogram_freq: 1
+  # Callbacks (Optional)
+  callbacks:
+    - type: "MetricsTracker"
+    # - type: "EarlyStopping"
+    #   monitor: "val_loss"
+    #   patience: 3
+    #   restore_best_weights: True
+    # - type: "ModelCheckpoint"
+    #   filename: "model_{epoch}.pkl"
+    #   save_best_only: True
+    # - type: "MLFlowLogger"
+    #   log_dir_name: "logs"
+    #   histogram_freq: 1
