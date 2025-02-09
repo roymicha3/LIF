@@ -137,17 +137,13 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             total_loss, total_accuracy = self.evaluate(network, criterion, val_dataset)
             epoch_res = {"val_loss": total_loss, "val_acc": total_accuracy}
             
-            self.on_epoch_end(epoch_res)
+            stop_flag = self.on_epoch_end(epoch_res)
+            if stop_flag:
+                print("A callback issued a stop! \n")
+                break
             
             # Print epoch summary
             print(f"[Epoch {epoch + 1}] Loss: {total_loss:.3f}, Accuracy: {total_accuracy:.2f}%")
-
-            # Early stopping logic
-            early_stopping(total_loss, network)
-
-            if early_stopping.early_stop:
-                print(f"Early stopping at epoch {epoch + 1} due to no improvement in validation loss.")
-                break
 
             if total_accuracy >= 99.9:
                 print(f"Early stopping at epoch {epoch + 1} due to 100% train accuracy.")
