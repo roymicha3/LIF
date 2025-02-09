@@ -3,7 +3,6 @@ from omegaconf import DictConfig
 
 from network.kernel.kernel import Kernel
 from network.kernel.leaky_kernel import LeakyKernel
-from common import SPIKE_NS
 from data.spike.spike_sample import SpikeSample
 from settings.serializable import YAMLSerializable
 
