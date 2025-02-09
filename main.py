@@ -4,10 +4,8 @@ the main of the project
 import os
 from omegaconf import OmegaConf, DictConfig
 
-from common import MODEL_NS, SPIKE_NS, DATA_NS
-# from analysis.visualization import *
-from experiment.trial import Trial
-from network.kernel.kernel_factory import KernelFactory
+
+from experiment.experiment import Experiment
 
 
 def main():
@@ -16,19 +14,20 @@ def main():
     """
     print("This is the thesis main!")
     
-    # config = MODEL_ATTRIBUTES
+    base_dir_path = os.path.join("outputs", "experiment example", "config")
     
-    # Trial.run(config, report=False)
+    experiment_config = OmegaConf.load(os.path.join(base_dir_path, "experiment.yaml"))
+    config = OmegaConf.load(os.path.join(base_dir_path, "config.yaml"))
     
-    config = OmegaConf.load("kernel.yaml")
-    kernel = KernelFactory.create(config.type, config)
+    experiment_config.settings = config
     
-    # simple_tempotron_tune_hyperparameters()
+    env_config = OmegaConf.load(os.path.join(base_dir_path, "env.yaml"))
     
-    # visualizer = RandomSpikePattern(config)
-    # visualizer.den_response()
+    trials_config = OmegaConf.load(os.path.join(base_dir_path, "trials.yaml"))
     
-    # RandomSpikePattern.results_b()
+    experiment = Experiment.from_config(experiment_config, env_config)
+    
+    experiment.run(trials_config)
     
     
 
