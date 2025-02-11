@@ -2,7 +2,7 @@
 the main of the project
 """
 import os
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import OmegaConf
 
 
 from experiment.experiment import Experiment
@@ -14,8 +14,7 @@ def main():
     """
     print("This is the thesis main!")
     
-    base_dir_path = os.path.join("outputs", "experiment example", "config")
-    
+    base_dir_path = os.path.join("outputs", "lr validation", "config")
     experiment_config = OmegaConf.load(os.path.join(base_dir_path, "experiment.yaml"))
     config = OmegaConf.load(os.path.join(base_dir_path, "config.yaml"))
     
@@ -28,7 +27,6 @@ def main():
     experiment = Experiment.from_config(experiment_config, env_config)
     
     experiment.run(trials_config)
-    
     
 
 if __name__ == "__main__":

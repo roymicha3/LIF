@@ -27,7 +27,7 @@ class NetworkFactory(Factory):
         """
         builds a network out of a config file
         """
-        network = Network(config, learning=True)
+        network = Network(config, learning=True, device=env_config.device)
         
         for layer in config.layers:
             kernel = KernelFactory.create(layer.kernel.type, layer.kernel, env_config)

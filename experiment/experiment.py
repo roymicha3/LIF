@@ -45,7 +45,7 @@ class Experiment(YAMLSerializable):
         """
         for conf in trial_config:
             conf.settings = OmegaConf.merge(self.config.settings, conf.settings)
-            conf.base_dir = self.base_dir
+            conf.base_dir = self.experiment_dir
             trial = Trial.from_config(conf, self.env_config)
             trial.run()
             

@@ -25,7 +25,6 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                  batch_size: int, 
                  validation_split: float, 
                  test_split: float,
-                 early_stopping_patience: int,
                  shuffle: bool = True):
         
         super(TrainingPipeline, self).__init__()
@@ -35,7 +34,6 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         self.batch_size = batch_size
         self.validation_split = validation_split
         self.test_split = test_split
-        self.early_stopping_patience = early_stopping_patience
         self.shuffle = shuffle
         
     @classmethod
@@ -45,7 +43,6 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             config.batch_size, 
             config.validation_split,
             config.test_split,
-            config.early_stopping_patience,
             config.shuffle)
         
         for callback_config in config.callbacks:
@@ -92,9 +89,6 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         
         scheduler = LRSchedulerFactory.create(config.lr_scheduler.type, optimizer, config.lr_scheduler)
         criterion = LossFactory.create(config.loss.type, config.loss, env_config)
-        
-        # Early stopping variables
-        early_stopping = EarlyStopping(patience=self.early_stopping_patience)
         
         for epoch in range(self.epochs):
             correct_predictions = 0

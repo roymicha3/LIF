@@ -22,16 +22,16 @@ model:
 
 # Optimizer
 optimizer:
-  type: "MomentumOptimizer"
-  lr: 100.0
+  type: MomentumOptimizer
+  lr: 100
   momentum: 0.99
 
 # LR Scheduler
 lr_scheduler:
-  type: "StepLR"
+  type: StepLR
   args:
-    step_size: 50  # step_size
-    gamma: 0.9 # gamma
+    step_size: 50
+    gamma: 0.9
 
 # Loss Function
 loss:
