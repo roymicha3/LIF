@@ -16,7 +16,7 @@ class Adam(optim.Adam, YAMLSerializable):
     def from_config(cls, config: DictConfig, params):
         return cls(params,
                    lr=config.lr,
-                   betas=config.betas,
+                   betas=(config.beta_l, config.beta_h),
                    eps=config.eps,
                    weight_decay=config.weight_decay,
                    amsgrad=config.amsgrad) 

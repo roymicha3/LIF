@@ -5,6 +5,7 @@ from settings.serializable import YAMLSerializable
 
 # Import all the optimizers
 from network.optimizer.momentum_opt import MomentumOptimizer
+from network.optimizer.optimizers import *
 
 class OptimizerFactory(Factory):
     """
