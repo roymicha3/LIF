@@ -82,7 +82,7 @@ class SimpleConnection(Connection):
         if grad.dim() > self.w.dim():
             grad = torch.sum(grad, dim=0) / batch_size
 
-        self.w.grad = grad
+        self.w.grad = grad.to(self.device)
 
     def normalize(self) -> None:
         """

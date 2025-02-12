@@ -39,7 +39,7 @@ def main():
     runs the main logic
     """
     print("This is the thesis main!")
-    base_dir_path = os.path.join("outputs", "batch validation")
+    base_dir_path = os.path.join("outputs", "integral lr")
     
     run_experiment(base_dir_path)
 

@@ -60,5 +60,5 @@ class SingleSpikeLR(LearningRule, YAMLSerializable):
         return weight_grad
     
     @classmethod
-    def from_config(cls, config: DictConfig):
-        return cls(config.threshold)
+    def from_config(cls, config: DictConfig, env_config: DictConfig):
+        return cls(env_config.v_th)

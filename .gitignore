@@ -2,3 +2,4 @@ venv/*
 *.pyc
 data/data/*
 outputs/*
+*.ps1
