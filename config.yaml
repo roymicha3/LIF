@@ -67,7 +67,7 @@ pipeline:
     - type: "EarlyStopping"
       metric: "val_loss"
       patience: 3
-      min_delta: 0.0
+      min_delta: 5.0
       verbose: True
     # - type: "ModelCheckpoint"
     #   filename: "model_{epoch}.pkl"

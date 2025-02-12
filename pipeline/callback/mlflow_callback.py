@@ -1,14 +1,16 @@
 from typing import Optional, Dict, Any
+from omegaconf import DictConfig
 import mlflow
 import os
 
 from pipeline.callback.callback import Callback, Metrics
+from settings.serializable import YAMLSerializable
 
 
+@YAMLSerializable.register("MlflowCallback")
 class MlflowCallback(Callback):
     def __init__(self, experiment_name: Optional[str] = None, 
-                 experiment_dir: Optional[str] = None, 
-                 run_dir: Optional[str] = None):
+                 experiment_dir: Optional[str] = None):
         """
         Initialize the MlflowCallback.
 
@@ -16,21 +18,18 @@ class MlflowCallback(Callback):
             experiment_name (str, optional): Name of the MLflow experiment to log metrics to.
                                              If provided, sets or gets the experiment.
             experiment_dir (str, optional): Directory to store experiment artifacts.
-            run_dir (str, optional): Directory to store run artifacts.
         """
         if experiment_name:
             experiment = mlflow.get_experiment_by_name(experiment_name)
             if experiment is None:
                 if experiment_dir:
+                    os.makedirs(experiment_dir, exist_ok=True)
                     artifact_location = os.path.abspath(experiment_dir)
                     mlflow.create_experiment(experiment_name, artifact_location=artifact_location)
                 else:
                     mlflow.create_experiment(experiment_name)
             mlflow.set_experiment(experiment_name)
         
-        if run_dir:
-            self.active_run = mlflow.start_run(run_name=os.path.abspath(run_dir)) # TODO: check it this works as expected
-        else:
             self.active_run = mlflow.start_run()
 
     def on_epoch_end(self, metrics: Dict[str, Any]) -> bool:
@@ -57,3 +56,9 @@ class MlflowCallback(Callback):
         """
         if mlflow.active_run():
             mlflow.end_run()
+            
+    @classmethod
+    def from_config(cls, config: DictConfig, env_config: DictConfig):
+        return cls(
+            config.experiment_name,
+            config.root_dir)

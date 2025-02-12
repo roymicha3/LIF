@@ -7,18 +7,18 @@ from settings.serializable import YAMLSerializable
 @YAMLSerializable.register("EarlyStopping")
 class EarlyStopping(Callback):
     """
-    Early stops the training if validation loss doesn't improve after a given patience.
+    Early stops the training if validation metric doesn't improve after a given patience.
     """
-    def __init__(self, metric=Metrics.VAL_LOSS, patience=5, min_delta=0.0, verbose=False):
+    def __init__(self, metric=Metrics.VAL_LOSS, patience=5, min_delta_percent=0.0, verbose=False):
         """
         Args:
             patience (int): How many epochs to wait after last improvement.
-            min_delta (float): Minimum change to qualify as an improvement.
+            min_delta_percent (float): Minimum percentage change to qualify as an improvement.
             verbose (bool): Print message when stopping early.
         """
         self.metric = metric
         self.patience = patience
-        self.min_delta = min_delta
+        self.min_delta_percent = min_delta_percent
         self.verbose = verbose
         self.counter = 0
         self.best_metric = None
@@ -26,13 +26,21 @@ class EarlyStopping(Callback):
 
     def on_epoch_end(self, metrics) -> bool:
         """
-        Check if validation loss has improved; otherwise increase counter.
+        Check if validation metric has improved; otherwise increase counter.
 
         Args:
-            val_loss (float): Current validation loss.
+            metrics (dict): Current metrics including the monitored metric.
         """
-        if self.best_metric is None or metrics[self.metric] < self.best_metric - self.min_delta:
-            self.best_metric = metrics[self.metric]
+        current_metric = metrics[self.metric]
+        
+        if self.best_metric is None:
+            self.best_metric = current_metric
+            return False
+
+        percent_change = (self.best_metric - current_metric) / self.best_metric * 100
+
+        if percent_change > self.min_delta_percent:
+            self.best_metric = current_metric
             self.counter = 0
         else:
             self.counter += 1
