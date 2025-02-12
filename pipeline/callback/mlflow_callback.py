@@ -29,7 +29,7 @@ class MlflowCallback(Callback):
             mlflow.set_experiment(experiment_name)
         
         if run_dir:
-            self.active_run = mlflow.start_run(artifact_location=os.path.abspath(run_dir))
+            self.active_run = mlflow.start_run(run_name=os.path.abspath(run_dir)) # TODO: check it this works as expected
         else:
             self.active_run = mlflow.start_run()
 
