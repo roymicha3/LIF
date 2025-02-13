@@ -1,7 +1,11 @@
 import torch
 from torch.optim import Optimizer
+from omegaconf import DictConfig
 
-class MomentumOptimizer(Optimizer):
+from settings.serializable import YAMLSerializable
+
+@YAMLSerializable.register("MomentumOptimizer")
+class MomentumOptimizer(Optimizer, YAMLSerializable):
     """
     Implements a simplified momentum-based optimizer with the same API as the original.
     """
@@ -19,6 +23,8 @@ class MomentumOptimizer(Optimizer):
         """
         defaults = {'lr': lr, 'momentum': momentum}
         super().__init__(params, defaults)
+        super(YAMLSerializable, self).__init__()
+        
         self.prev_grad = None
 
     def step(self, closure=None):
@@ -78,3 +84,7 @@ class MomentumOptimizer(Optimizer):
             list: A list of learning rates for each parameter group.
         """
         return [group['lr'] for group in self.param_groups]
+
+    @classmethod
+    def from_config(cls, config: DictConfig, params):
+        return cls(params, config.lr, config.momentum)

@@ -1,0 +1,76 @@
+# Neural Network Configuration
+
+# Model Architecture
+model:
+  type: "Network"
+  layers:
+    - name: "input layer"
+      input_size: 500
+      output_size: 1
+      kernel:
+        type: "DENKernel"
+        n: 500
+        tau_s: 15
+        tau_m: 3.75
+        learning: False
+        # tau: 10
+        # scale: False
+      
+      learning_rule:
+        type: "SingleSpikeLR"
+        threshold: 0.5
+
+# Optimizer
+optimizer:
+  type: "MomentumOptimizer"
+  lr: 100.0
+  momentum: 0.99
+
+# LR Scheduler
+lr_scheduler:
+  type: "StepLR"
+  args:
+    step_size: 50  # step_size
+    gamma: 0.9 # gamma
+
+# Loss Function
+loss:
+  type: "BinaryLoss"
+
+# Dataset
+dataset:
+  type: "RandomDataset"
+  input_size: 500
+  len: 1000
+  root: "./outputs/data/random"  # Path to the dataset
+  normalize: False  # Normalize values to [0, 1]
+  flatten: True
+
+  encoder:
+    type: "LatencyEncoder"
+    size: 500
+    max_value: 1.0
+
+# Pipeline
+pipeline:
+  type: "TrainingPipeline"
+  epochs: 100
+  batch_size: 64
+  validation_split: 0.2
+  test_split: 0.2
+  early_stopping_patience: 15
+  shuffle: True
+
+  # Callbacks (Optional)
+  callbacks:
+    - type: "MetricsTracker"
+    # - type: "EarlyStopping"
+    #   monitor: "val_loss"
+    #   patience: 3
+    #   restore_best_weights: True
+    # - type: "ModelCheckpoint"
+    #   filename: "model_{epoch}.pkl"
+    #   save_best_only: True
+    # - type: "MLFlowLogger"
+    #   log_dir_name: "logs"
+    #   histogram_freq: 1

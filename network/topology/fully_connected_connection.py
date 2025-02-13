@@ -12,7 +12,8 @@ class SimpleConnection(Connection):
     def __init__(
         self,
         lr: LearningRule,
-        n: int = None,
+        input_size: int = None,
+        output_size: int = None,
         w: torch.Tensor = None,
         device=None,
         norm: np.int32 = 1) -> None:
@@ -22,7 +23,7 @@ class SimpleConnection(Connection):
         :param target: A layer of nodes to which the connection connects.
         :param bias: Whether to include a bias term in the connection.
         """
-        super().__init__(lr, n, w, device)
+        super().__init__(lr, (input_size, output_size), w, device)
         self.norm = norm
         self.saved_tensors = None
 

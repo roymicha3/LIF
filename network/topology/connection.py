@@ -8,7 +8,8 @@ from network.learning.learning_rule import LearningRule
 
 class Connection(ABC, Module):
     """
-    Abstract base method for connections between ``Nodes``.
+    Abstract base method for connections,
+    This class incorporates the activation inside the connection!
     """
 
     def __init__(self, lr: LearningRule, shape: tuple = None, w: torch.Tensor = None, device=None) -> None:

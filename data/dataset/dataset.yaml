@@ -1,0 +1,4 @@
+type: "RandomDataset"
+input_size: 500
+len: 1000
+root: "where the data should be saved (path)"

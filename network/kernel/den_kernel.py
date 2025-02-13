@@ -1,33 +1,46 @@
 import torch
-# from typing import override
+from omegaconf import DictConfig
 
 from network.kernel.kernel import Kernel
 from network.kernel.leaky_kernel import LeakyKernel
-from common import SPIKE_NS
 from data.spike.spike_sample import SpikeSample
+from settings.serializable import YAMLSerializable
 
-# Define the DEN Node class (assuming the class is provided as is)
-class DENKernel(Kernel):
+@YAMLSerializable.register("DENKernel")
+class DENKernel(Kernel, YAMLSerializable):
     def __init__(
         self,
-        config,
+        env_config : DictConfig,
         n,
-        device=None,
-        dtype=None,
-        scale = False,
+        tau_m,
+        tau_s,
         learning = False
     ):
         super(DENKernel, self).__init__(n, (n, n), learning)
+        super(YAMLSerializable, self).__init__()
         
-        self.device = device
-        self._config = config
-        tau_m = self._config[SPIKE_NS.tau_m]
-        self._coductness = LeakyKernel(self._config, n, device, dtype, scale=scale, learning=learning, tau=tau_m)
+        self.env_config = env_config
+        self.n = n
+        self.dt = env_config.dt
+        self.tau_m = tau_m
+        self.tau_s = tau_s
+        self.v_0 = env_config.v_0
         
-        tau_s = self._config[SPIKE_NS.tau_s]
-        self._voltage = LeakyKernel(self._config, n, device, dtype, scale=False, learning=learning, tau=tau_m / 4) #TODO: change back
+        self.device = env_config.device
+
+        self._coductness = LeakyKernel(env_config,
+                                       self.n,
+                                       self.tau_m,
+                                       scale = True,
+                                       learning=learning) 
         
-    # @override
+        self._voltage = LeakyKernel(env_config,
+                                    self.n,
+                                    self.tau_s,
+                                    scale = False,
+                                    learning=learning)
+    
+    
     def forward(self, x):
         """
         forward function for the layer
@@ -62,3 +75,15 @@ class DENKernel(Kernel):
                 response[t:, i] += (1 / (tau_m - tau_s)) * (exp_rise - exp_decay)
 
         return response
+    
+    @classmethod
+    def from_config(cls, config: DictConfig, env_config: DictConfig):
+        """
+        Create an instance from a DictConfig.
+        """
+        return cls(
+                   env_config,
+                   config.n,
+                   config.tau_m,
+                   config.tau_s,
+                   learning=config.learning)

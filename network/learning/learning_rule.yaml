@@ -1,0 +1,2 @@
+type: "SingleSpikeLR"
+threshould: 0.5

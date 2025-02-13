@@ -1,9 +1,7 @@
 import torch
 
-from common import SPIKE_NS
 from network.kernel.kernel import Kernel
 from network.topology.connection import Connection
-from network.learning.learning_rule import LearningRule
 
 class NeuronLayer(torch.nn.Module):
     """
@@ -11,13 +9,10 @@ class NeuronLayer(torch.nn.Module):
     """
     
     def __init__(self,
-                 config,
                  kernel: Kernel,
                  connection: Connection) -> None:
         
         super().__init__()
-        self._config = config
-        self._dt = self._config[SPIKE_NS.dt]  # Time step for spike calculation
         
         self.kernel = kernel
         self.connection = connection
