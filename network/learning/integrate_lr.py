@@ -49,18 +49,13 @@ class IntegrateLearningRule(LearningRule, YAMLSerializable):
             input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
 
         b = E.size(0)
-        n = E.size(-1)
         
-        mean_batch_input = torch.sum(input_, dim=0) / b
+        h = E * self.beta * torch.bmm(exp.transpose(1, 2), input_)
+        h = h / torch.sum(exp, dim=-2, keepdim=True)
         
-        layer_size = input_.size(-1)
-        gradient = torch.zeros(size=(layer_size, n))
+        gradient = torch.sum(h, dim=0).t() / b # sum over all batches
         
-        for i in range(n):
-            exp[:, :, i] = exp[:, :, i] / torch.sum(exp[:, :, i], dim=-1, keepdim=True)
-            gradient[:, i] = torch.sum(E[:, i].unsqueeze(-1) * torch.bmm(exp.transpose(1, 2), input_), dim=0)
-        
-        return gradient / b
+        return gradient
     
     @classmethod
     def from_config(cls, config: DictConfig, env_config: DictConfig):

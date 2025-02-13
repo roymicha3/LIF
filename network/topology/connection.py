@@ -55,15 +55,15 @@ class Connection(ABC, Module):
     @staticmethod
     def sample_weights(input_size: int, output_size: int, device=None) -> torch.Tensor:
         """
-        Samples weights from a normal distribution with mean 0.5 and standard deviation 1.
+        Samples weights from a normal distribution with mean 0.0 and standard deviation 1.
 
         :param input_size: Number of inputs.
         :param output_size: Number of outputs.
         :param device: Device to store the weights (CPU or GPU).
         :return: A tensor of sampled weights.
         """
-        # Sample from Norm(0.5, 1)
-        weights = torch.normal(0.5, 1.0, size=(input_size, output_size), device=device)
+        # Sample from Norm(0.0, 1)
+        weights = torch.normal(0.0, 1.0, size=(input_size, output_size), device=device)
         return weights
 
     def plot_weights_histogram(self, bins=25):
