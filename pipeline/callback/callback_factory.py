@@ -5,6 +5,8 @@ from settings.serializable import YAMLSerializable
 
 # import the callbacks classes
 from pipeline.callback.metric_tracker import MetricsTracker
+from pipeline.callback.early_stopping import EarlyStopping
+from pipeline.callback.mlflow_callback import MlflowCallback
 
 
 class CallbackFactory(Factory):

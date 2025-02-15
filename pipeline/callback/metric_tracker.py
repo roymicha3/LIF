@@ -43,7 +43,7 @@ class MetricsTracker(Callback, YAMLSerializable):
         with open(self.log_path, 'w', newline='', encoding="utf-8") as f:
             writer = csv.writer(f)
             # Write the header
-            writer.writerow(['Metric'] + list(self.metrics.keys()))
+            writer.writerow(list(self.metrics.keys()))
             # Write the rows
             rows = zip(*self.metrics.values())
             for row in rows:

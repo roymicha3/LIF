@@ -1,0 +1,25 @@
+name: "experiment 1"
+base_dir: "./outputs"
+settings: # the base cofiguration of the experiment
+
+trials: # each trial changes the parameters it chooses
+  - name: "trial_1"
+    base_dir: ""
+    repeat: 1
+    settings:
+      dataset:
+        len: 1000
+
+  - name: "trial_2"
+    base_dir: ""
+    repeat: 1
+    settings:
+      dataset:
+        len: 1250
+
+  - name: "trial_3"
+    base_dir: ""
+    repeat: 1
+    settings:
+      dataset:
+        len: 1500

@@ -2,3 +2,5 @@ venv/*
 *.pyc
 data/data/*
 outputs/*
+*.ps1
+mlruns

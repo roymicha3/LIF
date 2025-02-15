@@ -1,4 +1,4 @@
-# Neural Network Configuration
+# Trial Configuration
 
 # Model Architecture
 model:
@@ -22,16 +22,16 @@ model:
 
 # Optimizer
 optimizer:
-  type: "MomentumOptimizer"
-  lr: 100.0
+  type: MomentumOptimizer
+  lr: 100
   momentum: 0.99
 
 # LR Scheduler
 lr_scheduler:
-  type: "StepLR"
+  type: StepLR
   args:
-    step_size: 50  # step_size
-    gamma: 0.9 # gamma
+    step_size: 50
+    gamma: 0.9
 
 # Loss Function
 loss:
@@ -54,7 +54,7 @@ dataset:
 # Pipeline
 pipeline:
   type: "TrainingPipeline"
-  epochs: 100
+  epochs: 5
   batch_size: 64
   validation_split: 0.2
   test_split: 0.2
@@ -64,13 +64,14 @@ pipeline:
   # Callbacks (Optional)
   callbacks:
     - type: "MetricsTracker"
-    # - type: "EarlyStopping"
-    #   monitor: "val_loss"
-    #   patience: 3
-    #   restore_best_weights: True
+    - type: "EarlyStopping"
+      metric: "val_loss"
+      patience: 3
+      min_delta: 5.0
+      verbose: True
+    - type: "MlflowCallback"
+      experiment_name: ""
+      root_dir: "./outputs"
     # - type: "ModelCheckpoint"
     #   filename: "model_{epoch}.pkl"
     #   save_best_only: True
-    # - type: "MLFlowLogger"
-    #   log_dir_name: "logs"
-    #   histogram_freq: 1
