@@ -1,5 +1,5 @@
 from omegaconf import OmegaConf, DictConfig
-from typing import Type, Dict
+from typing import Type, Dict, Self
 
 
 class YAMLSerializable:
@@ -22,7 +22,7 @@ class YAMLSerializable:
         return decorator
     
     @classmethod
-    def get_by_name(cls, name: str):
+    def get_by_name(cls, name: str) -> Self:
         """
         return an instance of a registered serializable object.
         """
