@@ -1,0 +1,4 @@
+name: "Trial 1"
+base_dir: ./experiment1
+repeat: 1
+settings: # the actual cofiguration of the trial

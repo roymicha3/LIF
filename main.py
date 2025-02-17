@@ -2,63 +2,46 @@
 the main of the project
 """
 import os
+from omegaconf import OmegaConf
 
-from common import MODEL_NS, SPIKE_NS, DATA_NS, Configuration
-from analysis.visualization import *
-from experiment.trial import Trial
-from experiment.experiment import simple_tempotron_tune_hyperparameters
+from experiment.experiment import Experiment
 
-from analysis.results import RandomSpikePattern
-
-
-MODEL_ATTRIBUTES = \
-{
-    # MODEL PARAMETERS:
-    MODEL_NS.NUM_OUTPUTS             : 1,
-    MODEL_NS.NUM_INPUTS              : 500,
-    MODEL_NS.LR                      : 100.0
-    ,
-    MODEL_NS.MOMENTUM                : 0.99,
-    MODEL_NS.EPOCHS                  : 1000,
-    MODEL_NS.BETA                    : 50,
+def run_experiment(experiment_path: str):
+    if not os.path.exists(experiment_path):
+        print(f"Base directory path '{experiment_path}' does not exist.")
+        raise NotADirectoryError(f"Base directory path '{experiment_path}' does not exist.")
     
-    # DATA PARAMETERS:
-    DATA_NS.BATCH_SIZE               : 64,
-    DATA_NS.DATASET_SIZE             : 1000,
-    DATA_NS.NUM_CLASSES              : 2,
-    DATA_NS.TRAINING_PERCENTAGE      : 50,
-    DATA_NS.TESTING_PERCENTAGE       : 25,
-    DATA_NS.VALIDATION_PERCENTAGE    : 100,
-    DATA_NS.ROOT                     : os.path.join(".", "data", "data", "random"),
+    config_path = os.path.join(experiment_path, "config")
+    if not os.path.exists(config_path):
+        print(f"Config path '{config_path}' does not exist.")
+        raise NotADirectoryError(f"Config path '{config_path}' does not exist.")
     
-    # SPIKE PARAMETERS:
-    SPIKE_NS.T                       : 500,
-    SPIKE_NS.dt                      : 1.0,
-    SPIKE_NS.tau                     : 10,
+        
+    experiment_config = OmegaConf.load(os.path.join(config_path, "experiment.yaml"))
+    experiment_config.name = os.path.basename(experiment_path)
     
-    SPIKE_NS.tau_m                   : 10,
-    SPIKE_NS.tau_s                   : 10 / 4,
-    SPIKE_NS.v_thr                   : 1,
-}
+    config = OmegaConf.load(os.path.join(config_path, "config.yaml"))
+    
+    experiment_config.settings = config
+    
+    env_config = OmegaConf.load(os.path.join(config_path, "env.yaml"))
+    
+    trials_config = OmegaConf.load(os.path.join(config_path, "trials.yaml"))
+    
+    experiment = Experiment.from_config(experiment_config, env_config)
+    
+    experiment.run(trials_config)
+    
+
 
 def main():
     """
     runs the main logic
     """
-    # print("This is the thesis main!")
+    print("This is the thesis main!")
+    base_dir_path = os.path.join("outputs", "integral lr")
     
-    config = Configuration(MODEL_ATTRIBUTES)
-    
-    Trial.run(config, report=False)
-    
-    # simple_tempotron_tune_hyperparameters()
-    
-    # visualizer = RandomSpikePattern(config)
-    # visualizer.den_response()
-    
-    # RandomSpikePattern.results_b()
-    
-    
+    run_experiment(base_dir_path)
 
 if __name__ == "__main__":
     main()

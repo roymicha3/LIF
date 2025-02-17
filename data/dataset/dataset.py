@@ -70,6 +70,9 @@ class Dataset(data.Dataset):
         
         return DataSample.deserialize(filename)
     
+    def set_type(self, type_: DataType):
+        self._type = type_
+    
     @staticmethod
     def get(sample: DataSample, output_type: OutputType = OutputType.TORCH):
         if output_type is OutputType.NORMAL:

@@ -1,0 +1,14 @@
+layers:
+  - name: "input layer"
+    input_size: 784
+    output_size: 1
+    kernel:
+      type: "DENKernel"
+      n: 784
+      tau_s: 15
+      tau_m: 3.75
+      learning: False
+    
+    learning_rule:
+      type: "SingleSpikeLR"
+      threshould: 0.5

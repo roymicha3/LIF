@@ -2,47 +2,48 @@
 In this file, we define the Dataset class.
 """
 import os
-import torch
 import numpy as np
+from omegaconf import DictConfig
 
 from data.dataset.dataset import Dataset, DataType, OutputType
 from data.data_sample import DataSample
+from settings.serializable import YAMLSerializable
 from encoders.encoder import Encoder
-from encoders.identity_encoder import IdentityEncoder
-from common import Configuration, DATA_NS, MODEL_NS
 
+@YAMLSerializable.register("RandomDataset")
 class RandomDataset(Dataset):
     """
     This class is responsible for loading the data .
     """
     def __init__(self,
-                config: Configuration,
-                data_type: DataType = DataType.TRAIN,
-                output_type: OutputType = OutputType.TORCH,
-                encoder: Encoder = ...) -> None:
+                 input_size: int,
+                 len_: int,
+                 root: str,
+                 data_type: DataType = DataType.TRAIN,
+                 output_type: OutputType = OutputType.TORCH,
+                 encoder: Encoder = ...) -> None:
 
         super().__init__(data_type, output_type, encoder)
-        self._config         = config
-        self._input_size     = self._config[MODEL_NS.NUM_INPUTS]
-        self._len            = self._config[DATA_NS.DATASET_SIZE]
-        self._root           = self._config[DATA_NS.ROOT]
+        self.input_size     = input_size
+        self.len            = len_
+        self.root           = root
         
         
     def __len__(self):
         """
         Return the length of the dataset
         """
-        return self._len
+        return self.len
     
     def get_raw(self, idx, encoded = True) -> DataSample:
         """
         Returns a single raw item from the dataset
         """
         filename = f"{idx}.pkl"
-        full_path = os.path.join(self._root, filename)
+        full_path = os.path.join(self.root, filename)
         
         if not os.path.exists(full_path):
-            data = np.random.rand(self._input_size).reshape((self._input_size, 1)).tolist()
+            data = np.random.rand(self.input_size).reshape((self.input_size, 1)).tolist()
             label = np.random.randint(0, 2) * 2 - 1 # either +1 or -1 label
             DataSample(data, label).serialize(full_path)
         
@@ -59,3 +60,16 @@ class RandomDataset(Dataset):
         """
         sample = self.get_raw(idx)
         return Dataset.get(sample, self._output_type), sample.get_label()
+    
+    @staticmethod
+    def from_config(config: DictConfig, 
+                    data_type: DataType, 
+                    output_type: OutputType, 
+                    encoder: Encoder):
+        
+        return RandomDataset(config.input_size,
+                            config.len,
+                            config.root,
+                            data_type=data_type,
+                            output_type=output_type,
+                            encoder=encoder) 

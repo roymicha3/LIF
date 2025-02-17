@@ -3,8 +3,6 @@ Utility functions.
 """
 import numpy as np
 
-from common import *
-
 def max_with_default(arr, default_value = 0):
     """
     Return the maximum value of the array or the default value if the array is empty.

@@ -1,15 +1,16 @@
+from omegaconf import DictConfig
+
+from settings.factory import Factory
+from settings.serializable import YAMLSerializable
+
+from network.kernel.kernel_factory import KernelFactory
+from network.learning.lr_factory import LearningRuleFactory
+
 from network.topology.network import Network
-from network.nodes.node import Node
-from network.nodes.leaky_node import LeakyNode
-from network.nodes.den_node import DENNode
-from network.nodes.single_spike_node import SingleSpikeNode
-from network.topology.simple_connection import SimpleConnection
-from network.topology.voltage_conv_connection import VoltageConvConnection
-from network.nodes.exp_node import ExpNode
+from network.topology.neuron import NeuronLayer
+from network.topology.fully_connected_connection import SimpleConnection
 
-from common import Configuration, SPIKE_NS, MODEL_NS, DATA_NS
-
-class NetworkFactory:
+class NetworkFactory(Factory):
     """
     A factory class to build different types of neural network models with specified configurations.
     Currently supports:
@@ -20,56 +21,27 @@ class NetworkFactory:
     - build_simple_network: Constructs a network with a simple, direct connection.
     - build_voltage_convolution_network: Constructs a network with a voltage convolutional connection.
     """
-
+    
     @staticmethod
-    def build_simple_network(config: dict, device: str) -> Network:
+    def build_network(config: DictConfig, env_config: DictConfig) -> Network:
         """
-        Constructs a network with a simple connection between input and output layers.
-
-        Args:
-            config (dict): Configuration dictionary containing model parameters.
-            device (str): Device to which the network components are moved (e.g., 'cpu' or 'cuda').
-
-        Returns:
-            Network: A configured network with input and output layers connected by a SimpleConnection.
+        builds a network out of a config file
         """
-        # Initialize input and output layers with specified configurations
-        input_layer = DENNode(config, config[MODEL_NS.NUM_INPUTS], device=device)
-        output_layer = SingleSpikeNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=False)
-        connection = SimpleConnection(input_layer, output_layer, device=device)
-
-        # Create the network and add layers and connection
-        network = Network(config[DATA_NS.BATCH_SIZE], device=device)
-        network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
-        network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
-        network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
+        network = Network(config, learning=True, device=env_config.device)
         
-        for name, param in network.named_parameters():
-            print(name, param.size())
+        for layer in config.layers:
+            kernel = KernelFactory.create(layer.kernel.type, layer.kernel, env_config)
+            learning_rule = LearningRuleFactory.create(layer.learning_rule.type, layer.learning_rule, env_config)
+            connection = SimpleConnection(learning_rule, layer.input_size, layer.output_size, device=env_config.device)
+            neuron_layer = NeuronLayer(kernel, connection)
+            network.add_layer(neuron_layer, layer.name)
+            
+        network.to(env_config.device)
         
         return network
-
+    
     @staticmethod
-    def build_voltage_convolution_network(config: dict, device: str) -> Network:
-        """
-        Constructs a network with a voltage-based convolutional connection between input and output layers.
+    def create(name: str, config: DictConfig, env_config: DictConfig):
+        return NetworkFactory.build_network(config, env_config)
 
-        Args:
-            config (dict): Configuration dictionary containing model parameters.
-            device (str): Device to which the network components are moved (e.g., 'cpu' or 'cuda').
-
-        Returns:
-            Network: A configured network with input and output layers connected by a VoltageConvConnection.
-        """
-        # Initialize input and output layers with specified configurations
-        input_layer = DENNode(config, config[MODEL_NS.NUM_INPUTS], device=device)
-        output_layer = ExpNode(config, config[MODEL_NS.NUM_OUTPUTS], device=device, learning=True)
-        connection = VoltageConvConnection(input_layer, output_layer, beta=config[MODEL_NS.BETA], device=device)
-
-        # Create the network and add layers and connection
-        network = Network(config[DATA_NS.BATCH_SIZE], device=device)
-        network.add_layer(input_layer, Network.INPUT_LAYER_NAME)
-        network.add_layer(output_layer, Network.OUTPUT_LAYER_NAME)
-        network.add_connection(connection, Network.INPUT_LAYER_NAME, Network.OUTPUT_LAYER_NAME)
-        
-        return network
+    
