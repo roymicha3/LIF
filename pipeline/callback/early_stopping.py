@@ -1,6 +1,6 @@
 from omegaconf import DictConfig
 
-from pipeline.callback.callback import Callback, Metrics
+from pipeline.callback.callback import Callback, Metric
 from settings.serializable import YAMLSerializable
 
 
@@ -9,7 +9,7 @@ class EarlyStopping(Callback):
     """
     Early stops the training if validation metric doesn't improve after a given patience.
     """
-    def __init__(self, metric=Metrics.VAL_LOSS, patience=5, min_delta_percent=0.0, verbose=False):
+    def __init__(self, metric=Metric.VAL_LOSS, patience=5, min_delta_percent=0.0, verbose=False):
         """
         Args:
             patience (int): How many epochs to wait after last improvement.
@@ -59,4 +59,4 @@ class EarlyStopping(Callback):
     
     @classmethod
     def from_config(cls, config: DictConfig, env_config: DictConfig):
-        return cls(config.metric, config.patience, config.min_delta, config.verbose)
+        return cls(Metric.get(config.metric), config.patience, config.min_delta, config.verbose)
