@@ -129,7 +129,13 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             
             # Compute full dataset loss and accuracy after each epoch
             total_loss, total_accuracy = self.evaluate(network, criterion, val_dataset)
-            epoch_res = {Metric.VAL_LOSS: total_loss, Metric.VAL_ACC: total_accuracy}
+            
+            epoch_res = \
+                {
+                    Metric.VAL_LOSS: total_loss,
+                    Metric.VAL_ACC: total_accuracy,
+                    Metric.NETWORK: network
+                }
             
             stop_flag = self.on_epoch_end(epoch_res)
             if stop_flag:
