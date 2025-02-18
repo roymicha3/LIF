@@ -23,8 +23,8 @@ class NeuronLayer(torch.nn.Module):
     
     def forward(self, input_):
         input_voltage = self.kernel.forward(input_)
-        output = self.connection.forward(input_voltage)
-        output = self.activation.forward(output)
+        inner_voltage = self.connection.forward(input_voltage)
+        output = self.activation.forward(inner_voltage)
         return output
         
     def backward(self, output_grad):
@@ -34,3 +34,8 @@ class NeuronLayer(torch.nn.Module):
         activation_grad = self.activation.backward(output_grad)
         input_grad = self.connection.backward(activation_grad)
         return self.kernel.backward(input_grad)
+    
+    def partial_forward(self, input_):
+        input_voltage = self.kernel.forward(input_)
+        inner_voltage = self.connection.partial_forward(input_voltage)
+        return inner_voltage

@@ -33,6 +33,14 @@ class Connection(ABC, Module):
 
         :param input_: Incoming spikes.
         """
+        raise NotImplementedError
+    
+    @abstractmethod
+    def partial_forward(self, input_: torch.Tensor) -> torch.Tensor:
+        """
+        Compute the inner state of the connection
+        """
+        raise NotImplemented
 
     @abstractmethod
     def update(self, **kwargs) -> None:

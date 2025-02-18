@@ -72,6 +72,20 @@ class Network(torch.nn.Module, YAMLSerializable):
             
         return data
     
+    def inner_state(self, input_, layer_idx: int):
+        """
+        return the inner state of a layer of a given index
+        """
+        inner_layer = self.layers[layer_idx]
+        
+        for layer in self.layers:
+            if layer is inner_layer:
+                return inner_layer.partial_forward(input_)
+            
+            input_ = layer.forward(input_)
+        
+        raise IndexError
+    
     def backward(self, grad: torch.Tensor) -> None:
         """
         the backward function of the network

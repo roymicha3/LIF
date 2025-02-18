@@ -10,24 +10,29 @@ class SimpleConnection(Connection):
     """
 
     def __init__(
-        self,
-        lr: LearningRule,
-        input_size: int = None,
-        output_size: int = None,
-        w: torch.Tensor = None,
-        device=None,
-        norm: np.int32 = 1) -> None:
+                self,
+                lr: LearningRule,
+                input_size: int = None,
+                output_size: int = None,
+                w: torch.Tensor = None,
+                device=None,
+                norm: np.int32 = 1) -> None:
         
-        """
-        :param source: A layer of nodes from which the connection originates.
-        :param target: A layer of nodes to which the connection connects.
-        :param bias: Whether to include a bias term in the connection.
-        """
         super().__init__(lr, (input_size, output_size), w, device)
         self.norm = norm
         self.saved_tensors = None
 
 
+    def partial_forward(self, input_: torch.Tensor) -> torch.Tensor:
+        input_ = input_.to(self.device)
+        
+        if input_.dim() == 1:  # Single sample
+            input_ = input_.unsqueeze(0)  # Add a batch dimension
+
+        output = input_ @ self.w  # Matrix multiplication between input spikes and weights
+        return output
+    
+    
     def forward(self, input_: torch.Tensor) -> torch.Tensor:
         """
         Compute pre-activations given spikes using connection weights and bias.
@@ -35,17 +40,11 @@ class SimpleConnection(Connection):
         :param input_: Incoming spikes of shape (batch_size, n_inputs) or (n_inputs,).
         :return: Incoming spikes multiplied by synaptic weights and bias.
         """
-        input_ = input_.to(self.device)
-        
-        if input_.dim() == 1:  # Single sample
-            input_ = input_.unsqueeze(0)  # Add a batch dimension
-
-        output = input_ @ self.w  # Matrix multiplication between input spikes and weights
-        
-        spikes = self.learning_rule.forward(output)  # Forward pass of the learning rule
+        output = self.partial_forward(input_)
+        spikes = self.learning_rule.forward(output) # Forward pass of the learning rule
 
         if torch.is_grad_enabled():
-            self.saved_tensors = input_, output  # Save for backward pass
+            self.saved_tensors = input_, output # Save for backward pass
         
         return spikes
 
