@@ -1,7 +1,10 @@
+import os
 from omegaconf import DictConfig, OmegaConf
+import torch
 
-from network.network_factory import NetworkFactory
+from network.network_factory import NetworkFactory, Network
 from pipeline.training_pipeline import TrainingPipeline
+from pipeline.plotting_pipeline import PlottingPipeline
 
 
 def test_network_factory():
@@ -22,4 +25,9 @@ def test_training_pipeline():
     pipeline.run(config, env_config)
     
 
-test_training_pipeline()
+base_dir = os.path.join("outputs", "single run")
+config = OmegaConf.load(os.path.join(base_dir, "config", "config.yaml"))
+env_config = OmegaConf.load(os.path.join(base_dir, "config", "env.yaml"))
+
+pipeline = PlottingPipeline(base_dir)
+pipeline.run(config, env_config)

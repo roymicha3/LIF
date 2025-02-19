@@ -3,9 +3,6 @@ from tqdm import tqdm
 from omegaconf import DictConfig, OmegaConf
 import numpy as np
 
-from data.dataset.dataset import Dataset, DataType, OutputType
-from data.dataset.dataset_factory import DatasetFactory
-from encoders.encoder_factory import EncoderFactory
 from network.network_factory import NetworkFactory
 from network.optimizer.optimizer_factory import OptimizerFactory
 from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
@@ -50,21 +47,6 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             pipeline.register_callback(callback)
             
         return pipeline
-        
-    def load_dataset(self, 
-                     dataset_config: DictConfig, 
-                     env_config: DictConfig, 
-                     type_: DataType = DataType.TRAIN) -> Dataset:
-        
-        encoder_config = dataset_config.encoder
-        encoder = EncoderFactory.create(encoder_config.type, encoder_config, env_config)
-        dataset = DatasetFactory.create(
-            dataset_config.type, dataset_config, 
-            type_, 
-            OutputType.TORCH, 
-            encoder)
-        
-        return dataset
     
     
     def run(self, config: DictConfig, env_config: DictConfig):

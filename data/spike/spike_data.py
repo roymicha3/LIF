@@ -77,7 +77,7 @@ def add_neuron_raster(data: SpikeData, plot: matplotlib.figure.Figure) -> matplo
     Adds the raster plot of a specific neuron to an existing raster plot.
     """
     # Extract spike times for the specified neuron
-    neuron_spikes = data.getspike_times()
+    neuron_spikes = data.get_spike_times()
     neuron_index = data.get_index()
 
     # Plot the spikes for the neuron

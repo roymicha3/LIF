@@ -1,7 +1,9 @@
 """
 Utility functions.
 """
+import os
 import numpy as np
+from typing import List
 
 def max_with_default(arr, default_value = 0):
     """
@@ -23,6 +25,27 @@ def calculate_sequence_len(T: int, dt: int):
     calculates the number of time samples within the measured window
     """
     return int(T / dt)
+
+def get_prefix_files(directory: str, word: str, max_depth: int=5) -> List[str]:
+        result = []
+
+        def search_dir(current_dir, current_depth):
+            if current_depth > max_depth:
+                return
+            try:
+                for entry in os.scandir(current_dir):
+                    if entry.is_file() and word in entry.name:
+                        result.append(entry.path)
+                    
+                    elif entry.is_dir():
+                        search_dir(entry.path, current_depth + 1)
+            
+            except PermissionError:
+                pass
+
+        search_dir(directory, 0)
+        return result
+
 
 SEQ_LEN = calculate_sequence_len
 
