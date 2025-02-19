@@ -3,15 +3,12 @@ from tqdm import tqdm
 from omegaconf import DictConfig, OmegaConf
 import numpy as np
 
-from data.dataset.dataset import Dataset, DataType, OutputType
-from data.dataset.dataset_factory import DatasetFactory
-from encoders.encoder_factory import EncoderFactory
 from network.network_factory import NetworkFactory
 from network.optimizer.optimizer_factory import OptimizerFactory
 from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
 from network.loss.loss_factory import LossFactory
-from network.utils import EarlyStopping
 from pipeline.pipline import Pipeline
+from pipeline.callback.callback import Metric
 from pipeline.callback.callback_factory import CallbackFactory
 from settings.serializable import YAMLSerializable
 
@@ -50,21 +47,6 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             pipeline.register_callback(callback)
             
         return pipeline
-        
-    def load_dataset(self, 
-                     dataset_config: DictConfig, 
-                     env_config: DictConfig, 
-                     type_: DataType = DataType.TRAIN) -> Dataset:
-        
-        encoder_config = dataset_config.encoder
-        encoder = EncoderFactory.create(encoder_config.type, encoder_config, env_config)
-        dataset = DatasetFactory.create(
-            dataset_config.type, dataset_config, 
-            type_, 
-            OutputType.TORCH, 
-            encoder)
-        
-        return dataset
     
     
     def run(self, config: DictConfig, env_config: DictConfig):
@@ -129,7 +111,13 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             
             # Compute full dataset loss and accuracy after each epoch
             total_loss, total_accuracy = self.evaluate(network, criterion, val_dataset)
-            epoch_res = {"val_loss": total_loss, "val_acc": total_accuracy}
+            
+            epoch_res = \
+                {
+                    Metric.VAL_LOSS: total_loss,
+                    Metric.VAL_ACC: total_accuracy,
+                    Metric.NETWORK: network
+                }
             
             stop_flag = self.on_epoch_end(epoch_res)
             if stop_flag:

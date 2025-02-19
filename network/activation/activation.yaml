@@ -1,0 +1,3 @@
+activation:
+  type: Subtract
+  parameters:

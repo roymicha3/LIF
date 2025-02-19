@@ -3,9 +3,8 @@ from omegaconf import DictConfig
 import mlflow
 import os
 
-from pipeline.callback.callback import Callback, Metrics
+from pipeline.callback.callback import Callback, Metric, MetricCategory
 from settings.serializable import YAMLSerializable
-
 
 @YAMLSerializable.register("MlflowCallback")
 class MlflowCallback(Callback):
@@ -30,16 +29,19 @@ class MlflowCallback(Callback):
                     mlflow.create_experiment(experiment_name)
             mlflow.set_experiment(experiment_name)
         
-            self.active_run = mlflow.start_run()
+        self.active_run = mlflow.start_run()
 
     def on_epoch_end(self, metrics: Dict[str, Any]) -> bool:
         """
         Logs metrics to MLflow at the end of each epoch.
         """
         for key, value in metrics.items():
-            if isinstance(key, Metrics):
-                mlflow.log_metric(key.value, value)
-            else:
+            try:
+                metric = Metric(key)
+                if metric.category == MetricCategory.TRACKED:
+                    mlflow.log_metric(metric.value, value)
+            except ValueError:
+                # If the key is not in the Metric enum, log it as-is
                 mlflow.log_metric(key, value)
         return True
 
@@ -47,7 +49,13 @@ class MlflowCallback(Callback):
         """
         Logs final metrics to MLflow at the end of training and ends the run.
         """
-        self.on_epoch_end(metrics)  # Log final metrics
+        for key, value in metrics.items():
+            try:
+                metric = Metric(key)
+                mlflow.log_metric(metric.value, value)
+            except ValueError:
+                # If the key is not in the Metric enum, log it as-is
+                mlflow.log_metric(key, value)
         mlflow.end_run()
 
     def __del__(self):

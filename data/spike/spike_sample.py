@@ -42,6 +42,13 @@ class SpikeSample(DataSample):
                 
         return spike_train
 
+    def to(self, device):
+        """
+        Move the spike data to the specified device.
+        """
+        spike_train = self.to_torch()
+        return spike_train.to(device)
+
     def __str__(self):
         return f"SpikeSample({self.get_label()})"
     
