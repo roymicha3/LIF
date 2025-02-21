@@ -1,118 +1,195 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from experiment.db.tables import Base, Experiment, Trial, TrialRun, Results, Epoch, Dataset, Encoder, Artifact, Logs
+from sqlalchemy.orm import sessionmaker, declarative_base
+from datetime import datetime
+import json
+
+from experiment.db.tables import *
+
+
+URI = 'sqlite:///experiment_tracking.db'
+Base = declarative_base()
 
 class DBManager:
-    """
-    Database Manager to interact with the experiment tracking database.
-    Provides methods to create, update, delete, and retrieve records from the database.
-    """
-    
-    def __init__(self, db_uri='sqlite:///experiment_tracking.db'):
-        """Initialize the database connection and session."""
-        self.engine = create_engine(db_uri, echo=True)
+    def __init__(self, db_url: str = URI):
+        """
+        Initialize the database manager.
+        """
+        self.engine = create_engine(db_url)
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
-    
-    def create_experiment(self, exp_id, title, desc, start_time, update_time, config, dataset_id):
-        """Create a new experiment record."""
+
+    def add_experiment(self, title, desc, config, dataset_id):
+        """
+        Add a new experiment to the database.
+        """
         session = self.Session()
-        experiment = Experiment(id=exp_id, title=title, desc=desc, start_time=start_time,
-                                update_time=update_time, config=config, dataset_id=dataset_id)
+        experiment = Experiment(
+            id=generate_id(),
+            title=title,
+            desc=desc,
+            start_time=datetime.now(),
+            update_time=datetime.now(),
+            config=json.dumps(config),
+            dataset_id=dataset_id
+        )
         session.add(experiment)
         session.commit()
         session.close()
-    
-    def get_experiment(self, exp_id):
-        """Retrieve an experiment by ID."""
-        session = self.Session()
-        experiment = session.query(Experiment).filter_by(id=exp_id).first()
-        session.close()
         return experiment
-    
-    def delete_experiment(self, exp_id):
-        """Delete an experiment by ID."""
+
+    def add_trial(self, name, desc, config, experiment_id):
+        """
+        Add a new trial to the database.
+        """
         session = self.Session()
-        experiment = session.query(Experiment).filter_by(id=exp_id).first()
-        if experiment:
-            session.delete(experiment)
-            session.commit()
-        session.close()
-    
-    def create_trial(self, trial_id, name, desc, start_time, update_time, config, experiment_id):
-        """Create a new trial record."""
-        session = self.Session()
-        trial = Trial(id=trial_id, name=name, desc=desc, start_time=start_time,
-                      update_time=update_time, config=config, experiment_id=experiment_id)
+        trial = Trial(
+            id=generate_id(),
+            name=name,
+            desc=desc,
+            start_time=datetime.now(),
+            update_time=datetime.now(),
+            config=json.dumps(config),
+            experiment_id=experiment_id
+        )
         session.add(trial)
         session.commit()
         session.close()
-    
-    def get_trial(self, trial_id):
-        """Retrieve a trial by ID."""
-        session = self.Session()
-        trial = session.query(Trial).filter_by(id=trial_id).first()
-        session.close()
         return trial
-    
-    def create_trial_run(self, run_id, start_time, end_time, status, trial_id):
-        """Create a new trial run record."""
+
+    def add_trial_run(self, trial_id):
+        """
+        Add a new trial run to the database.
+        """
         session = self.Session()
-        trial_run = TrialRun(id=run_id, start_time=start_time, end_time=end_time, status=status, trial_id=trial_id)
+        trial_run = TrialRun(
+            id=generate_id(),
+            start_time=datetime.now(),
+            status="STARTED",
+            trial_id=trial_id
+        )
         session.add(trial_run)
         session.commit()
         session.close()
-    
-    def get_trial_run(self, run_id):
-        """Retrieve a trial run by ID."""
-        session = self.Session()
-        trial_run = session.query(TrialRun).filter_by(id=run_id).first()
-        session.close()
         return trial_run
-    
-    def create_results(self, result_id, trial_run_id, total_accuracy, accuracy_per_label, total_loss, loss_per_label):
-        """Create a new results record."""
+
+    def update_trial_run(self, trial_run_id, status, end_time=None):
+        """
+        Update the status and end time of a trial run.
+        """
         session = self.Session()
-        results = Results(id=result_id, trial_run_id=trial_run_id, total_accuracy=total_accuracy,
-                          accuracy_per_label=accuracy_per_label, total_loss=total_loss, loss_per_label=loss_per_label)
+        trial_run = session.query(TrialRun).filter_by(id=trial_run_id).first()
+        if trial_run:
+            trial_run.status = status
+            if end_time:
+                trial_run.end_time = end_time
+            session.commit()
+        session.close()
+
+    def add_results(self, trial_run_id, total_accuracy, accuracy_per_label, total_loss, loss_per_label):
+        """
+        Add results for a trial run.
+        """
+        session = self.Session()
+        results = Results(
+            id=generate_id(),
+            trial_run_id=trial_run_id,
+            total_accuracy=total_accuracy,
+            accuracy_per_label=json.dumps(accuracy_per_label),
+            total_loss=total_loss,
+            loss_per_label=json.dumps(loss_per_label)
+        )
         session.add(results)
         session.commit()
         session.close()
-    
-    def get_results(self, result_id):
-        """Retrieve results by ID."""
-        session = self.Session()
-        results = session.query(Results).filter_by(id=result_id).first()
-        session.close()
         return results
-    
-    def create_dataset(self, dataset_id, size, location, config):
-        """Create a new dataset record."""
+
+    def add_epoch(self, trial_run_id, index, total_accuracy, accuracy_per_label, total_loss, loss_per_label):
+        """
+        Add an epoch for a trial run.
+        """
         session = self.Session()
-        dataset = Dataset(id=dataset_id, size=size, location=location, config=config)
+        epoch = Epoch(
+            id=generate_id(),
+            trial_run_id=trial_run_id,
+            index=index,
+            total_accuracy=total_accuracy,
+            accuracy_per_label=json.dumps(accuracy_per_label),
+            total_loss=total_loss,
+            loss_per_label=json.dumps(loss_per_label)
+        )
+        session.add(epoch)
+        session.commit()
+        session.close()
+        return epoch
+
+    def add_dataset(self, size, location, config):
+        """
+        Add a new dataset to the database.
+        """
+        session = self.Session()
+        dataset = Dataset(
+            id=generate_id(),
+            size=size,
+            location=location,
+            config=json.dumps(config)
+        )
         session.add(dataset)
         session.commit()
         session.close()
-    
-    def get_dataset(self, dataset_id):
-        """Retrieve a dataset by ID."""
-        session = self.Session()
-        dataset = session.query(Dataset).filter_by(id=dataset_id).first()
-        session.close()
         return dataset
-    
-    def create_log(self, log_id, location, trial_run_id):
-        """Create a new log entry."""
+
+    def add_encoder(self, type, config):
+        """
+        Add a new encoder to the database.
+        """
         session = self.Session()
-        log = Logs(id=log_id, location=location, trial_run_id=trial_run_id)
-        session.add(log)
+        encoder = Encoder(
+            type=type,
+            config=json.dumps(config)
+        )
+        session.add(encoder)
         session.commit()
         session.close()
-    
-    def get_log(self, log_id):
-        """Retrieve log by ID."""
+        return encoder
+
+    def add_artifact(self, type, config, location, trial_run_id=None, epoch_id=None, results_id=None):
+        """
+        Add a new artifact to the database.
+        """
         session = self.Session()
-        log = session.query(Logs).filter_by(id=log_id).first()
+        artifact = Artifact(
+            id=generate_id(),
+            type=type,
+            config=json.dumps(config),
+            location=location,
+            trial_run_id=trial_run_id,
+            epoch_id=epoch_id,
+            results_id=results_id
+        )
+        session.add(artifact)
+        session.commit()
         session.close()
-        return log
-    
+        return artifact
+
+    def add_logs(self, location, trial_run_id):
+        """
+        Add logs for a trial run.
+        """
+        session = self.Session()
+        logs = Logs(
+            id=generate_id(),
+            location=location,
+            trial_run_id=trial_run_id
+        )
+        session.add(logs)
+        session.commit()
+        session.close()
+        return logs
+
+def generate_id():
+    """
+    Generate a unique ID for database entries.
+    """
+    import uuid
+    return str(uuid.uuid4())
+

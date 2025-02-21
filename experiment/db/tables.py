@@ -6,107 +6,107 @@ from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
 class Experiment(Base):
-    __tablename__ = 'experiment'
-    id = Column(String, primary_key=True)
-    title = Column(String)
+    __tablename__ = 'EXPERIMENT'
+    id = Column(String(255), primary_key=True)
+    title = Column(String(255))
     desc = Column(Text)
     start_time = Column(DateTime)
     update_time = Column(DateTime)
     config = Column(Text)
-    dataset_id = Column(String, ForeignKey('dataset.id'))
-
+    dataset_id = Column(String(255), ForeignKey('DATASET.id'))
+    dataset = relationship("Dataset")
     trials = relationship("Trial", back_populates="experiment")
 
 class Trial(Base):
-    __tablename__ = 'trial'
-    id = Column(String, primary_key=True)
-    name = Column(String)
+    __tablename__ = 'TRIAL'
+    id = Column(String(255), primary_key=True)
+    name = Column(String(255))
     desc = Column(Text)
     start_time = Column(DateTime)
     update_time = Column(DateTime)
     config = Column(Text)
-    experiment_id = Column(String, ForeignKey('experiment.id'))
-
+    experiment_id = Column(String(255), ForeignKey('EXPERIMENT.id'))
     experiment = relationship("Experiment", back_populates="trials")
     trial_runs = relationship("TrialRun", back_populates="trial")
 
 class TrialRun(Base):
-    __tablename__ = 'trial_run'
-    id = Column(String, primary_key=True)
+    __tablename__ = 'TRIAL_RUN'
+    id = Column(String(255), primary_key=True)
     start_time = Column(DateTime)
     end_time = Column(DateTime)
-    status = Column(String)
-    trial_id = Column(String, ForeignKey('trial.id'))
-
+    status = Column(String(255))
+    trial_id = Column(String(255), ForeignKey('TRIAL.id'))
     trial = relationship("Trial", back_populates="trial_runs")
-    results = relationship("Results", back_populates="trial_run")
+    results = relationship("Results", uselist=False, back_populates="trial_run")
     epochs = relationship("Epoch", back_populates="trial_run")
-    logs = relationship("Logs", back_populates="trial_run")
     artifacts = relationship("Artifact", back_populates="trial_run")
+    logs = relationship("Logs", back_populates="trial_run")
 
 class Results(Base):
-    __tablename__ = 'results'
-    id = Column(String, primary_key=True)
-    trial_run_id = Column(String, ForeignKey('trial_run.id'))
+    __tablename__ = 'RESULTS'
+    id = Column(String(255), primary_key=True)
+    trial_run_id = Column(String(255), ForeignKey('TRIAL_RUN.id'))
     total_accuracy = Column(Float)
     accuracy_per_label = Column(Text)
     total_loss = Column(Float)
     loss_per_label = Column(Text)
-
     trial_run = relationship("TrialRun", back_populates="results")
     artifacts = relationship("Artifact", back_populates="results")
 
 class Epoch(Base):
-    __tablename__ = 'epoch'
-    id = Column(String, primary_key=True)
-    trial_run_id = Column(String, ForeignKey('trial_run.id'))
+    __tablename__ = 'EPOCH'
+    id = Column(String(255), primary_key=True)
+    trial_run_id = Column(String(255), ForeignKey('TRIAL_RUN.id'))
     index = Column(Integer)
     total_accuracy = Column(Float)
     accuracy_per_label = Column(Text)
     total_loss = Column(Float)
     loss_per_label = Column(Text)
-
     trial_run = relationship("TrialRun", back_populates="epochs")
     artifacts = relationship("Artifact", back_populates="epoch")
 
 class Dataset(Base):
-    __tablename__ = 'dataset'
-    id = Column(String, primary_key=True)
+    __tablename__ = 'DATASET'
+    id = Column(String(255), primary_key=True)
     size = Column(Float)
-    location = Column(String)
+    location = Column(String(255))
     config = Column(Text)
+    experiments = relationship("Experiment", back_populates="dataset")
+    encoders = relationship("Encoder", secondary="ENCODER_DATASET")
 
 class Encoder(Base):
-    __tablename__ = 'encoder'
-    type = Column(String, primary_key=True)
+    __tablename__ = 'ENCODER'
+    type = Column(String(255), primary_key=True)
     config = Column(Text)
+    datasets = relationship("Dataset", secondary="ENCODER_DATASET")
 
 class Artifact(Base):
-    __tablename__ = 'artifact'
-    id = Column(String, primary_key=True)
-    type = Column(String)
+    __tablename__ = 'ARTIFACT'
+    id = Column(String(255), primary_key=True)
+    type = Column(String(255))
     config = Column(Text)
-    location = Column(String)
-    trial_run_id = Column(String, ForeignKey('trial_run.id'))
-    epoch_id = Column(String, ForeignKey('epoch.id'))
-    results_id = Column(String, ForeignKey('results.id'))
-
+    location = Column(String(255))
+    trial_run_id = Column(String(255), ForeignKey('TRIAL_RUN.id'))
+    epoch_id = Column(String(255), ForeignKey('EPOCH.id'))
+    results_id = Column(String(255), ForeignKey('RESULTS.id'))
     trial_run = relationship("TrialRun", back_populates="artifacts")
     epoch = relationship("Epoch", back_populates="artifacts")
     results = relationship("Results", back_populates="artifacts")
 
 class Logs(Base):
-    __tablename__ = 'logs'
-    id = Column(String, primary_key=True)
-    location = Column(String)
-    trial_run_id = Column(String, ForeignKey('trial_run.id'))
-
+    __tablename__ = 'LOGS'
+    id = Column(String(255), primary_key=True)
+    location = Column(String(255))
+    trial_run_id = Column(String(255), ForeignKey('TRIAL_RUN.id'))
     trial_run = relationship("TrialRun", back_populates="logs")
 
-# Database Initialization
-def init_db(uri='sqlite:///experiment_tracking.db'):
-    engine = create_engine(uri, echo=True)
-    Base.metadata.create_all(engine)
-    return sessionmaker(bind=engine)
+class ExperimentDataset(Base):
+    __tablename__ = 'EXPERIMENT_DATASET'
+    experiment_id = Column(String(255), ForeignKey('EXPERIMENT.id'), primary_key=True)
+    dataset_id = Column(String(255), ForeignKey('DATASET.id'), primary_key=True)
 
-Session = init_db()
+class EncoderDataset(Base):
+    __tablename__ = 'ENCODER_DATASET'
+    encoder_type = Column(String(255), ForeignKey('ENCODER.type'), primary_key=True)
+    dataset_id = Column(String(255), ForeignKey('DATASET.id'), primary_key=True)
+    
