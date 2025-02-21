@@ -29,6 +29,7 @@ erDiagram
     TRIAL_RUN ||--o{ LOGS : generates
     TRIAL_RUN ||--o{ ARTIFACT : generates
     EPOCH ||--o{ ARTIFACT : generates
+    RESULTS ||--o{ ARTIFACT : generates
     RESULTS {
         float total_accuracy
         float accuracy_per_label
@@ -53,7 +54,7 @@ erDiagram
         string type
         string config
     }
-    ENCODER ||--o{ EXPERIMENT : used_by
+    ENCODER ||--o{ DATASET : used_by
     ARTIFACT {
         string id
         string type
