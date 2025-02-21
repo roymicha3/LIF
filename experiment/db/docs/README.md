@@ -2,6 +2,10 @@
 
 This database schema is designed to support an **experiment tracking system** that records trials, trial runs, results, artifacts, datasets, encoders, and logs.
 
+The data base is desigend as:
+    1. DB file
+    2. data - directory containing resources and artifacts
+
 ## 📌 Table Overview
 
 ### 1️⃣ `EXPERIMENT`

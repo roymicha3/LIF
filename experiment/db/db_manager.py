@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
@@ -6,17 +7,25 @@ import json
 from experiment.db.tables import *
 
 
-URI = 'sqlite:///experiment_tracking.db'
+URI = "sqlite:///"
+DATA_DIR = "data"
+
 Base = declarative_base()
 
 class DBManager:
-    def __init__(self, db_url: str = URI):
+    def __init__(self, db_path):
         """
         Initialize the database manager.
         """
+        db_url = f"{URI}{db_path}"
+        
         self.engine = create_engine(db_url)
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
+        
+        base_dir = os.path.dirname(db_path)
+        self.data_path = os.path.join(base_dir, DATA_DIR)
+        os.makedirs(self.data_path, exist_ok=True)
 
     def add_experiment(self, title, desc, config, dataset_id):
         """
@@ -156,6 +165,9 @@ class DBManager:
         """
         Add a new artifact to the database.
         """
+        if not os.path.exists(os.path.join(self.data_path, location)):
+            raise FileNotFoundError(f"Artifact location '{location}' does not exist.")
+        
         session = self.Session()
         artifact = Artifact(
             id=generate_id(),
