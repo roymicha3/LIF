@@ -1,112 +1,105 @@
-from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, Text
-from sqlalchemy.orm import relationship, declarative_base
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, ForeignKey, JSON, Table
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from datetime import datetime
 
 Base = declarative_base()
 
+# Association tables for many-to-many relationships
+results_metric = Table('results_metric', Base.metadata,
+    Column('results_id', Integer, ForeignKey('results.trial_run_id')),
+    Column('metric_id', Integer, ForeignKey('metric.id'))
+)
+
+results_artifact = Table('results_artifact', Base.metadata,
+    Column('results_id', Integer, ForeignKey('results.trial_run_id')),
+    Column('artifact_id', Integer, ForeignKey('artifact.id'))
+)
+
+epoch_metric = Table('epoch_metric', Base.metadata,
+    Column('epoch_idx', Integer),
+    Column('epoch_trial_run_id', Integer),
+    Column('metric_id', Integer, ForeignKey('metric.id')),
+    ForeignKey('epoch.idx', 'epoch.trial_run_id')
+)
+
+epoch_artifact = Table('epoch_artifact', Base.metadata,
+    Column('epoch_idx', Integer),
+    Column('epoch_trial_run_id', Integer),
+    Column('artifact_id', Integer, ForeignKey('artifact.id')),
+    ForeignKey('epoch.idx', 'epoch.trial_run_id')
+)
+
+trial_run_artifact = Table('trial_run_artifact', Base.metadata,
+    Column('trial_run_id', Integer, ForeignKey('trial_run.id')),
+    Column('artifact_id', Integer, ForeignKey('artifact.id'))
+)
+
 class Experiment(Base):
-    __tablename__ = 'EXPERIMENT'
-    id = Column(String(255), primary_key=True)
-    title = Column(String(255))
-    desc = Column(Text)
-    start_time = Column(DateTime)
-    update_time = Column(DateTime)
-    config = Column(Text)
-    dataset_id = Column(String(255), ForeignKey('DATASET.id'))
-    dataset = relationship("Dataset")
+    __tablename__ = 'experiment'
+    id = Column(Integer, primary_key=True)
+    title = Column(String(255), nullable=False)
+    desc = Column(String)
+    start_time = Column(DateTime, nullable=False)
+    update_time = Column(DateTime, nullable=False)
     trials = relationship("Trial", back_populates="experiment")
 
 class Trial(Base):
-    __tablename__ = 'TRIAL'
-    id = Column(String(255), primary_key=True)
-    name = Column(String(255))
-    desc = Column(Text)
-    start_time = Column(DateTime)
-    update_time = Column(DateTime)
-    config = Column(Text)
-    experiment_id = Column(String(255), ForeignKey('EXPERIMENT.id'))
+    __tablename__ = 'trial'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    experiment_id = Column(Integer, ForeignKey('experiment.id'), nullable=False)
+    start_time = Column(DateTime, nullable=False)
+    update_time = Column(DateTime, nullable=False)
     experiment = relationship("Experiment", back_populates="trials")
     trial_runs = relationship("TrialRun", back_populates="trial")
 
 class TrialRun(Base):
-    __tablename__ = 'TRIAL_RUN'
-    id = Column(String(255), primary_key=True)
-    start_time = Column(DateTime)
-    end_time = Column(DateTime)
-    status = Column(String(255))
-    trial_id = Column(String(255), ForeignKey('TRIAL.id'))
+    __tablename__ = 'trial_run'
+    id = Column(Integer, primary_key=True)
+    trial_id = Column(Integer, ForeignKey('trial.id'), nullable=False)
+    status = Column(String(50), nullable=False)
+    start_time = Column(DateTime, nullable=False)
+    update_time = Column(DateTime, nullable=False)
     trial = relationship("Trial", back_populates="trial_runs")
-    results = relationship("Results", uselist=False, back_populates="trial_run")
+    results = relationship("Results", back_populates="trial_run", uselist=False)
     epochs = relationship("Epoch", back_populates="trial_run")
-    artifacts = relationship("Artifact", back_populates="trial_run")
-    logs = relationship("Logs", back_populates="trial_run")
+    artifacts = relationship("Artifact", secondary=trial_run_artifact, back_populates="trial_runs")
 
 class Results(Base):
-    __tablename__ = 'RESULTS'
-    id = Column(String(255), primary_key=True)
-    trial_run_id = Column(String(255), ForeignKey('TRIAL_RUN.id'))
-    total_accuracy = Column(Float)
-    accuracy_per_label = Column(Text)
-    total_loss = Column(Float)
-    loss_per_label = Column(Text)
+    __tablename__ = 'results'
+    trial_run_id = Column(Integer, ForeignKey('trial_run.id'), primary_key=True)
+    time = Column(DateTime, nullable=False)
     trial_run = relationship("TrialRun", back_populates="results")
-    artifacts = relationship("Artifact", back_populates="results")
+    metrics = relationship("Metric", secondary=results_metric, back_populates="results")
+    artifacts = relationship("Artifact", secondary=results_artifact, back_populates="results")
 
 class Epoch(Base):
-    __tablename__ = 'EPOCH'
-    id = Column(String(255), primary_key=True)
-    trial_run_id = Column(String(255), ForeignKey('TRIAL_RUN.id'))
-    index = Column(Integer)
-    total_accuracy = Column(Float)
-    accuracy_per_label = Column(Text)
-    total_loss = Column(Float)
-    loss_per_label = Column(Text)
+    __tablename__ = 'epoch'
+    idx = Column(Integer, primary_key=True)
+    trial_run_id = Column(Integer, ForeignKey('trial_run.id'), primary_key=True)
+    time = Column(DateTime, nullable=False)
     trial_run = relationship("TrialRun", back_populates="epochs")
-    artifacts = relationship("Artifact", back_populates="epoch")
+    metrics = relationship("Metric", secondary=epoch_metric, back_populates="epochs")
+    artifacts = relationship("Artifact", secondary=epoch_artifact, back_populates="epochs")
 
-class Dataset(Base):
-    __tablename__ = 'DATASET'
-    id = Column(String(255), primary_key=True)
-    size = Column(Float)
-    location = Column(String(255))
-    config = Column(Text)
-    experiments = relationship("Experiment", back_populates="dataset")
-    encoders = relationship("Encoder", secondary="ENCODER_DATASET")
-
-class Encoder(Base):
-    __tablename__ = 'ENCODER'
-    type = Column(String(255), primary_key=True)
-    config = Column(Text)
-    datasets = relationship("Dataset", secondary="ENCODER_DATASET")
+class Metric(Base):
+    __tablename__ = 'metric'
+    id = Column(Integer, primary_key=True)
+    type = Column(String(50), nullable=False)
+    total_val = Column(Float, nullable=False)
+    per_label_val = Column(JSON)
+    results = relationship("Results", secondary=results_metric, back_populates="metrics")
+    epochs = relationship("Epoch", secondary=epoch_metric, back_populates="metrics")
 
 class Artifact(Base):
-    __tablename__ = 'ARTIFACT'
-    id = Column(String(255), primary_key=True)
-    type = Column(String(255))
-    config = Column(Text)
-    location = Column(String(255))
-    trial_run_id = Column(String(255), ForeignKey('TRIAL_RUN.id'))
-    epoch_id = Column(String(255), ForeignKey('EPOCH.id'))
-    results_id = Column(String(255), ForeignKey('RESULTS.id'))
-    trial_run = relationship("TrialRun", back_populates="artifacts")
-    epoch = relationship("Epoch", back_populates="artifacts")
-    results = relationship("Results", back_populates="artifacts")
+    __tablename__ = 'artifact'
+    id = Column(Integer, primary_key=True)
+    type = Column(String(50), nullable=False)
+    loc = Column(String(255), nullable=False)
+    results = relationship("Results", secondary=results_artifact, back_populates="artifacts")
+    epochs = relationship("Epoch", secondary=epoch_artifact, back_populates="artifacts")
+    trial_runs = relationship("TrialRun", secondary=trial_run_artifact, back_populates="artifacts")
 
-class Logs(Base):
-    __tablename__ = 'LOGS'
-    id = Column(String(255), primary_key=True)
-    location = Column(String(255))
-    trial_run_id = Column(String(255), ForeignKey('TRIAL_RUN.id'))
-    trial_run = relationship("TrialRun", back_populates="logs")
 
-class ExperimentDataset(Base):
-    __tablename__ = 'EXPERIMENT_DATASET'
-    experiment_id = Column(String(255), ForeignKey('EXPERIMENT.id'), primary_key=True)
-    dataset_id = Column(String(255), ForeignKey('DATASET.id'), primary_key=True)
 
-class EncoderDataset(Base):
-    __tablename__ = 'ENCODER_DATASET'
-    encoder_type = Column(String(255), ForeignKey('ENCODER.type'), primary_key=True)
-    dataset_id = Column(String(255), ForeignKey('DATASET.id'), primary_key=True)
-    

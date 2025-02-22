@@ -1,151 +1,118 @@
-# Experiment Tracking Database Schema
+# Experiment Tracking Database
 
-This database schema is designed to support an **experiment tracking system** that records trials, trial runs, results, artifacts, datasets, encoders, and logs.
+## Overview
 
-The data base is desigend as:
-    1. DB file
-    2. data - directory containing resources and artifacts
+This document outlines the structure of the Experiment Tracking Database, a comprehensive system designed to manage and track machine learning experiments, trials, and their associated data. This database is ideal for researchers, data scientists, and machine learning engineers who need to organize, monitor, and analyze their experimental results efficiently.
 
-## 📌 Table Overview
+## Database Structure
 
-### 1️⃣ `EXPERIMENT`
+### Core Tables
 
-Represents an experiment consisting of multiple trials.
+#### EXPERIMENT
+Represents a high-level experiment.
+- `id` (INT, PK): Unique identifier
+- `title` (VARCHAR): Experiment title
+- `desc` (TEXT): Experiment description
+- `start_time` (DATETIME): Start time of the experiment
+- `update_time` (DATETIME): Last update time
 
-- `id` (PK) - Unique identifier for the experiment.
-- `title` - Name of the experiment.
-- `desc` - Description of the experiment.
-- `start_time` - When the experiment started.
-- `update_time` - Last update timestamp.
-- `config` - Configuration details (e.g., JSON format).
-- `dataset_id` (FK) - Links the experiment to a dataset.
-
-### 2️⃣ `TRIAL`
-
+#### TRIAL
 Represents a specific trial within an experiment.
+- `id` (INT, PK): Unique identifier
+- `name` (VARCHAR): Trial name
+- `experiment_id` (INT, FK): Reference to EXPERIMENT
+- `start_time` (DATETIME): Start time of the trial
+- `update_time` (DATETIME): Last update time
 
-- `id` (PK) - Unique identifier for the trial.
-- `name` - Name of the trial.
-- `desc` - Description of the trial.
-- `start_time` - When the trial started.
-- `update_time` - Last update timestamp.
-- `config` - Trial-specific configurations.
-- `experiment_id` (FK) - Links the trial to its parent experiment.
+#### TRIAL_RUN
+Represents a single run of a trial.
+- `id` (INT, PK): Unique identifier
+- `trial_id` (INT, FK): Reference to TRIAL
+- `status` (VARCHAR): Current status of the run
+- `start_time` (DATETIME): Start time of the run
+- `update_time` (DATETIME): Last update time
 
-### 3️⃣ `TRIAL_RUN`
+#### RESULTS
+Stores the overall results of a trial run.
+- `trial_run_id` (INT, PK, FK): Reference to TRIAL_RUN
+- `time` (DATETIME): Time when results were recorded
 
-Each trial consists of multiple trial runs.
+#### EPOCH
+Represents individual epochs within a trial run.
+- `idx` (INT): Epoch index
+- `trial_run_id` (INT): Reference to TRIAL_RUN
+- `time` (DATETIME): Time of the epoch
+(Composite PK: idx, trial_run_id)
 
-- `id` (PK) - Unique identifier for the trial run.
-- `start_time` - When the trial run started.
-- `end_time` - When the trial run ended.
-- `status` - Status of the trial run (e.g., completed, failed).
-- `trial_id` (FK) - Links the trial run to its parent trial.
+#### METRIC
+Stores metric data for results and epochs.
+- `id` (INT, PK): Unique identifier
+- `type` (VARCHAR): Type of metric
+- `total_val` (FLOAT): Total value of the metric
+- `per_label_val` (JSON): Per-label values
 
-### 4️⃣ `RESULTS`
+#### ARTIFACT
+Represents files or objects generated during the experiment.
+- `id` (INT, PK): Unique identifier
+- `type` (VARCHAR): Type of artifact
+- `loc` (VARCHAR): Location or path of the artifact
 
-Stores the results of a trial run.
+### Junction Tables
 
-- `id` (PK) - Unique identifier for the result entry.
-- `trial_run_id` (FK) - Links results to a specific trial run.
-- `total_accuracy` - Overall accuracy of the model.
-- `accuracy_per_label` - Accuracy per label (JSON format).
-- `total_loss` - Overall loss value.
-- `loss_per_label` - Loss per label (JSON format).
+To handle many-to-many relationships, the following junction tables are used:
 
-### 5️⃣ `EPOCH`
+#### RESULTS_METRIC
+- `results_id` (INT, FK): Reference to RESULTS
+- `metric_id` (INT, FK): Reference to METRIC
 
-Records performance per training epoch within a trial run.
+#### RESULTS_ARTIFACT
+- `results_id` (INT, FK): Reference to RESULTS
+- `artifact_id` (INT, FK): Reference to ARTIFACT
 
-- `id` (PK) - Unique identifier for the epoch.
-- `trial_run_id` (FK) - Links epoch to a trial run.
-- `index` - Epoch number.
-- `total_accuracy` - Accuracy after the epoch.
-- `accuracy_per_label` - Accuracy breakdown.
-- `total_loss` - Loss after the epoch.
-- `loss_per_label` - Loss breakdown.
+#### EPOCH_METRIC
+- `epoch_idx` (INT): Reference to EPOCH.idx
+- `epoch_trial_run_id` (INT): Reference to EPOCH.trial_run_id
+- `metric_id` (INT, FK): Reference to METRIC
 
-### 6️⃣ `DATASET`
+#### EPOCH_ARTIFACT
+- `epoch_idx` (INT): Reference to EPOCH.idx
+- `epoch_trial_run_id` (INT): Reference to EPOCH.trial_run_id
+- `artifact_id` (INT, FK): Reference to ARTIFACT
 
-Represents datasets used in experiments.
+#### TRIAL_RUN_ARTIFACT
+- `trial_run_id` (INT, FK): Reference to TRIAL_RUN
+- `artifact_id` (INT, FK): Reference to ARTIFACT
 
-- `id` (PK) - Unique identifier for the dataset.
-- `size` - Size of the dataset.
-- `location` - File location or source.
-- `config` - Dataset-specific configurations.
+## Entity Relationships
 
-### 7️⃣ `ENCODER`
+1. An EXPERIMENT can have multiple TRIALs
+2. A TRIAL can have multiple TRIAL_RUNs
+3. A TRIAL_RUN is associated with one RESULTS entry
+4. A TRIAL_RUN can have multiple EPOCHs
+5. RESULTS and EPOCHs can be associated with multiple METRICs and ARTIFACTs
 
-Defines encoding methods used in data processing.
+## Key Features
 
-- `type` (PK) - Type of encoder (e.g., BERT, One-Hot).
-- `config` - Encoder-specific configurations.
+1. **Hierarchical Structure**: Experiments > Trials > Trial Runs > Epochs
+2. **Flexible Metric Storage**: Supports both overall and per-label metric values
+3. **Artifact Tracking**: Ability to link artifacts (e.g., model files, plots) to various stages of the experiment
+4. **Temporal Tracking**: All major entities include timestamp information
 
-### 8️⃣ `ARTIFACT`
+## Best Practices for Usage
 
-Represents artifacts generated during a trial run.
+1. Maintain consistent naming conventions for experiments, trials, and metrics
+2. Regularly backup the database
+3. Implement data validation before inserting or updating records
+4. Use appropriate indexing for frequently queried columns
+5. Consider partitioning large tables (e.g., EPOCH) for improved performance
 
-- `id` (PK) - Unique identifier for the artifact.
-- `type` - Type of artifact (e.g., model checkpoint, log file).
-- `config` - Configuration details.
-- `location` - Storage location.
-- `trial_run_id` (FK) - Links to a trial run.
-- `epoch_id` (FK) - Links to a specific epoch.
-- `results_id` (FK) - Links to result data.
+## Potential Extensions
 
-### 9️⃣ `LOGS`
+1. Add user authentication and access control
+2. Implement versioning for experiments and trials
+3. Add support for distributed experiments
+4. Integrate with popular ML frameworks for automatic logging
 
-Stores log files related to trial runs.
+## Conclusion
 
-- `id` (PK) - Unique identifier for the log entry.
-- `location` - Storage location of logs.
-- `trial_run_id` (FK) - Links logs to a trial run.
-
-### 🔁 Relationship Tables
-
-#### `EXPERIMENT_DATASET`
-
-Links experiments to datasets (many-to-many relationship).
-
-- `experiment_id` (FK) - Experiment reference.
-- `dataset_id` (FK) - Dataset reference.
-
-#### `ENCODER_DATASET`
-
-Links encoders to datasets (many-to-many relationship).
-
-- `encoder_type` (FK) - Encoder reference.
-- `dataset_id` (FK) - Dataset reference.
-
-## 🔍 How It Works
-
-1. **An **``** is created**, linked to one or more `DATASET`s.
-2. **Each experiment consists of multiple **``**s**, which explore different configurations.
-3. **A **``** has multiple **``**s**, each representing a single execution.
-4. **During each **``**, **``**, **``**s, **``**, and **``**s are recorded**.
-5. **Encoders and datasets are managed separately and linked to experiments as needed**.
-
-## 📂 Example Queries
-
-### 1️⃣ Get all trials for a given experiment
-
-```sql
-SELECT * FROM TRIAL WHERE experiment_id = 'exp_123';
-```
-
-### 2️⃣ Retrieve trial run results
-
-```sql
-SELECT * FROM RESULTS WHERE trial_run_id = 'run_456';
-```
-
-### 3️⃣ Find all artifacts related to a trial run
-
-```sql
-SELECT * FROM ARTIFACT WHERE trial_run_id = 'run_789';
-```
-
----
-
-This database schema provides a **structured and scalable approach** for tracking experiments, trial runs, and model performance data. 🚀
-
+This database structure provides a robust foundation for tracking machine learning experiments. It offers flexibility to accommodate various experimental setups while maintaining a clear and organized data structure.

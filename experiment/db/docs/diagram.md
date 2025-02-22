@@ -1,68 +1,63 @@
 ```mermaid
+
 erDiagram
-    EXPERIMENT ||--o{ TRIAL : has
     EXPERIMENT {
-        string id
+        int id PK
         string title
         string desc
         datetime start_time
         datetime update_time
-        string config
     }
+    
     TRIAL {
-        string id
+        int id PK
         string name
-        string desc
+        int experiment_id FK
         datetime start_time
         datetime update_time
-        string config
     }
-    TRIAL ||--o{ TRIAL_RUN : repeat
+    
     TRIAL_RUN {
-        string id
-        datetime start_time
-        datetime end_time
+        int id PK
+        int trial_id FK
         string status
+        datetime start_time
+        datetime update_time
     }
-    TRIAL_RUN ||--o{ RESULTS : produces
-    TRIAL_RUN ||--o{ EPOCH : has
-    TRIAL_RUN ||--o{ LOGS : generates
-    TRIAL_RUN ||--o{ ARTIFACT : generates
-    EPOCH ||--o{ ARTIFACT : generates
-    RESULTS ||--o{ ARTIFACT : generates
+    
     RESULTS {
-        float total_accuracy
-        float accuracy_per_label
-        float total_loss
-        float loss_per_label
+        int trial_run_id PK, FK
+        datetime time
     }
+    
     EPOCH {
-        int index
-        float total_accuracy
-        float accuracy_per_label
-        float total_loss
-        float loss_per_label
+        int idx CK
+        int trial_run_id CK
+        datetime time
     }
-    DATASET {
-        string id
-        float size
-        string location
-        string config
-    }
-    DATASET ||--o{ EXPERIMENT : used_by
-    ENCODER {
+    
+    METRIC {
+        int id PK
         string type
-        string config
+        float total_val
+        json per_label_val
     }
-    ENCODER ||--o{ DATASET : used_by
+    
     ARTIFACT {
-        string id
+        int id PK
         string type
-        string config
-        string location
+        string loc
     }
-    LOGS {
-        string id
-        string location
-    }
+    
+    EXPERIMENT ||--o{ TRIAL : includes
+    TRIAL ||--o{ TRIAL_RUN : has
+    TRIAL_RUN ||--o{ RESULTS : produces
+    TRIAL_RUN ||--o{ EPOCH : contains
+    TRIAL_RUN ||--o{ ARTIFACT : generates
+    RESULTS ||--o{ METRIC : measures
+    RESULTS ||--o{ ARTIFACT : links
+    EPOCH ||--o{ METRIC : records
+    EPOCH ||--o{ ARTIFACT : stores
+
+
 ```
