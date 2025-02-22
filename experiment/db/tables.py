@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, ForeignKey, JSON, Table
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, ForeignKey, JSON, Table, ForeignKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -17,17 +17,17 @@ results_artifact = Table('results_artifact', Base.metadata,
 )
 
 epoch_metric = Table('epoch_metric', Base.metadata,
-    Column('epoch_idx', Integer),
-    Column('epoch_trial_run_id', Integer),
-    Column('metric_id', Integer, ForeignKey('metric.id')),
-    ForeignKey('epoch.idx', 'epoch.trial_run_id')
+    Column('epoch_idx', Integer, primary_key=True),
+    Column('epoch_trial_run_id', Integer, primary_key=True),
+    Column('metric_id', Integer, ForeignKey('metric.id'), primary_key=True),
+    ForeignKeyConstraint(['epoch_idx', 'epoch_trial_run_id'], ['epoch.idx', 'epoch.trial_run_id'])
 )
 
 epoch_artifact = Table('epoch_artifact', Base.metadata,
-    Column('epoch_idx', Integer),
-    Column('epoch_trial_run_id', Integer),
-    Column('artifact_id', Integer, ForeignKey('artifact.id')),
-    ForeignKey('epoch.idx', 'epoch.trial_run_id')
+    Column('epoch_idx', Integer, primary_key=True),
+    Column('epoch_trial_run_id', Integer, primary_key=True),
+    Column('artifact_id', Integer, ForeignKey('artifact.id'), primary_key=True),
+    ForeignKeyConstraint(['epoch_idx', 'epoch_trial_run_id'], ['epoch.idx', 'epoch.trial_run_id'])
 )
 
 trial_run_artifact = Table('trial_run_artifact', Base.metadata,

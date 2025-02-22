@@ -1,5 +1,7 @@
 name: "experiment 1"
+desc: "This is a description of the experiment"
 base_dir: "./outputs"
+db_path: "./outputs/db/experiment.db"
 settings: # the base cofiguration of the experiment
 
 trials: # each trial changes the parameters it chooses

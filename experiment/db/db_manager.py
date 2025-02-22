@@ -1,7 +1,9 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from contextlib import contextmanager
+import os
+
 from datetime import datetime
+from sqlalchemy import create_engine
+from contextlib import contextmanager
+from sqlalchemy.orm import sessionmaker
 
 from experiment.db.tables import Base, Experiment, Trial, TrialRun, Results, Epoch, Metric, Artifact
 
@@ -10,8 +12,13 @@ DB_URL_PREFIX = "sqlite:///"
 class DatabaseManager:
     def __init__(self, db_path):
         
-        db_url = f"{DB_URL_PREFIX}{db_path}"
-        self.engine = create_engine(db_url)
+        self.db_path = db_path
+        self.db_url = f"{DB_URL_PREFIX}{self.db_path}"
+        self.engine = create_engine(self.db_url)
+        
+        self.data_path = os.path.join(self.db_dir_path, "data")
+        if not os.path.exists(self.data_path):
+            os.makedirs(self.data_path)
         
         self.Session = sessionmaker(bind=self.engine)
 
@@ -136,3 +143,7 @@ class DatabaseManager:
             trial_run = session.query(TrialRun).get(trial_run_id)
             artifact = session.query(Artifact).get(artifact_id)
             trial_run.artifacts.append(artifact)
+    
+    @property
+    def db_dir_path(self):
+        return os.path.dirname(self.db_path)
