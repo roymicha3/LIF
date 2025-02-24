@@ -29,10 +29,9 @@ class CheckpointCallback(Callback, YAMLSerializable):
         
     def on_epoch_end(self, epoch_idx, metrics: Dict[str, Any]) -> bool:
         """Called at the end of each epoch."""
-        
         self.index += 1
         if self.index % self.interval == 0:
-            file_path = self.checkpoint_path + f"{self.current_checkpoint}"
+            file_path = f"{self.checkpoint_path}-{self.parent_id}-{self.current_checkpoint}"
             metrics[Metric.NETWORK].save(file_path)
             self.current_checkpoint += 1
             
