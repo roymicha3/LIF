@@ -1,6 +1,8 @@
 import os
 from omegaconf import OmegaConf, DictConfig
 
+from experiment.db.database import DB
+
 from experiment.trial import Trial
 from settings.serializable import YAMLSerializable
 
@@ -25,7 +27,7 @@ class Experiment(YAMLSerializable):
         if not os.path.exists(self.base_dir):
             raise FileNotFoundError(f"Base directory '{self.base_dir}' does not exist.")
 
-        Experiment.setup_experiment(self.experiment_dir, config)
+        self.id = Experiment.setup_experiment(self.experiment_dir, config)
 
     @staticmethod
     def setup_experiment(experiment_dir: str, experiment_conf: DictConfig):
@@ -37,7 +39,15 @@ class Experiment(YAMLSerializable):
         # Save the experiment configuration
         experiment_config_path = os.path.join(experiment_dir, Experiment.CONFIG_FILE)
         OmegaConf.save(experiment_conf, experiment_config_path)
-
+        
+        # setup the database
+        DB.initialize(experiment_conf.db_path)
+        
+        experiment_conf_db_path = os.path.join(DB.instance().data_path, Experiment.CONFIG_FILE)
+        OmegaConf.save(experiment_conf, experiment_conf_db_path)
+        
+        id_ = DB.instance().create_experiment(experiment_conf.name, experiment_conf.desc)
+        return id_
 
     def run(self, trial_config: DictConfig) -> None:
         """
@@ -47,7 +57,7 @@ class Experiment(YAMLSerializable):
             conf.settings = OmegaConf.merge(self.config.settings, conf.settings)
             conf.base_dir = self.experiment_dir
             trial = Trial.from_config(conf, self.env_config)
-            trial.run()
+            trial.run(self.id)
             
     @classmethod
     def from_config(cls, config: DictConfig, env_config: DictConfig):
