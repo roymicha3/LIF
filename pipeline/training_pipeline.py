@@ -3,11 +3,14 @@ from tqdm import tqdm
 from omegaconf import DictConfig, OmegaConf
 import numpy as np
 
+from experiment.db.database import DB
+
+
 from network.network_factory import NetworkFactory
 from network.optimizer.optimizer_factory import OptimizerFactory
 from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
 from network.loss.loss_factory import LossFactory
-from pipeline.pipline import Pipeline
+from pipeline.pipeline import Pipeline
 from pipeline.callback.callback import Metric
 from pipeline.callback.callback_factory import CallbackFactory
 from settings.serializable import YAMLSerializable
@@ -22,7 +25,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                  batch_size: int, 
                  validation_split: float, 
                  test_split: float,
-                 shuffle: bool = True):
+                 shuffle: bool = True,
+                 id: int = None):
         
         super(TrainingPipeline, self).__init__()
         super(YAMLSerializable, self).__init__()
@@ -32,18 +36,20 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         self.validation_split = validation_split
         self.test_split = test_split
         self.shuffle = shuffle
+        self.id = id
         
     @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
+    def from_config(cls, config: DictConfig, env_config: DictConfig, id: int = None):
         pipeline = cls(
             config.epochs,
             config.batch_size, 
             config.validation_split,
             config.test_split,
-            config.shuffle)
+            config.shuffle,
+            id)
         
         for callback_config in config.callbacks:
-            callback = CallbackFactory.create(callback_config.type, callback_config, env_config)
+            callback = CallbackFactory.create(callback_config.type, callback_config, env_config, id)
             pipeline.register_callback(callback)
             
         return pipeline
@@ -73,6 +79,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         criterion = LossFactory.create(config.loss.type, config.loss, env_config)
         
         for epoch in range(self.epochs):
+            
+            DB.instance().create_epoch(self.id, epoch)
             correct_predictions = 0
             total_predictions = 0
  
@@ -119,7 +127,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                     Metric.NETWORK: network
                 }
             
-            stop_flag = self.on_epoch_end(epoch_res)
+            stop_flag = self.on_epoch_end(epoch, epoch_res)
             if stop_flag:
                 print("A callback issued a stop! \n")
                 break

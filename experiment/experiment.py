@@ -41,11 +41,9 @@ class Experiment(YAMLSerializable):
         OmegaConf.save(experiment_conf, experiment_config_path)
         
         # setup the database
-        db_path = os.path.join(experiment_dir, "db")
-        DB.initialize(db_path)
+        DB.initialize(experiment_conf.db_path)
         
-        db_data_path = DB.instance().db_dir_path
-        experiment_conf_db_path = os.path.join(db_data_path, Experiment.CONFIG_FILE)
+        experiment_conf_db_path = os.path.join(DB.instance().data_path, Experiment.CONFIG_FILE)
         OmegaConf.save(experiment_conf, experiment_conf_db_path)
         
         id_ = DB.instance().create_experiment(experiment_conf.name, experiment_conf.desc)

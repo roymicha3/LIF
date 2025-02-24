@@ -9,7 +9,7 @@ class EarlyStopping(Callback):
     """
     Early stops the training if validation metric doesn't improve after a given patience.
     """
-    def __init__(self, metric=Metric.VAL_LOSS, patience=5, min_delta_percent=0.0, verbose=False):
+    def __init__(self, id, metric=Metric.VAL_LOSS, patience=5, min_delta_percent=0.0, verbose=False):
         """
         Args:
             patience (int): How many epochs to wait after last improvement.
@@ -24,7 +24,7 @@ class EarlyStopping(Callback):
         self.best_metric = None
         self.early_stop = False
 
-    def on_epoch_end(self, metrics) -> bool:
+    def on_epoch_end(self, epoch_idx, metrics) -> bool:
         """
         Check if validation metric has improved; otherwise increase counter.
 
@@ -58,5 +58,5 @@ class EarlyStopping(Callback):
         pass
     
     @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
-        return cls(Metric.get(config.metric), config.patience, config.min_delta, config.verbose)
+    def from_config(cls, config: DictConfig, env_config: DictConfig, parent_id):
+        return cls(parent_id, Metric.get(config.metric), config.patience, config.min_delta, config.verbose)

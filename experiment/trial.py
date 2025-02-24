@@ -50,15 +50,15 @@ class Trial(YAMLSerializable):
         """
         Run a single trial.
         """
-        repeat_path = os.path.join(self.trial_dir, str(id))
-        os.makedirs(repeat_path, exist_ok=True)
+        trial_run_path = os.path.join(self.trial_dir, str(id))
+        os.makedirs(trial_run_path, exist_ok=True)
         
         # set the working directory
         env_conf = self.env_conf.copy()
-        env_conf.work_dir = repeat_path
+        env_conf.work_dir = trial_run_path
         
         # Create pipeline
-        pipeline = TrainingPipeline.from_config(self.trial_conf.pipeline, env_conf)
+        pipeline = TrainingPipeline.from_config(self.trial_conf.pipeline, env_conf, id)
         pipeline.run(self.trial_conf, env_conf)
 
     def run(self, parent_id) -> None:
@@ -68,7 +68,10 @@ class Trial(YAMLSerializable):
         trial_id = DB.instance().create_trial(parent_id, self.trial_name)
         for i in range(self.repeat):
             trial_run_id = DB.instance().create_trial_run(trial_id, "running")
+            
             self.run_single(trial_run_id)
+            
+            DB.instance().update_trial_run_status(trial_run_id, "completed")
             
     @classmethod
     def from_config(cls, config, env_config):
