@@ -61,6 +61,14 @@ Represents files or objects generated during the experiment.
 
 To handle many-to-many relationships, the following junction tables are used:
 
+#### EXPERIMENT_ARTIFACT
+- `experiment_id` (INT, FK): Reference to EXPERIMENT
+- `artifact_id` (INT, FK): Reference to ARTIFACT
+
+#### TRIAL_ARTIFACT
+- `trial_id` (INT, FK): Reference to TRIAL
+- `artifact_id` (INT, FK): Reference to ARTIFACT
+
 #### RESULTS_METRIC
 - `results_id` (INT, FK): Reference to RESULTS
 - `metric_id` (INT, FK): Reference to METRIC
@@ -85,9 +93,9 @@ To handle many-to-many relationships, the following junction tables are used:
 
 ## Entity Relationships
 
-1. An EXPERIMENT can have multiple TRIALs
-2. A TRIAL can have multiple TRIAL_RUNs
-3. A TRIAL_RUN is associated with one RESULTS entry
+1. An EXPERIMENT can have multiple TRIALs and ARTIFACTs
+2. A TRIAL can have multiple TRIAL_RUNs and ARTIFACTs
+3. A TRIAL_RUN is associated with one RESULTS entry and can have multiple ARTIFACTs
 4. A TRIAL_RUN can have multiple EPOCHs
 5. RESULTS and EPOCHs can be associated with multiple METRICs and ARTIFACTs
 
@@ -95,7 +103,7 @@ To handle many-to-many relationships, the following junction tables are used:
 
 1. **Hierarchical Structure**: Experiments > Trials > Trial Runs > Epochs
 2. **Flexible Metric Storage**: Supports both overall and per-label metric values
-3. **Artifact Tracking**: Ability to link artifacts (e.g., model files, plots) to various stages of the experiment
+3. **Comprehensive Artifact Tracking**: Ability to link artifacts (e.g., model files, plots) to experiments, trials, trial runs, results, and epochs
 4. **Temporal Tracking**: All major entities include timestamp information
 
 ## Best Practices for Usage
@@ -115,4 +123,4 @@ To handle many-to-many relationships, the following junction tables are used:
 
 ## Conclusion
 
-This database structure provides a robust foundation for tracking machine learning experiments. It offers flexibility to accommodate various experimental setups while maintaining a clear and organized data structure.
+This database structure provides a robust foundation for tracking machine learning experiments. It offers flexibility to accommodate various experimental setups while maintaining a clear and organized data structure. The addition of artifact associations at multiple levels (experiment, trial, trial run) allows for more comprehensive tracking of resources throughout the experimental process.
