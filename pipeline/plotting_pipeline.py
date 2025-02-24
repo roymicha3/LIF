@@ -18,7 +18,8 @@ class PlottingPipeline(Pipeline, YAMLSerializable):
         super(YAMLSerializable, self).__init__()
         
         self.work_dir = work_dir
-        
+    
+    
     @classmethod
     def from_config(cls, config: DictConfig, env_config: DictConfig): # TODO: fix this
         pipeline = cls()

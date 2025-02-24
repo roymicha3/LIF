@@ -59,7 +59,7 @@ class Experiment(YAMLSerializable):
             conf.settings = OmegaConf.merge(self.config.settings, conf.settings)
             conf.base_dir = self.experiment_dir
             trial = Trial.from_config(conf, self.env_config)
-            trial.run()
+            trial.run(self.id)
             
     @classmethod
     def from_config(cls, config: DictConfig, env_config: DictConfig):

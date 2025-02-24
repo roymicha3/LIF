@@ -1,6 +1,8 @@
 import os
 from omegaconf import OmegaConf, DictConfig
 
+from experiment.db.database import DB
+
 # TODO: someday support multiple kinds of pipelines...(consider creating a factory for pipelines)
 from settings.serializable import YAMLSerializable
 from pipeline.training_pipeline import TrainingPipeline
@@ -44,11 +46,11 @@ class Trial(YAMLSerializable):
         OmegaConf.save(config, trial_config_path)
         
 
-    def run_single(self, tag: str) -> None:
+    def run_single(self, id) -> None:
         """
         Run a single trial.
         """
-        repeat_path = os.path.join(self.trial_dir, tag)
+        repeat_path = os.path.join(self.trial_dir, str(id))
         os.makedirs(repeat_path, exist_ok=True)
         
         # set the working directory
@@ -59,12 +61,14 @@ class Trial(YAMLSerializable):
         pipeline = TrainingPipeline.from_config(self.trial_conf.pipeline, env_conf)
         pipeline.run(self.trial_conf, env_conf)
 
-    def run(self) -> None:
+    def run(self, parent_id) -> None:
         """
         Run the trial.
         """
+        trial_id = DB.instance().create_trial(parent_id, self.trial_name)
         for i in range(self.repeat):
-            self.run_single(f"repeat_{i}")
+            trial_run_id = DB.instance().create_trial_run(trial_id, "running")
+            self.run_single(trial_run_id)
             
     @classmethod
     def from_config(cls, config, env_config):
