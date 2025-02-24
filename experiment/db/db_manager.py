@@ -1,5 +1,4 @@
 import os
-
 from datetime import datetime
 from sqlalchemy import create_engine
 from contextlib import contextmanager
@@ -7,11 +6,10 @@ from sqlalchemy.orm import sessionmaker
 
 from experiment.db.tables import Base, Experiment, Trial, TrialRun, Results, Epoch, Metric, Artifact
 
-
 DB_URL_PREFIX = "sqlite:///"
+
 class DatabaseManager:
     def __init__(self, db_path):
-        
         self.db_path = db_path
         self.db_url = f"{DB_URL_PREFIX}{self.db_path}"
         self.engine = create_engine(self.db_url)
@@ -60,6 +58,12 @@ class DatabaseManager:
                 setattr(experiment, key, value)
             experiment.update_time = datetime.now()
 
+    def add_artifact_to_experiment(self, experiment_id, artifact_id):
+        with self.session_scope() as session:
+            experiment = session.query(Experiment).get(experiment_id)
+            artifact = session.query(Artifact).get(artifact_id)
+            experiment.artifacts.append(artifact)
+
     # Trial methods
     def create_trial(self, experiment_id, name):
         with self.session_scope() as session:
@@ -71,6 +75,12 @@ class DatabaseManager:
     def get_trial(self, trial_id):
         with self.session_scope() as session:
             return session.query(Trial).get(trial_id)
+
+    def add_artifact_to_trial(self, trial_id, artifact_id):
+        with self.session_scope() as session:
+            trial = session.query(Trial).get(trial_id)
+            artifact = session.query(Artifact).get(artifact_id)
+            trial.artifacts.append(artifact)
 
     # TrialRun methods
     def create_trial_run(self, trial_id, status):
@@ -86,17 +96,27 @@ class DatabaseManager:
             trial_run.status = status
             trial_run.update_time = datetime.now()
 
+    def add_artifact_to_trial_run(self, trial_run_id, artifact_id):
+        with self.session_scope() as session:
+            trial_run = session.query(TrialRun).get(trial_run_id)
+            artifact = session.query(Artifact).get(artifact_id)
+            trial_run.artifacts.append(artifact)
+
     # Results methods
     def create_results(self, trial_run_id):
         with self.session_scope() as session:
             results = Results(trial_run_id=trial_run_id, time=datetime.now())
             session.add(results)
+            session.flush()
+            return results.trial_run_id
 
     # Epoch methods
     def create_epoch(self, trial_run_id, idx):
         with self.session_scope() as session:
             epoch = Epoch(trial_run_id=trial_run_id, idx=idx, time=datetime.now())
             session.add(epoch)
+            session.flush()
+            return epoch.idx, epoch.trial_run_id
 
     # Metric methods
     def create_metric(self, type, total_val, per_label_val=None):
@@ -138,12 +158,6 @@ class DatabaseManager:
             artifact = session.query(Artifact).get(artifact_id)
             epoch.artifacts.append(artifact)
 
-    def add_artifact_to_trial_run(self, trial_run_id, artifact_id):
-        with self.session_scope() as session:
-            trial_run = session.query(TrialRun).get(trial_run_id)
-            artifact = session.query(Artifact).get(artifact_id)
-            trial_run.artifacts.append(artifact)
-    
     @property
     def db_dir_path(self):
         return os.path.dirname(self.db_path)

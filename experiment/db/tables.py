@@ -30,6 +30,16 @@ epoch_artifact = Table('epoch_artifact', Base.metadata,
     ForeignKeyConstraint(['epoch_idx', 'epoch_trial_run_id'], ['epoch.idx', 'epoch.trial_run_id'])
 )
 
+experiment_artifact = Table('experiment_artifact', Base.metadata,
+    Column('experiment_id', Integer, ForeignKey('experiment.id')),
+    Column('artifact_id', Integer, ForeignKey('artifact.id'))
+)
+
+trial_artifact = Table('trial_artifact', Base.metadata,
+    Column('trial_id', Integer, ForeignKey('trial.id')),
+    Column('artifact_id', Integer, ForeignKey('artifact.id'))
+)
+
 trial_run_artifact = Table('trial_run_artifact', Base.metadata,
     Column('trial_run_id', Integer, ForeignKey('trial_run.id')),
     Column('artifact_id', Integer, ForeignKey('artifact.id'))
@@ -43,6 +53,7 @@ class Experiment(Base):
     start_time = Column(DateTime, nullable=False)
     update_time = Column(DateTime, nullable=False)
     trials = relationship("Trial", back_populates="experiment")
+    artifacts = relationship("Artifact", secondary=experiment_artifact, back_populates="experiments")
 
 class Trial(Base):
     __tablename__ = 'trial'
@@ -53,6 +64,7 @@ class Trial(Base):
     update_time = Column(DateTime, nullable=False)
     experiment = relationship("Experiment", back_populates="trials")
     trial_runs = relationship("TrialRun", back_populates="trial")
+    artifacts = relationship("Artifact", secondary=trial_artifact, back_populates="trials")
 
 class TrialRun(Base):
     __tablename__ = 'trial_run'
@@ -97,9 +109,8 @@ class Artifact(Base):
     id = Column(Integer, primary_key=True)
     type = Column(String(50), nullable=False)
     loc = Column(String(255), nullable=False)
+    experiments = relationship("Experiment", secondary=experiment_artifact, back_populates="artifacts")
+    trials = relationship("Trial", secondary=trial_artifact, back_populates="artifacts")
+    trial_runs = relationship("TrialRun", secondary=trial_run_artifact, back_populates="artifacts")
     results = relationship("Results", secondary=results_artifact, back_populates="artifacts")
     epochs = relationship("Epoch", secondary=epoch_artifact, back_populates="artifacts")
-    trial_runs = relationship("TrialRun", secondary=trial_run_artifact, back_populates="artifacts")
-
-
-

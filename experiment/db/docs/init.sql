@@ -60,6 +60,24 @@ CREATE TABLE ARTIFACT (
 
 -- Create relationship tables
 
+-- EXPERIMENT to ARTIFACT relationship
+CREATE TABLE EXPERIMENT_ARTIFACT (
+    experiment_id INT,
+    artifact_id INT,
+    PRIMARY KEY (experiment_id, artifact_id),
+    FOREIGN KEY (experiment_id) REFERENCES EXPERIMENT(id),
+    FOREIGN KEY (artifact_id) REFERENCES ARTIFACT(id)
+);
+
+-- TRIAL to ARTIFACT relationship
+CREATE TABLE TRIAL_ARTIFACT (
+    trial_id INT,
+    artifact_id INT,
+    PRIMARY KEY (trial_id, artifact_id),
+    FOREIGN KEY (trial_id) REFERENCES TRIAL(id),
+    FOREIGN KEY (artifact_id) REFERENCES ARTIFACT(id)
+);
+
 -- RESULTS to METRIC relationship
 CREATE TABLE RESULTS_METRIC (
     results_id INT,

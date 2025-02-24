@@ -50,7 +50,9 @@ erDiagram
     }
     
     EXPERIMENT ||--o{ TRIAL : includes
+    EXPERIMENT ||--o{ ARTIFACT : stores
     TRIAL ||--o{ TRIAL_RUN : has
+    TRIAL ||--o{ ARTIFACT : stores
     TRIAL_RUN ||--o{ RESULTS : produces
     TRIAL_RUN ||--o{ EPOCH : contains
     TRIAL_RUN ||--o{ ARTIFACT : generates

@@ -32,7 +32,8 @@ class Trial(YAMLSerializable):
 
         self.env_conf = env_conf
         self.trial_conf = config
-        Trial.setup_trial(self.trial_dir, config)
+        
+        self.trial_conf_path = Trial.setup_trial(self.trial_dir, config)
 
     @staticmethod
     def setup_trial(trial_dir: str, config: DictConfig) -> DictConfig:
@@ -44,6 +45,8 @@ class Trial(YAMLSerializable):
         # Save the trial configuration
         trial_config_path = os.path.join(trial_dir, Trial.TRIAL_CONFIG)
         OmegaConf.save(config, trial_config_path)
+        
+        return trial_config_path
         
 
     def run_single(self, id) -> None:
@@ -66,6 +69,11 @@ class Trial(YAMLSerializable):
         Run the trial.
         """
         trial_id = DB.instance().create_trial(parent_id, self.trial_name)
+        
+        # register the experiment configuration as artifact
+        artifact_id = DB.instance().create_artifact("config", self.trial_conf_path)
+        DB.instance().add_artifact_to_trial(trial_id, artifact_id)
+        
         for i in range(self.repeat):
             trial_run_id = DB.instance().create_trial_run(trial_id, "running")
             
