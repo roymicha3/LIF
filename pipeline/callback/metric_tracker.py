@@ -3,6 +3,8 @@ import csv
 from typing import Dict, List, Any
 from omegaconf import DictConfig
 
+from experiment.db.database import DB
+
 from pipeline.callback.callback import Callback, Metric, MetricCategory
 from settings.serializable import YAMLSerializable
 
@@ -14,18 +16,25 @@ class MetricsTracker(Callback, YAMLSerializable):
     """
     LOG_NAME = "metrics.log"
     
-    def __init__(self, work_dir: str):
+    def __init__(self, parent_id, work_dir: str):
         super(MetricsTracker, self).__init__()
         super(YAMLSerializable, self).__init__()
         
+        self.parent_id = parent_id
         self.log_path = os.path.join(work_dir, MetricsTracker.LOG_NAME)
         self.metrics: Dict[str, List[Any]] = {}
         
-    def on_epoch_end(self, metrics: Dict[str, Any]) -> bool:
-        """Called at the end of each epoch."""
+    def on_epoch_end(self, epoch_idx, metrics: Dict[str, Any]) -> bool:
+        
         for key, value in metrics.items():
-            metric = Metric(key)
-            if metric.category == MetricCategory.TRACKED:
+            
+            if key.category == MetricCategory.TRACKED:
+                
+                # create a metric in the database
+                metric_id = DB.instance().create_metric(key.value, value, per_label_val=None)
+                DB.instance().add_metric_to_epoch(epoch_idx, self.parent_id, metric_id)
+                
+                # save it to the metrics dictionary
                 if key not in self.metrics:
                     self.metrics[key] = []
                 self.metrics[key].append(value)
@@ -54,8 +63,8 @@ class MetricsTracker(Callback, YAMLSerializable):
         return self.metrics.get(key, [default])[-1]
     
     @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
+    def from_config(cls, config: DictConfig, env_config: DictConfig, parent_id):
         """
         Create an instance from a DictConfig.
         """
-        return cls(env_config.work_dir)
+        return cls(parent_id, env_config.work_dir)
