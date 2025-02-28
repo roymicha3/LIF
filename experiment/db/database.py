@@ -15,7 +15,9 @@ class SingletonDatabaseManager:
         if cls._instance is None:
             cls._instance = cls.__new__(cls)
             cls._instance.db_manager = DatabaseManager(db_path)
-            cls._instance.db_manager.create_tables()
+            if not os.path.exists(db_path):
+                cls._instance.db_manager.create_tables()
+        
         return cls._instance
 
     @classmethod

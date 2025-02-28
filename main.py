@@ -39,7 +39,7 @@ def run_experiment(experiment_path: str):
     experiment.run(trials_config)
 
 
-EXPERIMENT_NAME = "data len" # "integral lr beta validation"
+EXPERIMENT_NAME = "lr validation" # "integral lr beta validation"
 
 def main():
     """

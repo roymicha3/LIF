@@ -50,6 +50,13 @@ class DatabaseManager:
     def get_experiment(self, experiment_id):
         with self.session_scope() as session:
             return session.query(Experiment).get(experiment_id)
+        
+    def get_experiment_id(self, experiment_name):
+        with self.session_scope() as session:
+            experiment = session.query(Experiment).filter_by(title=experiment_name).first()
+            if experiment is None:
+                return None
+            return experiment.id
 
     def update_experiment(self, experiment_id, **kwargs):
         with self.session_scope() as session:
