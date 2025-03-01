@@ -1,84 +1,225 @@
-# LIF Project
+# LIF (Leaky Integrate-and-Fire) Neural Network Framework
 
-This project implements a Leaky Integrate-and-Fire (LIF) model for neural simulations. It includes modules for configuring the model, running experiments, and visualizing results.
+A comprehensive framework for building, training, and analyzing Leaky Integrate-and-Fire neural networks. This framework provides a flexible architecture for spiking neural network experiments with configurable components and extensive monitoring capabilities.
 
 ## Project Structure
 
-- `main.py`: The main script to run the project.
-- `common/`: Contains common utilities and configurations.
-- `analysis/`: Contains modules for data analysis and visualization.
-- `experiment/`: Contains modules for running experiments.
+```
+LIF/
+├── analysis/          # Analysis and visualization tools
+├── data/             # Dataset storage and management
+├── encoders/         # Neural spike encoding implementations
+├── experiment/       # Experiment framework
+│   ├── db/          # Experiment database management
+│   └── trial.py     # Trial implementation
+├── network/          # Neural network components
+│   ├── activation/   # Activation functions and spike generators
+│   ├── kernel/       # Network kernels (DEN, etc.)
+│   ├── learning/     # Learning rules and algorithms
+│   ├── loss/        # Loss functions
+│   ├── optimizer/   # Optimization algorithms
+│   └── topology/    # Network architecture definitions
+├── pipeline/         # Training and evaluation pipelines
+│   ├── callback/    # Training callbacks and monitoring
+│   └── training_pipeline.py  # Main training implementation
+├── settings/        # Configuration and environment settings
+└── tools/           # Utility functions and helpers
+```
 
-## Setup
+## Core Components
+
+### 1. Neural Network Architecture
+
+- **Kernel Types**:
+  - DENKernel (Dynamic Evolving Neural Kernel)
+  - Configurable parameters: tau_s, tau_m, learning rates
+
+- **Learning Rules**:
+  - SingleSpikeLR (Single Spike Learning Rule)
+  - Customizable thresholds and learning parameters
+
+- **Optimizers**:
+  - MomentumOptimizer
+  - Configurable learning rates and momentum
+
+### 2. Experiment Framework
+
+The experiment system is designed for systematic neural network research:
+
+```yaml
+# experiment.yaml
+name: "experiment_name"
+desc: "Experiment description"
+base_dir: "./outputs"
+db_path: "./outputs/db/experiment.db"
+
+trials:
+  - name: "trial_1"
+    repeat: 1
+    settings:
+      dataset:
+        len: 1000
+  # Additional trials...
+```
+
+- **Database Integration**: Automatic logging of experiments and trials
+- **Trial Management**: Support for multiple trials with different parameters
+- **Parameter Sweeping**: Systematic exploration of hyperparameters
+
+### 3. Training Pipeline
+
+The training pipeline (`TrainingPipeline`) provides a comprehensive training framework:
+
+- **Data Management**:
+  - Automatic train/validation/test splitting
+  - Configurable batch sizes
+  - Dataset normalization and preprocessing
+
+- **Training Features**:
+  - Epoch-based training with progress monitoring
+  - Automatic device management (CPU/GPU)
+  - Learning rate scheduling
+  - Early stopping capabilities
+
+- **Evaluation**:
+  - Per-epoch validation
+  - Label-wise accuracy tracking
+  - Loss monitoring and optimization
+
+### 4. Callback System
+
+Extensive callback system for monitoring and controlling the training process:
+
+- **MetricsTracker**: Tracks and logs training metrics
+- **EarlyStopping**: Prevents overfitting with configurable patience
+- **MLflowCallback**: Integration with MLflow for experiment tracking
+- **ModelCheckpoint**: Saves model states during training
+
+```yaml
+# Pipeline configuration with callbacks
+pipeline:
+  type: "TrainingPipeline"
+  epochs: 5
+  batch_size: 64
+  validation_split: 0.2
+  callbacks:
+    - type: "MetricsTracker"
+    - type: "EarlyStopping"
+      metric: "val_loss"
+      patience: 3
+    - type: "MLflowCallback"
+      experiment_name: "experiment_1"
+```
+
+## Configuration System
+
+### Main Configuration (config.yaml)
+
+```yaml
+model:
+  type: "Network"
+  layers:
+    - name: "input_layer"
+      input_size: 500
+      output_size: 1
+      kernel:
+        type: "DENKernel"
+        n: 500
+        tau_s: 15
+        tau_m: 3.75
+
+optimizer:
+  type: MomentumOptimizer
+  lr: 100
+  momentum: 0.99
+
+lr_scheduler:
+  type: StepLR
+  args:
+    step_size: 50
+    gamma: 0.9
+
+dataset:
+  type: "RandomDataset"
+  input_size: 500
+  len: 1000
+  encoder:
+    type: "LatencyEncoder"
+    size: 500
+```
+
+### Environment Configuration (env.yaml)
+
+```yaml
+T: 500          # Simulation duration
+dt: 1.0         # Time step
+v_th: 1.0       # Voltage threshold
+v_reset: 0.0    # Reset voltage
+v_0: 2.12       # Initial voltage
+device: "cpu"   # Computing device
+```
+
+## Setup and Usage
+
+### Installation
 
 1. Clone the repository:
-    ```sh
-    git clone https://github.com/yourusername/LIF.git
-    cd LIF
-    ```
+```bash
+git clone [repository-url]
+cd LIF
+```
 
-2. Install the required dependencies:
-    ```sh
-    pip install -r requirements.txt
-    ```
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-## Usage
+### Running Experiments
 
-To run the main script, execute:
-```sh
+1. Create an experiment configuration:
+   - Define model architecture in `config.yaml`
+   - Set environment parameters in `env.yaml`
+   - Configure experiment settings in `experiment.yaml`
+   - Define trials in `trials.yaml`
+
+2. Place configurations in experiment directory:
+```
+outputs/
+└── experiment_name/
+    ├── config/
+    │   ├── config.yaml
+    │   ├── env.yaml
+    │   ├── experiment.yaml
+    │   └── trials.yaml
+    └── results/
+```
+
+3. Run the experiment:
+```bash
 python main.py
 ```
 
-## Configuration
+## Monitoring and Analysis
 
-The model attributes can be configured in the `main.py` file. Here is an example configuration:
-```python
-MODEL_ATTRIBUTES = {
-    MODEL_NS.NUM_OUTPUTS: 1,
-    MODEL_NS.NUM_INPUTS: 500,
-    MODEL_NS.LR: 100.0,
-    MODEL_NS.MOMENTUM: 0.99,
-    MODEL_NS.EPOCHS: 1000,
-    MODEL_NS.BETA: 50,
-    DATA_NS.BATCH_SIZE: 64,
-    DATA_NS.DATASET_SIZE: 1000,
-    DATA_NS.NUM_CLASSES: 2,
-    DATA_NS.TRAINING_PERCENTAGE: 50,
-    DATA_NS.TESTING_PERCENTAGE: 25,
-    DATA_NS.VALIDATION_PERCENTAGE: 100,
-    DATA_NS.ROOT: os.path.join(".", "data", "data", "random"),
-    SPIKE_NS.T: 500,
-    SPIKE_NS.dt: 1.0,
-    SPIKE_NS.tau: 10,
-    SPIKE_NS.tau_m: 10,
-    SPIKE_NS.tau_s: 10 / 4,
-    SPIKE_NS.v_thr: 1,
-}
-```
+- **MLflow Integration**: Access experiment tracking UI:
+  ```bash
+  mlflow ui --backend-store-uri ./outputs/mlruns
+  ```
 
-## Running Experiments
+- **Metrics**: Monitor training progress through:
+  - Loss curves
+  - Accuracy metrics
+  - Spike patterns
+  - Network responses
 
-To run an experiment, modify the `main.py` file to call the desired experiment function. For example:
-```python
-from experiment.experiment import simple_tempotron_tune_hyperparameters
+## Contributing
 
-def main():
-    config = Configuration(MODEL_ATTRIBUTES)
-    simple_tempotron_tune_hyperparameters()
-```
-
-## Visualization
-
-To visualize the results, use the visualization modules in the `analysis` package. For example:
-```python
-from analysis.results import RandomSpikePattern
-
-def main():
-    config = Configuration(MODEL_ATTRIBUTES)
-    visualizer = RandomSpikePattern(config)
-    visualizer.den_response()
-```
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
