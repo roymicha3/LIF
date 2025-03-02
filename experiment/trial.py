@@ -1,6 +1,8 @@
 import os
 from omegaconf import OmegaConf, DictConfig
 
+from experiment.db.database import DB
+
 # TODO: someday support multiple kinds of pipelines...(consider creating a factory for pipelines)
 from settings.serializable import YAMLSerializable
 from pipeline.training_pipeline import TrainingPipeline
@@ -30,7 +32,8 @@ class Trial(YAMLSerializable):
 
         self.env_conf = env_conf
         self.trial_conf = config
-        Trial.setup_trial(self.trial_dir, config)
+        
+        self.trial_conf_path = Trial.setup_trial(self.trial_dir, config)
 
     @staticmethod
     def setup_trial(trial_dir: str, config: DictConfig) -> DictConfig:
@@ -43,28 +46,40 @@ class Trial(YAMLSerializable):
         trial_config_path = os.path.join(trial_dir, Trial.TRIAL_CONFIG)
         OmegaConf.save(config, trial_config_path)
         
+        return trial_config_path
+        
 
-    def run_single(self, tag: str) -> None:
+    def run_single(self, id) -> None:
         """
         Run a single trial.
         """
-        repeat_path = os.path.join(self.trial_dir, tag)
-        os.makedirs(repeat_path, exist_ok=True)
+        trial_run_path = os.path.join(self.trial_dir, str(id))
+        os.makedirs(trial_run_path, exist_ok=True)
         
         # set the working directory
         env_conf = self.env_conf.copy()
-        env_conf.work_dir = repeat_path
+        env_conf.work_dir = trial_run_path
         
         # Create pipeline
-        pipeline = TrainingPipeline.from_config(self.trial_conf.pipeline, env_conf)
+        pipeline = TrainingPipeline.from_config(self.trial_conf.pipeline, env_conf, id)
         pipeline.run(self.trial_conf, env_conf)
 
-    def run(self) -> None:
+    def run(self, parent_id) -> None:
         """
         Run the trial.
         """
+        trial_id = DB.instance().create_trial(parent_id, self.trial_name)
+        
+        # register the experiment configuration as artifact
+        artifact_id = DB.instance().create_artifact("config", self.trial_conf_path)
+        DB.instance().add_artifact_to_trial(trial_id, artifact_id)
+        
         for i in range(self.repeat):
-            self.run_single(f"repeat_{i}")
+            trial_run_id = DB.instance().create_trial_run(trial_id, "running")
+            
+            self.run_single(trial_run_id)
+            
+            DB.instance().update_trial_run_status(trial_run_id, "completed")
             
     @classmethod
     def from_config(cls, config, env_config):

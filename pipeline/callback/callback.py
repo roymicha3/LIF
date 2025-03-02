@@ -47,7 +47,7 @@ class Metric(Enum):
 
 class Callback(ABC):
     @abstractmethod
-    def on_epoch_end(self, metrics) -> bool:
+    def on_epoch_end(self, epoch_idx, metrics) -> bool:
         """Called at the end of each epoch."""
         pass
 
