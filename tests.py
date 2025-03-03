@@ -6,9 +6,7 @@ def test_plotter():
     
     print(df)
     
-    df = plotter.load_experiment_avg_epochs("data len")
-    
-    print(df)
+    fig, ax = plotter.plot_epoch_progression("data len", "val_acc")
     
 
 if __name__ == "__main__":
