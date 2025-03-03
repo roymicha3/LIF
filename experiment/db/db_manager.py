@@ -145,6 +145,33 @@ class DatabaseManager:
             metric = session.query(Metric).get(metric_id)
             epoch.metrics.append(metric)
 
+    def get_epoch_metric_types(self):
+        """Get all unique metric types from epochs."""
+        with self.session_scope() as session:
+            epoch_metrics = session.query(Metric.type)\
+                .select_from(Epoch)\
+                .join(Epoch.metrics)\
+                .distinct()\
+                .all()
+            return [metric_type[0] for metric_type in epoch_metrics]
+
+    def get_result_metric_types(self):
+        """Get all unique metric types from results."""
+        with self.session_scope() as session:
+            result_metrics = session.query(Metric.type)\
+                .select_from(Results)\
+                .join(Results.metrics)\
+                .distinct()\
+                .all()
+            return [metric_type[0] for metric_type in result_metrics]
+
+    def get_metric_types(self):
+        """Get all unique metric types grouped by their parent object type."""
+        return {
+            'epoch': self.get_epoch_metric_types(),
+            'result': self.get_result_metric_types()
+        }
+
     # Artifact methods
     def create_artifact(self, type, loc):
         with self.session_scope() as session:

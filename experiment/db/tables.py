@@ -63,7 +63,7 @@ class Trial(Base):
     start_time = Column(DateTime, nullable=False)
     update_time = Column(DateTime, nullable=False)
     experiment = relationship("Experiment", back_populates="trials")
-    trial_runs = relationship("TrialRun", back_populates="trial")
+    trial_runs = relationship("TrialRun", back_populates="trial") # TODO: check this relation
     artifacts = relationship("Artifact", secondary=trial_artifact, back_populates="trials")
 
 class TrialRun(Base):
