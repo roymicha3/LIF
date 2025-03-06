@@ -5,6 +5,7 @@ from settings.serializable import YAMLSerializable
 
 from network.kernel.kernel_factory import KernelFactory
 from network.learning.lr_factory import LearningRuleFactory
+from network.activation.activation_factory import ActivationFactory
 
 from network.topology.network import Network
 from network.topology.neuron import NeuronLayer
@@ -33,7 +34,8 @@ class NetworkFactory(Factory):
             kernel = KernelFactory.create(layer.kernel.type, layer.kernel, env_config)
             learning_rule = LearningRuleFactory.create(layer.learning_rule.type, layer.learning_rule, env_config)
             connection = SimpleConnection(learning_rule, layer.input_size, layer.output_size, device=env_config.device)
-            neuron_layer = NeuronLayer(kernel, connection)
+            activation = ActivationFactory.create(layer.activation.type, layer.activation, env_config)
+            neuron_layer = NeuronLayer(kernel, connection, activation)
             network.add_layer(neuron_layer, layer.name)
             
         network.to(env_config.device)
