@@ -63,10 +63,6 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         val_size = int(self.validation_split * len(dataset))
         val_dataset = torch.utils.data.Subset(dataset, np.arange(1, val_size))
         
-        dataloader = torch.utils.data.DataLoader(
-            dataset,
-            batch_size=self.batch_size,
-            shuffle=self.shuffle)
         
         network = NetworkFactory.create(config.model.type, config.model, env_config)
         
@@ -79,6 +75,14 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         criterion = LossFactory.create(config.loss.type, config.loss, env_config)
         
         for epoch in range(self.epochs):
+            
+            indices = torch.randperm(len(dataset))
+            dataset = torch.utils.data.Subset(dataset, indices)
+            
+            dataloader = torch.utils.data.DataLoader(
+                dataset,
+                batch_size=self.batch_size,
+                shuffle=self.shuffle)
             
             DB.instance().create_epoch(self.id, epoch)
             correct_predictions = 0
@@ -103,7 +107,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                 # Backward pass
                 network.backward(criterion.backward())
                 optimizer.step()
-                scheduler.step()
+                
 
                 # Update running loss and accuracy
                 running_loss = torch.sum(loss).item()
@@ -115,6 +119,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                 accuracy = 100 * correct_predictions / total_predictions
                 progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
 
+            
+            scheduler.step()
             torch.cuda.empty_cache()
             
             # Compute full dataset loss and accuracy after each epoch

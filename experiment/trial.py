@@ -61,8 +61,14 @@ class Trial(YAMLSerializable):
         env_conf.work_dir = trial_run_path
         
         # Create pipeline
-        pipeline = TrainingPipeline.from_config(self.trial_conf.pipeline, env_conf, id)
-        pipeline.run(self.trial_conf, env_conf)
+        try:
+            pipeline = TrainingPipeline.from_config(self.trial_conf.pipeline, env_conf, id)
+            pipeline.run(self.trial_conf, env_conf)
+        
+        except Exception as e:
+            print(f"Error running trial {id}: {e}")
+            DB.instance().update_trial_run_status(id, "failed")
+            raise e
 
     def run(self, parent_id) -> None:
         """

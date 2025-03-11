@@ -47,18 +47,16 @@ class LatencyEncoder(Encoder, YAMLSerializable):
             
             if isinstance(neuron, list):
                 neuron = neuron[0]
-            spike_delay = int((neuron / self.max_value) * seq_len)
             
-            # if the neuron is silent
-            if spike_delay == -1:
+            # Ensure neuron value is within valid range
+            neuron_val = max(0, min(neuron, self.max_value))  # Clamp between 0 and max_value
+            spike_delay = int((neuron_val / self.max_value) * (seq_len - 1))  # Ensure within sequence length
+            
+            # Skip if spike delay is invalid
+            if spike_delay < 0 or spike_delay >= seq_len:
                 continue
             
-            elif spike_delay >= 0:
-                spikes = np.array([spike_delay]).astype(int)
-            # if no spikes were fired
-            else:
-                continue
-
+            spikes = np.array([spike_delay], dtype=np.int32)
             data.append(SpikeData(self.env_config, neuron_idx, spikes))
 
         return SpikeSample(self.env_config, data, self.num_of_neurons, seq_len, sample.get_label())

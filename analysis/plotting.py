@@ -145,7 +145,7 @@ class Plotter:
         plt.show()
         return fig, ax
     
-    def plot_epoch_progression(self, experiment_name: str, metric: str, figsize=(14, 8)):
+    def plot_epoch_progression(self, experiment_name: str, metric: str, average_runs: bool = True, figsize=(14, 8)):
         """
         Plot the progression of a metric across epochs for each trial.
         
@@ -155,6 +155,8 @@ class Plotter:
             Name of the experiment to analyze
         metric : str
             Metric to plot (e.g., 'accuracy', 'loss')
+        average_runs : bool, optional
+            Whether to average over multiple runs of the same trial (default: True)
         figsize : tuple, optional
             Figure size (width, height)
             
@@ -168,14 +170,23 @@ class Plotter:
         # Create figure and axes
         fig, ax = plt.subplots(figsize=figsize)
         
-        # Plot each trial as a line
-        sns.lineplot(data=df, x='idx', y='total_val', hue='trial_name', 
-                 marker='o', markersize=4, ax=ax)
+        # average the metrics over the runs of each trial if requested
+        if average_runs:
+            df = df.groupby(['trial_name', 'idx'])['total_val'].mean().reset_index()
+            # Plot with averaged data
+            sns.lineplot(data=df, x='idx', y='total_val', hue='trial_name',
+                     marker='o', markersize=4, ax=ax)
+        else:
+            # Plot individual runs with thinner lines and smaller markers
+            sns.lineplot(data=df, x='idx', y='total_val', hue='trial_name', 
+                     units='run_id', estimator=None, alpha=0.5,
+                     marker='o', markersize=2, ax=ax)
         
         # Add labels and title
         ax.set_xlabel('Epoch')
         ax.set_ylabel(f'{metric}')
-        ax.set_title(f'{metric} Progression Across Epochs for Experiment: {experiment_name}')
+        title_suffix = " (Averaged)" if average_runs else " (Individual Runs)"
+        ax.set_title(f'{metric} Progression Across Epochs{title_suffix}\nExperiment: {experiment_name}')
         
         # Add grid for better readability
         ax.grid(True, linestyle='--', alpha=0.7)
@@ -184,6 +195,6 @@ class Plotter:
         ax.legend(title='Trial', bbox_to_anchor=(1.05, 1), loc='upper left')
         
         plt.tight_layout()
-        plt.show()
+        
         return fig, ax
     

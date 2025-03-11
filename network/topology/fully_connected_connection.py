@@ -83,6 +83,18 @@ class SimpleConnection(Connection):
 
         self.w.grad = grad.to(self.device)
 
+        # Monitor values
+        with torch.no_grad():
+            if torch.isnan(self.w.grad).any():
+                print("NaN in weight gradients")
+            if torch.isinf(self.w.grad).any():
+                print("Inf in weight gradients")
+            if self.w.grad.max() > 1e3 or self.w.grad.min() < -1e3:
+                print("Large values in weight gradients")
+                
+            if self.w.grad.max() < 1e-3 and self.w.grad.min() > -1e-3:
+                print("\nSmall values in weight gradients \n")
+
     def normalize(self) -> None:
         """
         Normalize weights so each target neuron has a sum of connection weights equal to
