@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from analysis.plotting import Plotter
 
-EXPERIMENT_NAME = "polynomial lr scheduler large dataset"
+EXPERIMENT_NAME = "data len 2"
 
 def test_plotter():
     plotter = Plotter("D:\\results\\DB\\experiment.db")
@@ -10,7 +10,7 @@ def test_plotter():
     
     print(df)
     
-    fig, ax = plotter.plot_epoch_progression(EXPERIMENT_NAME, "val_loss", average_runs=True)
+    fig, ax = plotter.plot_epoch_progression(EXPERIMENT_NAME, "val_acc", average_runs=True)
     
     plt.show()
 

@@ -74,6 +74,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         scheduler = LRSchedulerFactory.create(config.lr_scheduler.type, optimizer, config.lr_scheduler)
         criterion = LossFactory.create(config.loss.type, config.loss, env_config)
         
+        status = "completed"
+        
         for epoch in range(self.epochs):
             
             indices = torch.randperm(len(dataset))
@@ -135,6 +137,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             
             stop_flag = self.on_epoch_end(epoch, epoch_res)
             if stop_flag:
+                status = "stopped"
                 print("A callback issued a stop! \n")
                 break
             
@@ -145,7 +148,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                 print(f"Early stopping at epoch {epoch + 1} due to 100% train accuracy.")
                 break
         
-        self.on_end({})
+        self.on_end({Metric.STATUS: status})
 
     def evaluate(self, network, criterion, dataset):
         """

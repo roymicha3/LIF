@@ -19,6 +19,7 @@ class Metric(Enum):
     # Untracked metrics
     NETWORK = ("network", MetricCategory.UNTRACKED)
     DATA = ("data", MetricCategory.UNTRACKED)
+    STATUS = ("status", MetricCategory.UNTRACKED)
 
     def __init__(self, value: str, category: MetricCategory):
         self._value_ = value

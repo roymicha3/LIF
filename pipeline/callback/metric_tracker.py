@@ -43,6 +43,9 @@ class MetricsTracker(Callback, YAMLSerializable):
 
     def on_train_end(self, metrics: Dict[str, Any]):
         """Called at the end of training."""
+        
+        DB.instance().update_trial_run_status(self.parent_id, metrics[Metric.STATUS])
+        
         for key, value in metrics.items():
             metric = Metric(key)
             if metric.category == MetricCategory.TRACKED:

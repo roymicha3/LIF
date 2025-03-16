@@ -98,7 +98,7 @@ def run_experiment(experiment_path: str) -> None:
         print(f"Error running experiment: {str(e)}")
         raise
 
-EXPERIMENT_NAME = "polynomial lr scheduler large dataset"
+EXPERIMENT_NAME = "data len 2"
 
 def main():
     """
