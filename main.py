@@ -98,7 +98,9 @@ def run_experiment(experiment_path: str) -> None:
         print(f"Error running experiment: {str(e)}")
         raise
 
-EXPERIMENT_NAME = "data len 2"
+
+SUBJECT = "length"
+EXPERIMENT_NAME = "data len 3"
 
 def main():
     """
@@ -108,7 +110,8 @@ def main():
     DB.initialize("D:\\results\\DB\\experiment.db")
     
     # Construct the experiment path using the experiment name
-    experiment_path = os.path.join("outputs", EXPERIMENT_NAME)
+    base_path = os.path.join("outputs", SUBJECT)
+    experiment_path = os.path.join(base_path, EXPERIMENT_NAME)
     
     # Run the experiment
     run_experiment(experiment_path)

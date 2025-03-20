@@ -154,10 +154,13 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         """
         Compute the loss, overall accuracy, and accuracy per label type over the entire dataset.
 
-        :param network: The spiking neural network.
-        :param criterion: The loss function.
-        :param dataloader: The DataLoader for the dataset.
-        :return: Tuple of (loss, overall accuracy, accuracy per label type).
+        Args:
+            network: The spiking neural network
+            criterion: The loss function
+            dataset: The dataset to evaluate on
+            
+        Returns:
+            Tuple of (average_loss, overall_accuracy)
         """
         dataloader = torch.utils.data.DataLoader(
             dataset,
@@ -172,8 +175,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
 
         with torch.no_grad():
             for inputs, labels in dataloader:
-                inputs = inputs.to(network.device)  # Ensure inputs are moved to the correct device
-                labels = labels.to(network.device)  # Move labels to the correct device
+                inputs = inputs.to(network.device)
+                labels = labels.to(network.device)
 
                 # Forward pass
                 outputs = network.forward(inputs)
@@ -182,27 +185,45 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
 
                 # Classify the outputs
                 predicted = criterion.classify(outputs)
+                
+                # Ensure predicted has the same shape as labels
+                if predicted.dim() == 0:
+                    predicted = predicted.unsqueeze(0)  # Make it 1D if it's a scalar
+                
+                # Make sure both tensors are 1D
+                predicted = predicted.view(-1)
+                labels = labels.view(-1)
 
-                # Update overall correct predictions and total predictions
+                # Update overall accuracy metrics
                 correct_predictions += (predicted == labels).sum().item()
                 total_predictions += labels.size(0)
 
-                # Update per-label correct and total counts
-                for label in torch.unique(labels):  # Iterate over all unique labels
-
-                    # Ensure we index correctly, handling batch-wise dimensions
-                    label_correct[label.item()] = label_correct.get(label.item(), 0) + (predicted[labels == label] == labels[labels == label]).sum().item()
-                    label_total[label.item()] = label_total.get(label.item(), 0) + (labels == label).sum().item()
+                # Update per-label accuracy metrics
+                unique_labels = torch.unique(labels)
+                for label in unique_labels:
+                    label_val = label.item()
+                    label_mask = (labels == label_val)
+                    
+                    # Get current counts or initialize to 0
+                    current_correct = label_correct.get(label_val, 0)
+                    current_total = label_total.get(label_val, 0)
+                    
+                    # Update counts - ensure we're comparing properly shaped tensors
+                    matches = (predicted[label_mask] == label_val).sum().item()
+                    total = label_mask.sum().item()
+                    
+                    label_correct[label_val] = current_correct + matches
+                    label_total[label_val] = current_total + total
 
         # Calculate average loss and overall accuracy
         average_loss = total_loss / len(dataloader)
         accuracy = 100 * correct_predictions / total_predictions
 
-        # Calculate per-label accuracy
-        accuracy_per_label = {}
-        for label in label_correct:
-            accuracy_per_label[label] = 100 * label_correct[label] / label_total[label]
-            print(f"The accuracy for label: {label} is: {accuracy_per_label[label]:.2f}%")
+        # Calculate and print per-label accuracy
+        for label_val in label_correct:
+            if label_total[label_val] > 0:  # Avoid division by zero
+                label_accuracy = 100 * label_correct[label_val] / label_total[label_val]
+                print(f"Accuracy for label {label_val}: {label_accuracy:.2f}%")
 
         return average_loss, accuracy
     
