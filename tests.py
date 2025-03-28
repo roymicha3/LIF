@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from analysis.plotting import Plotter
 
-EXPERIMENT_NAME = "data len 2"
+EXPERIMENT_NAME = "data len 3"
 
 def plot_metric_progression(database_path: str, experiment_name: str, metric: str, average_runs: bool = False):
     plotter = Plotter(database_path)
@@ -15,5 +15,5 @@ def plot_metric_progression(database_path: str, experiment_name: str, metric: st
 
 
 if __name__ == "__main__":
-    # plot_metric_progression(database_path="D:\\results\\DB\\experiment.db", experiment_name=EXPERIMENT_NAME, metric="val_loss", average_runs=True)
+    plot_metric_progression(database_path="D:\\results\\DB\\experiment.db", experiment_name=EXPERIMENT_NAME, metric="val_loss", average_runs=True)
 
