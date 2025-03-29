@@ -1,33 +1,19 @@
-import os
-from omegaconf import DictConfig, OmegaConf
-import torch
+import matplotlib.pyplot as plt
 
-from network.network_factory import NetworkFactory, Network
-from pipeline.training_pipeline import TrainingPipeline
-from pipeline.plotting_pipeline import PlottingPipeline
+from analysis.plotting import Plotter
 
+EXPERIMENT_NAME = "data len 3"
 
-def test_network_factory():
-    config = OmegaConf.load("config.yaml")
-    env_config = OmegaConf.load("env.yaml")
+def plot_metric_progression(database_path: str, experiment_name: str, metric: str, average_runs: bool = False):
+    plotter = Plotter(database_path)
     
-    model_config = config.model
-    network = NetworkFactory.create(model_config.type, model_config, env_config)
-    assert network is not None
+    df = plotter.load_experiment_metrics(experiment_name, metric)
+    fig, ax = plotter.plot_epoch_progression(experiment_name, metric, average_runs=average_runs)
+    
+    plt.show()
     
 
-def test_training_pipeline():
-    config = OmegaConf.load("config.yaml")
-    env_config = OmegaConf.load("env.yaml")
-    
-    pipeline = TrainingPipeline.from_config(config.pipeline, env_config)
-    
-    pipeline.run(config, env_config)
-    
 
-base_dir = os.path.join("outputs", "single run")
-config = OmegaConf.load(os.path.join(base_dir, "config", "config.yaml"))
-env_config = OmegaConf.load(os.path.join(base_dir, "config", "env.yaml"))
+if __name__ == "__main__":
+    plot_metric_progression(database_path="D:\\results\\DB\\experiment.db", experiment_name=EXPERIMENT_NAME, metric="val_loss", average_runs=True)
 
-pipeline = PlottingPipeline(base_dir)
-pipeline.run(config, env_config)

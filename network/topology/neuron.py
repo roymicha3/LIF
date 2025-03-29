@@ -1,5 +1,5 @@
 import torch
-
+import matplotlib.pyplot as plt
 from network.kernel.kernel import Kernel
 from network.topology.connection import Connection
 from network.activation.activation import Activation
@@ -39,3 +39,13 @@ class NeuronLayer(torch.nn.Module):
         input_voltage = self.kernel.forward(input_)
         inner_voltage = self.connection.partial_forward(input_voltage)
         return inner_voltage
+    
+    def plot(self, input_):
+        inner_voltage = self.partial_forward(input_)
+        
+        # plot the inner voltage
+        plt.plot(inner_voltage)
+        plt.title("Inner Voltage")
+        plt.xlabel("Time")
+        plt.ylabel("Voltage")
+        plt.show()

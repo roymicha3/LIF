@@ -3,11 +3,14 @@ from tqdm import tqdm
 from omegaconf import DictConfig, OmegaConf
 import numpy as np
 
+from experiment.db.database import DB
+
+
 from network.network_factory import NetworkFactory
 from network.optimizer.optimizer_factory import OptimizerFactory
 from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
 from network.loss.loss_factory import LossFactory
-from pipeline.pipline import Pipeline
+from pipeline.pipeline import Pipeline
 from pipeline.callback.callback import Metric
 from pipeline.callback.callback_factory import CallbackFactory
 from settings.serializable import YAMLSerializable
@@ -22,7 +25,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                  batch_size: int, 
                  validation_split: float, 
                  test_split: float,
-                 shuffle: bool = True):
+                 shuffle: bool = True,
+                 id: int = None):
         
         super(TrainingPipeline, self).__init__()
         super(YAMLSerializable, self).__init__()
@@ -32,18 +36,20 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         self.validation_split = validation_split
         self.test_split = test_split
         self.shuffle = shuffle
+        self.id = id
         
     @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
+    def from_config(cls, config: DictConfig, env_config: DictConfig, id: int = None):
         pipeline = cls(
             config.epochs,
             config.batch_size, 
             config.validation_split,
             config.test_split,
-            config.shuffle)
+            config.shuffle,
+            id)
         
         for callback_config in config.callbacks:
-            callback = CallbackFactory.create(callback_config.type, callback_config, env_config)
+            callback = CallbackFactory.create(callback_config.type, callback_config, env_config, id)
             pipeline.register_callback(callback)
             
         return pipeline
@@ -57,10 +63,6 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         val_size = int(self.validation_split * len(dataset))
         val_dataset = torch.utils.data.Subset(dataset, np.arange(1, val_size))
         
-        dataloader = torch.utils.data.DataLoader(
-            dataset,
-            batch_size=self.batch_size,
-            shuffle=self.shuffle)
         
         network = NetworkFactory.create(config.model.type, config.model, env_config)
         
@@ -72,7 +74,19 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         scheduler = LRSchedulerFactory.create(config.lr_scheduler.type, optimizer, config.lr_scheduler)
         criterion = LossFactory.create(config.loss.type, config.loss, env_config)
         
+        status = "completed"
+        
         for epoch in range(self.epochs):
+            
+            indices = torch.randperm(len(dataset))
+            dataset = torch.utils.data.Subset(dataset, indices)
+            
+            dataloader = torch.utils.data.DataLoader(
+                dataset,
+                batch_size=self.batch_size,
+                shuffle=self.shuffle)
+            
+            DB.instance().create_epoch(self.id, epoch)
             correct_predictions = 0
             total_predictions = 0
  
@@ -95,7 +109,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                 # Backward pass
                 network.backward(criterion.backward())
                 optimizer.step()
-                scheduler.step()
+                
 
                 # Update running loss and accuracy
                 running_loss = torch.sum(loss).item()
@@ -107,6 +121,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                 accuracy = 100 * correct_predictions / total_predictions
                 progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
 
+            
+            scheduler.step()
             torch.cuda.empty_cache()
             
             # Compute full dataset loss and accuracy after each epoch
@@ -119,8 +135,9 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                     Metric.NETWORK: network
                 }
             
-            stop_flag = self.on_epoch_end(epoch_res)
+            stop_flag = self.on_epoch_end(epoch, epoch_res)
             if stop_flag:
+                status = "stopped"
                 print("A callback issued a stop! \n")
                 break
             
@@ -131,16 +148,19 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                 print(f"Early stopping at epoch {epoch + 1} due to 100% train accuracy.")
                 break
         
-        self.on_end({})
+        self.on_end({Metric.STATUS: status})
 
     def evaluate(self, network, criterion, dataset):
         """
         Compute the loss, overall accuracy, and accuracy per label type over the entire dataset.
 
-        :param network: The spiking neural network.
-        :param criterion: The loss function.
-        :param dataloader: The DataLoader for the dataset.
-        :return: Tuple of (loss, overall accuracy, accuracy per label type).
+        Args:
+            network: The spiking neural network
+            criterion: The loss function
+            dataset: The dataset to evaluate on
+            
+        Returns:
+            Tuple of (average_loss, overall_accuracy)
         """
         dataloader = torch.utils.data.DataLoader(
             dataset,
@@ -155,8 +175,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
 
         with torch.no_grad():
             for inputs, labels in dataloader:
-                inputs = inputs.to(network.device)  # Ensure inputs are moved to the correct device
-                labels = labels.to(network.device)  # Move labels to the correct device
+                inputs = inputs.to(network.device)
+                labels = labels.to(network.device)
 
                 # Forward pass
                 outputs = network.forward(inputs)
@@ -165,27 +185,45 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
 
                 # Classify the outputs
                 predicted = criterion.classify(outputs)
+                
+                # Ensure predicted has the same shape as labels
+                if predicted.dim() == 0:
+                    predicted = predicted.unsqueeze(0)  # Make it 1D if it's a scalar
+                
+                # Make sure both tensors are 1D
+                predicted = predicted.view(-1)
+                labels = labels.view(-1)
 
-                # Update overall correct predictions and total predictions
+                # Update overall accuracy metrics
                 correct_predictions += (predicted == labels).sum().item()
                 total_predictions += labels.size(0)
 
-                # Update per-label correct and total counts
-                for label in torch.unique(labels):  # Iterate over all unique labels
-
-                    # Ensure we index correctly, handling batch-wise dimensions
-                    label_correct[label.item()] = label_correct.get(label.item(), 0) + (predicted[labels == label] == labels[labels == label]).sum().item()
-                    label_total[label.item()] = label_total.get(label.item(), 0) + (labels == label).sum().item()
+                # Update per-label accuracy metrics
+                unique_labels = torch.unique(labels)
+                for label in unique_labels:
+                    label_val = label.item()
+                    label_mask = (labels == label_val)
+                    
+                    # Get current counts or initialize to 0
+                    current_correct = label_correct.get(label_val, 0)
+                    current_total = label_total.get(label_val, 0)
+                    
+                    # Update counts - ensure we're comparing properly shaped tensors
+                    matches = (predicted[label_mask] == label_val).sum().item()
+                    total = label_mask.sum().item()
+                    
+                    label_correct[label_val] = current_correct + matches
+                    label_total[label_val] = current_total + total
 
         # Calculate average loss and overall accuracy
         average_loss = total_loss / len(dataloader)
         accuracy = 100 * correct_predictions / total_predictions
 
-        # Calculate per-label accuracy
-        accuracy_per_label = {}
-        for label in label_correct:
-            accuracy_per_label[label] = 100 * label_correct[label] / label_total[label]
-            print(f"The accuracy for label: {label} is: {accuracy_per_label[label]:.2f}%")
+        # Calculate and print per-label accuracy
+        for label_val in label_correct:
+            if label_total[label_val] > 0:  # Avoid division by zero
+                label_accuracy = 100 * label_correct[label_val] / label_total[label_val]
+                print(f"Accuracy for label {label_val}: {label_accuracy:.2f}%")
 
         return average_loss, accuracy
     

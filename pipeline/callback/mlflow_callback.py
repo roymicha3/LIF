@@ -8,7 +8,9 @@ from settings.serializable import YAMLSerializable
 
 @YAMLSerializable.register("MlflowCallback")
 class MlflowCallback(Callback):
-    def __init__(self, experiment_name: Optional[str] = None, 
+    def __init__(self, 
+                 parent_id,
+                 experiment_name: Optional[str] = None, 
                  experiment_dir: Optional[str] = None):
         """
         Initialize the MlflowCallback.
@@ -18,6 +20,7 @@ class MlflowCallback(Callback):
                                              If provided, sets or gets the experiment.
             experiment_dir (str, optional): Directory to store experiment artifacts.
         """
+        self.parent_id = parent_id
         if experiment_name:
             experiment = mlflow.get_experiment_by_name(experiment_name)
             if experiment is None:
@@ -31,7 +34,7 @@ class MlflowCallback(Callback):
         
         self.active_run = mlflow.start_run()
 
-    def on_epoch_end(self, metrics: Dict[str, Any]) -> bool:
+    def on_epoch_end(self, epoch_idx, metrics: Dict[str, Any]) -> bool:
         """
         Logs metrics to MLflow at the end of each epoch.
         """
@@ -66,7 +69,8 @@ class MlflowCallback(Callback):
             mlflow.end_run()
             
     @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
+    def from_config(cls, config: DictConfig, env_config: DictConfig, parent_id):
         return cls(
+            parent_id,
             config.experiment_name,
             config.root_dir)

@@ -19,6 +19,7 @@ class Metric(Enum):
     # Untracked metrics
     NETWORK = ("network", MetricCategory.UNTRACKED)
     DATA = ("data", MetricCategory.UNTRACKED)
+    STATUS = ("status", MetricCategory.UNTRACKED)
 
     def __init__(self, value: str, category: MetricCategory):
         self._value_ = value
@@ -47,7 +48,7 @@ class Metric(Enum):
 
 class Callback(ABC):
     @abstractmethod
-    def on_epoch_end(self, metrics) -> bool:
+    def on_epoch_end(self, epoch_idx, metrics) -> bool:
         """Called at the end of each epoch."""
         pass
 

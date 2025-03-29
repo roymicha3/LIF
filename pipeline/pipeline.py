@@ -21,10 +21,10 @@ class Pipeline(ABC):
     def register_callback(self, callback: Callback):
         self.callbacks.append(callback)
         
-    def on_epoch_end(self, metrics):
+    def on_epoch_end(self, epoch_idx, metrics):
         retval = True
         for callback in self.callbacks:
-            retval &= callback.on_epoch_end(metrics)
+            retval &= callback.on_epoch_end(epoch_idx, metrics)
             
         return retval
     
