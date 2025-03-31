@@ -1,0 +1,129 @@
+@startuml LIF Model Architecture
+
+package "Network" {
+    class Network {
+        + layers: List[NeuronLayer]
+        + learning: bool
+        + device: torch.device
+        + add_layer()
+        + forward()
+        + reset()
+        + save()
+        + load()
+    }
+    
+    class NeuronLayer {
+        + neurons: Tensor
+        + spikes: Tensor
+        + membrane_potential: Tensor
+        + kernel: Kernel
+        + forward()
+        + reset()
+        + plot()
+    }
+    
+    class Connection {
+        + weights: Tensor
+        + learning_rule: LearningRule
+        + forward()
+        + update()
+    }
+    
+    class FullyConnectedConnection {
+        + in_features: int
+        + out_features: int
+        + initialize_weights()
+    }
+}
+
+package "Kernel" {
+    interface Kernel {
+        + forward()
+        + reset()
+    }
+    
+    class LeakyKernel {
+        + tau: float
+        + threshold: float
+        + decay: float
+    }
+    
+    class DenKernel {
+        + weights: Tensor
+        + bias: Tensor
+    }
+}
+
+package "Learning" {
+    interface LearningRule {
+        + update()
+        + reset()
+    }
+    
+    class IntegrateLR {
+        + learning_rate: float
+        + momentum: float
+    }
+    
+    class SingleSpikeLR {
+        + learning_rate: float
+        + window_size: int
+    }
+}
+
+package "Activation" {
+    interface Activation {
+        + forward()
+    }
+    
+    class Softmax {
+        + temperature: float
+    }
+    
+    class SubActivation {
+        + threshold: float
+    }
+}
+
+package "Loss" {
+    interface Loss {
+        + forward()
+        + backward()
+    }
+    
+    class BinaryLoss
+    class CrossEntropy
+}
+
+package "Optimizer" {
+    interface Optimizer {
+        + step()
+        + zero_grad()
+    }
+    
+    class MomentumOptimizer {
+        + momentum: float
+        + learning_rate: float
+    }
+}
+
+' Relationships
+Network "1" *-- "many" NeuronLayer
+Network "1" *-- "many" Connection
+Connection <|-- FullyConnectedConnection
+NeuronLayer "1" *-- "1" Kernel
+Kernel <|-- LeakyKernel
+Kernel <|-- DenKernel
+Connection "1" *-- "1" LearningRule
+LearningRule <|-- IntegrateLR
+LearningRule <|-- SingleSpikeLR
+NeuronLayer "1" *-- "1" Activation
+Activation <|-- Softmax
+Activation <|-- SubActivation
+Network "1" *-- "1" Loss
+Loss <|-- BinaryLoss
+Loss <|-- CrossEntropy
+Network "1" *-- "1" Optimizer
+Optimizer <|-- MomentumOptimizer
+
+@enduml
