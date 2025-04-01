@@ -99,8 +99,8 @@ def run_experiment(experiment_path: str) -> None:
         raise
 
 
-SUBJECT = "length"
-EXPERIMENT_NAME = "data len 3"
+SUBJECT = "simple"
+EXPERIMENT_NAME = "simple"
 
 def main():
     """
