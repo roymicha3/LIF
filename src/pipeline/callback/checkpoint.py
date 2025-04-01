@@ -36,7 +36,7 @@ class CheckpointCallback(Callback, YAMLSerializable):
             self.current_checkpoint += 1
             
             # register artifact to the epoch:
-            artifact_id = DB.instance().create_artifact("checkpoint", file_path)
+            artifact_id = DB.instance().create_artifact(CheckpointCallback.CHECKPOINT_NAME, file_path)
             DB.instance().add_artifact_to_epoch(epoch_idx, self.parent_id, artifact_id)
         
         return True
