@@ -1,29 +1,26 @@
 import torch
-import numpy as np
 from tqdm import tqdm
 from omegaconf import DictConfig, OmegaConf
+import numpy as np
 
-from experiment_manager.common.common import Metric
-from experiment_manager.environment import Environment
-from experiment_manager.pipelines.pipeline import Pipeline
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment.db.database import DB
 
-from network.loss.loss_factory import LossFactory
+
 from network.network_factory import NetworkFactory
 from network.optimizer.optimizer_factory import OptimizerFactory
 from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
-
-from encoders.encoder_factory import EncoderFactory
-from data.dataset.dataset_factory import DatasetFactory
-from data.dataset.dataset import Dataset, DataType, OutputType
+from network.loss.loss_factory import LossFactory
+from pipeline.pipeline import Pipeline
+from pipeline.callback.callback import Metric
+from pipeline.callback.callback_factory import CallbackFactory
+from settings.serializable import YAMLSerializable
 
 
 class TrainingPipeline(Pipeline, YAMLSerializable):
     """
     class that is responsible for the training of the Network
     """
-    def __init__(self,
-                 env: Environment,
+    def __init__(self, 
                  epochs: int, 
                  batch_size: int, 
                  validation_split: float, 
@@ -31,7 +28,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                  shuffle: bool = True,
                  id: int = None):
         
-        super(TrainingPipeline, self).__init__(env)
+        super(TrainingPipeline, self).__init__()
         super(YAMLSerializable, self).__init__()
         
         self.epochs = epochs
@@ -42,111 +39,32 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         self.id = id
         
     @classmethod
-    def from_config(cls, config: DictConfig, env: Environment, id: int = None):
+    def from_config(cls, config: DictConfig, env_config: DictConfig, id: int = None):
         pipeline = cls(
-            env,
             config.epochs,
             config.batch_size, 
             config.validation_split,
             config.test_split,
             config.shuffle,
             id)
+        
+        for callback_config in config.callbacks:
+            callback = CallbackFactory.create(callback_config.type, callback_config, env_config, id)
+            pipeline.register_callback(callback)
             
         return pipeline
     
-    def load_dataset(self, 
-                     dataset_config: DictConfig, 
-                     env: Environment, 
-                     type_: DataType = DataType.TRAIN) -> Dataset:
-        
-        encoder_config = dataset_config.encoder
-        encoder = EncoderFactory.create(encoder_config.type, encoder_config, env) # TODO: fix this to accept environment
-        dataset = DatasetFactory.create(
-            dataset_config.type, 
-            dataset_config, 
-            type_, 
-            OutputType.TORCH, 
-            encoder)
-        
-        return dataset
     
-    @Pipeline.epoch_wrapper
-    def run_epoch(self, epoch_idx, model, train_loader, val_loader, criterion, optimizer, device):
-        correct_predictions = 0
-        total_predictions = 0
-        status = "completed"
-        
-        # Training loop
-        progress_bar = tqdm(
-            enumerate(train_loader),
-            total=len(train_loader),
-            desc=f"Epoch [{epoch_idx+1}/{self.epochs}]")
-        
-        for _, (inputs, labels) in progress_bar:
-            inputs = inputs.to(self.env.device)
-            labels = labels.to(self.env.device)
-            
-            # Forward pass
-            outputs = model.forward(inputs)
-
-            # Calculate loss
-            loss = criterion.forward(outputs, labels.unsqueeze(1).float())
-
-            # Backward pass
-            model.backward(criterion.backward())
-            optimizer.step()
-            
-            # Update running loss and accuracy
-            running_loss = torch.sum(loss).item()
-            predicted = criterion.classify(outputs)
-            correct_predictions += (predicted == labels).sum().item()
-            total_predictions += labels.size(0)
-
-            # Update progress bar with loss and accuracy
-            accuracy = 100 * correct_predictions / total_predictions
-            progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
-
-        
-        scheduler.step()
-        torch.cuda.empty_cache()
-        
-        # Compute full dataset loss and accuracy after each epoch
-        total_loss, total_accuracy = self.evaluate(model, criterion, val_loader)
-        
-        epoch_res = \
-            {
-                Metric.VAL_LOSS: total_loss,
-                Metric.VAL_ACC: total_accuracy,
-                Metric.NETWORK: model
-            }
-        
-        stop_flag = self.on_epoch_end(epoch_idx, epoch_res) # TODO: fix this logical error that collides with the wrapper logic
-        if stop_flag:
-            status = "stopped"
-            print("A callback issued a stop! \n")
-            return status
-        
-        # Print epoch summary
-        print(f"[Epoch {epoch + 1}] Loss: {total_loss:.3f}, Accuracy: {total_accuracy:.2f}%")
-
-        if total_accuracy >= 99.9:
-            print(f"Early stopping at epoch {epoch + 1} due to 100% train accuracy.")
-            return status
-        
-        return status
-    
-    
-    @Pipeline.run_wrapper
-    def run(self, config: DictConfig):
+    def run(self, config: DictConfig, env_config: DictConfig):
         """
         Train the model using the provided data loader.
         """
-        dataset = self.load_dataset(config.dataset, self.env)
+        dataset = self.load_dataset(config.dataset, env_config)
         val_size = int(self.validation_split * len(dataset))
         val_dataset = torch.utils.data.Subset(dataset, np.arange(1, val_size))
         
         
-        network = NetworkFactory.create(config.model.type, config.model, self.env) # TODO: fix to accept environment
+        network = NetworkFactory.create(config.model.type, config.model, env_config)
         
         optimizer = OptimizerFactory.create(
             config.optimizer.type,
@@ -154,7 +72,9 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             network.parameters())
         
         scheduler = LRSchedulerFactory.create(config.lr_scheduler.type, optimizer, config.lr_scheduler)
-        criterion = LossFactory.create(config.loss.type, config.loss, self.env) # TODO: fix to accept environment
+        criterion = LossFactory.create(config.loss.type, config.loss, env_config)
+        
+        status = "completed"
         
         for epoch in range(self.epochs):
             
@@ -166,7 +86,69 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                 batch_size=self.batch_size,
                 shuffle=self.shuffle)
             
-            self.run_epoch(epoch, network, dataloader, val_dataset, criterion, optimizer, scheduler)
+            DB.instance().create_epoch(self.id, epoch)
+            correct_predictions = 0
+            total_predictions = 0
+ 
+            # Training loop
+            progress_bar = tqdm(
+                enumerate(dataloader),
+                total=len(dataloader),
+                desc=f"Epoch [{epoch+1}/{self.epochs}]")
+            
+            for _, (inputs, labels) in progress_bar:
+                inputs = inputs.to(env_config.device)  # Move inputs to the correct device
+                labels = labels.to(env_config.device)  # Move labels to the correct device
+
+                # Forward pass
+                outputs = network.forward(inputs)
+
+                # Calculate loss
+                loss = criterion.forward(outputs, labels.unsqueeze(1).float())
+
+                # Backward pass
+                network.backward(criterion.backward())
+                optimizer.step()
+                
+
+                # Update running loss and accuracy
+                running_loss = torch.sum(loss).item()
+                predicted = criterion.classify(outputs)
+                correct_predictions += (predicted == labels).sum().item()
+                total_predictions += labels.size(0)
+
+                # Update progress bar with loss and accuracy
+                accuracy = 100 * correct_predictions / total_predictions
+                progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
+
+            
+            scheduler.step()
+            torch.cuda.empty_cache()
+            
+            # Compute full dataset loss and accuracy after each epoch
+            total_loss, total_accuracy = self.evaluate(network, criterion, val_dataset)
+            
+            epoch_res = \
+                {
+                    Metric.VAL_LOSS: total_loss,
+                    Metric.VAL_ACC: total_accuracy,
+                    Metric.NETWORK: network
+                }
+            
+            stop_flag = self.on_epoch_end(epoch, epoch_res)
+            if stop_flag:
+                status = "stopped"
+                print("A callback issued a stop! \n")
+                break
+            
+            # Print epoch summary
+            print(f"[Epoch {epoch + 1}] Loss: {total_loss:.3f}, Accuracy: {total_accuracy:.2f}%")
+
+            if total_accuracy >= 99.9:
+                print(f"Early stopping at epoch {epoch + 1} due to 100% train accuracy.")
+                break
+        
+        self.on_end({Metric.STATUS: status})
 
     def evaluate(self, network, criterion, dataset):
         """
