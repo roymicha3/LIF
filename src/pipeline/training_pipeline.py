@@ -118,19 +118,22 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         # torch.cuda.empty_cache() # TODO: check if this is needed
         
         # Compute full dataset loss and accuracy after each epoch
-        total_loss, total_accuracy = self.evaluate(model, criterion, val_dataloader)
+        # total_train_loss, total_train_accuracy = self.evaluate(model, criterion, train_dataloader)
+        total_val_loss, total_val_accuracy = self.evaluate(model, criterion, val_dataloader)
         
         self.epoch_metrics = \
             {
-                Metric.VAL_LOSS: total_loss,
-                Metric.VAL_ACC: total_accuracy,
+                # Metric.TRAIN_LOSS: total_train_loss,
+                # Metric.TRAIN_ACC: total_train_accuracy,
+                Metric.VAL_LOSS: total_val_loss,
+                Metric.VAL_ACC: total_val_accuracy,
                 Metric.NETWORK: model
             }
         
         # Print epoch summary
-        self.env.logger.info(f"[Epoch {epoch_idx + 1}] Loss: {total_loss:.3f}, Accuracy: {total_accuracy:.2f}%")
+        self.env.logger.info(f"[Epoch {epoch_idx + 1}] Loss: {total_val_loss:.3f}, Accuracy: {total_val_accuracy:.2f}%")
 
-        if total_accuracy >= 99.9:
+        if total_val_accuracy >= 99.9:
             self.env.logger.info(f"Early stopping at epoch {epoch_idx + 1} due to 100% train accuracy.")
             return RunStatus.SUCCESS
         
@@ -191,6 +194,11 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                 optimizer = optimizer,
                 scheduler = scheduler,
                 device = self.env.device)
+            
+            if status == RunStatus.SUCCESS:
+                break
+            
+            
             
         return status
     

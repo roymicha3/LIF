@@ -4,6 +4,8 @@ import torch
 from network.topology.connection import Connection
 from network.learning.learning_rule import LearningRule
 
+from experiment_manager.environment import Environment
+
 class SimpleConnection(Connection):
     """
     Specifies synapses between one or two populations of neurons
@@ -12,6 +14,7 @@ class SimpleConnection(Connection):
     def __init__(
                 self,
                 lr: LearningRule,
+                env: Environment,
                 input_size: int = None,
                 output_size: int = None,
                 w: torch.Tensor = None,
@@ -19,6 +22,7 @@ class SimpleConnection(Connection):
                 norm: np.int32 = 1) -> None:
         
         super().__init__(lr, (input_size, output_size), w, device)
+        self.env = env
         self.norm = norm
         self.saved_tensors = None
 
@@ -86,14 +90,14 @@ class SimpleConnection(Connection):
         # Monitor values
         with torch.no_grad():
             if torch.isnan(self.w.grad).any():
-                print("NaN in weight gradients")
+                self.env.logger.error("NaN in weight gradients")
             if torch.isinf(self.w.grad).any():
-                print("Inf in weight gradients")
+                self.env.logger.error("Inf in weight gradients")
             if self.w.grad.max() > 1e3 or self.w.grad.min() < -1e3:
-                print("Large values in weight gradients")
+                self.env.logger.warning("Large values in weight gradients")
                 
             if self.w.grad.max() < 1e-3 and self.w.grad.min() > -1e-3:
-                print("\nSmall values in weight gradients \n")
+                self.env.logger.info("\nSmall values in weight gradients \n")
 
     def normalize(self) -> None:
         """

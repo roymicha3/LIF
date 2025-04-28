@@ -1,0 +1,66 @@
+#####################################################################################
+#   Base Configuration - contains all the objects that are used in the experiment   #
+#####################################################################################
+
+model:
+  type: Network
+  layers:
+  - name: input layer
+    input_size: 1000
+    output_size: 1
+    kernel:
+      type: DENKernel
+      'n': 1000
+      tau_s: 10
+      tau_m: 2.5
+      learning: false
+    activation:
+      type: SubtractActivation
+    learning_rule:
+      type: SingleSpikeLR
+
+optimizer:
+  type: MomentumOptimizer
+  lr: 100
+  momentum: 0.99
+
+lr_scheduler:
+  type: PolynomialLR
+  args:
+    total_iters: 200
+    power: 2.0
+  # Longer training period with quadratic decay
+
+loss:
+  type: BinaryLoss
+
+dataset:
+  type: RandomDataset
+  input_size: 1000
+  len: 2000
+  root: ./outputs/data/random-size-1000
+  normalize: false
+  flatten: true
+  encoder:
+    type: LatencyEncoder
+    size: 1000
+    max_value: 1.0
+
+pipeline:
+  type: TrainingPipeline
+  epochs: 1000
+  batch_size: 64
+  validation_split: 0.2
+  test_split: 0.2
+  shuffle: true
+  callbacks:
+  - type: MetricsTracker
+  
+  - type: CheckpointCallback
+    interval: 10
+  
+  - type: EarlyStopping
+    metric: val_loss
+    patience: 20
+    min_delta_percent: 2.5
+    verbose: true

@@ -33,7 +33,7 @@ class NetworkFactory(Factory):
         for layer in config.layers:
             kernel = KernelFactory.create(layer.kernel.type, layer.kernel, env)
             learning_rule = LearningRuleFactory.create(layer.learning_rule.type, layer.learning_rule, env)
-            connection = SimpleConnection(learning_rule, layer.input_size, layer.output_size, device=env.device)
+            connection = SimpleConnection(learning_rule, env, layer.input_size, layer.output_size, device=env.device)
             activation = ActivationFactory.create(layer.activation.type, layer.activation, env)
             neuron_layer = NeuronLayer(kernel, connection, activation)
             network.add_layer(neuron_layer, layer.name)
