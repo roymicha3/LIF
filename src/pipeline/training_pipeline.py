@@ -142,6 +142,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         """
         Train the model using the provided data loader.
         """
+        status = RunStatus.SKIPPED
         dataset = self.load_dataset(config.dataset, self.env)
         val_size = int(self.validation_split * len(dataset))
         val_dataset = torch.utils.data.Subset(dataset, np.arange(1, val_size))
@@ -181,7 +182,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                                                          batch_size=self.batch_size,
                                                          shuffle=False)
             
-            self.run_epoch(
+            status = self.run_epoch(
                 epoch, 
                 network, 
                 train_dataloader = dataloader, 
@@ -190,17 +191,16 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                 optimizer = optimizer,
                 scheduler = scheduler,
                 device = self.env.device)
+            
+        return status
     
-    def evaluate(self, network, criterion, dataset): # TODO: might be a good idea to add a per label accuracy
+    def evaluate(self, network, criterion, dataloader): # TODO: might be a good idea to add a per label accuracy
         """
         Compute the loss, overall accuracy, and accuracy per label type over the entire dataset.
             
         Returns:
             Tuple of (average_loss, overall_accuracy)
         """
-        dataloader = torch.utils.data.DataLoader(
-            dataset,
-            batch_size=64)
         
         total_loss = 0.0
         correct_predictions = 0
