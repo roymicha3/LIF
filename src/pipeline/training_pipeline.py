@@ -76,8 +76,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         correct_predictions = 0
         total_predictions = 0
         
-        train_loader    = kwargs["train_loader"]
-        val_loader      = kwargs["val_loader"]
+        train_dataloader    = kwargs["train_dataloader"]
+        val_dataloader      = kwargs["val_dataloader"]
         criterion       = kwargs["criterion"]
         optimizer       = kwargs["optimizer"]
         scheduler       = kwargs["scheduler"]
@@ -85,8 +85,8 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         
         # Training loop
         progress_bar = tqdm(
-            enumerate(train_loader),
-            total=len(train_loader),
+            enumerate(train_dataloader),
+            total=len(train_dataloader),
             desc=f"Epoch [{epoch_idx+1}/{self.epochs}]")
         
         for _, (inputs, labels) in progress_bar:
@@ -118,7 +118,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         # torch.cuda.empty_cache() # TODO: check if this is needed
         
         # Compute full dataset loss and accuracy after each epoch
-        total_loss, total_accuracy = self.evaluate(model, criterion, val_loader)
+        total_loss, total_accuracy = self.evaluate(model, criterion, val_dataloader)
         
         self.epoch_metrics = \
             {
@@ -184,7 +184,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             self.run_epoch(
                 epoch, 
                 network, 
-                dataloader = dataloader, 
+                train_dataloader = dataloader, 
                 val_dataloader = val_dataloader,
                 criterion = criterion, 
                 optimizer = optimizer,
