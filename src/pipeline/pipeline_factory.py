@@ -1,13 +1,15 @@
 from experiment_manager.environment import Environment
-from experiment_manager.common.factory import Factory
 from experiment_manager.common.serializable import YAMLSerializable
 from experiment_manager.pipelines.pipeline import Pipeline
+
+# the pipeline factory logic is already implemented in the parent class
+from experiment_manager.pipelines.pipeline_factory import PipelineFactory
 
 # Import all pipelines
 from pipeline.training_pipeline import TrainingPipeline
 
 
-class PipelineFactory(Factory):
+class CustomPipelineFactory(PipelineFactory):
     """
     Factory class for creating pipelines.
     """
@@ -17,4 +19,5 @@ class PipelineFactory(Factory):
         """
         Create an instance of a registered pipeline.
         """
-        return YAMLSerializable.get_by_name(name).from_config(config, env)
+        # the pipeline factory logic is already implemented in the parent class!
+        return PipelineFactory.create(name, config, env)

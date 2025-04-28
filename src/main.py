@@ -4,7 +4,7 @@ the main of the project
 import os
 import torch
 
-from pipeline.pipeline_factory import PipelineFactory
+from pipeline.pipeline_factory import CustomPipelineFactory
 
 from experiment_manager.experiment import Experiment
 
@@ -27,7 +27,7 @@ def main():
         )
     
     experiment = Experiment.create(config_dir_path, 
-                                   factory = PipelineFactory,
+                                   factory = CustomPipelineFactory,
                                    workdir=WORKSPACE)
     experiment.run()
     
