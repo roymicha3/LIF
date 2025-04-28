@@ -1,7 +1,7 @@
 from omegaconf import DictConfig
 
-from settings.factory import Factory
-from settings.serializable import YAMLSerializable
+from experiment_manager.common.factory import Factory
+from experiment_manager.common.serializable import YAMLSerializable
 
 # Import all the optimizers
 from network.optimizer.momentum_opt import MomentumOptimizer

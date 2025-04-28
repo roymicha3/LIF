@@ -4,7 +4,7 @@ This module contains the IdentityEncoder class.
 import numpy as np
 
 from encoders.encoder import Encoder
-from settings.serializable import YAMLSerializable
+from experiment_manager.common.serializable import YAMLSerializable
 
 
 @YAMLSerializable.register("IdentityEncoder")
@@ -24,5 +24,5 @@ class IdentityEncoder(Encoder):
 
 
     @classmethod
-    def from_config(cls, config=None, env_config=None):
+    def from_config(cls, config=None, env=None):
         return cls()

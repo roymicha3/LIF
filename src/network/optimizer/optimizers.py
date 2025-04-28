@@ -1,7 +1,7 @@
 from omegaconf import DictConfig
 from torch import optim
 
-from settings.serializable import YAMLSerializable
+from experiment_manager.common.serializable import YAMLSerializable
 
 @YAMLSerializable.register("Adam")
 class Adam(optim.Adam, YAMLSerializable):

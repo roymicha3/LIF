@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from omegaconf import DictConfig
 from typing_extensions import override
 
+from experiment_manager.environment import Environment
+
 # TODO: add spike values to the data as optional!
 
 class SpikeData:
@@ -19,12 +21,12 @@ class SpikeData:
     spike_times (list of int): List of spike times of the neuron.
     """
 
-    def __init__(self, env_config: DictConfig, neuron_index, spike_times: list[int]):
+    def __init__(self, env: Environment, neuron_index, spike_times: list[int]):
 
         self.neuron_index = neuron_index
         self.spike_times = spike_times
-        self.env_config = env_config
-        self.T = env_config.T
+        self.env = env
+        self.T = env.args.T
 
 
     def __copy__(self):
@@ -32,7 +34,7 @@ class SpikeData:
         Implement the copy operation.
         :return: A copy of the current SpikeData object.
         """
-        return SpikeData(self.env_config, self.neuron_index, self.spike_times)
+        return SpikeData(self.env, self.neuron_index, self.spike_times)
     
     def get_index(self):
         return self.neuron_index

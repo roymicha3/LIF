@@ -4,7 +4,9 @@
 
 name: "simple"
 desc: "a simple experiment"
-settings: # the base cofiguration of the experiment
+
+settings:
+    debug: true # set to false for production
 
 trials: # each trial changes the parameters it chooses - this is later merged with the trials.yaml
 

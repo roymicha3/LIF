@@ -1,7 +1,8 @@
 import torch.nn.functional as F
 
 from network.activation.activation import Activation
-from settings.serializable import YAMLSerializable
+
+from experiment_manager.common.serializable import YAMLSerializable
 
 @YAMLSerializable.register("SoftmaxActivation")
 class SoftmaxActivation(Activation, YAMLSerializable):
@@ -24,5 +25,5 @@ class SoftmaxActivation(Activation, YAMLSerializable):
         return grad.unsqueeze(-1)
     
     @classmethod
-    def from_config(cls, config, env_config):
+    def from_config(cls, config, env) -> "SoftmaxActivation":
         return cls()

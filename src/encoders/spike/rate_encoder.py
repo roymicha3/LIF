@@ -10,7 +10,9 @@ from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
 from tools.utils import poisson_events, SEQ_LEN
-from settings.serializable import YAMLSerializable
+
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable
 
 
 @YAMLSerializable.register("RateEncoder")
@@ -24,7 +26,7 @@ class RateEncoder(Encoder, YAMLSerializable):
     
     def __init__(
         self,
-        env_config: DictConfig,
+        env: Environment,
         num_of_neurons: int,
         firing_rate: int = 20,
         random: bool = True) -> None:
@@ -35,9 +37,9 @@ class RateEncoder(Encoder, YAMLSerializable):
         super().__init__()
         super(YAMLSerializable, self).__init__()
         
-        self.env_config     = env_config
-        self.T              = env_config.T
-        self.dt             = env_config.dt
+        self.env            = env
+        self.T              = env.args.T
+        self.dt             = env.args.dt
         self.num_of_neurons = num_of_neurons
         self.firing_rate    = firing_rate
         self.random         = random
@@ -68,9 +70,9 @@ class RateEncoder(Encoder, YAMLSerializable):
             else:
                 continue
 
-            res.append(SpikeData(self.env_config, neuron_idx, spikes))
+            res.append(SpikeData(self.env, neuron_idx, spikes))
 
-        return SpikeSample(self.env_config, res, self.num_of_neurons, seq_len, sample.get_label())
+        return SpikeSample(self.env, res, self.num_of_neurons, seq_len, sample.get_label())
     
     @override
     def encode(self, sample: DataSample) -> SpikeSample:
@@ -80,6 +82,6 @@ class RateEncoder(Encoder, YAMLSerializable):
         return self._encode_sample(sample)
     
     @staticmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
-        return cls(env_config, config.num_of_neurons, config.firing_rate, config.random)
+    def from_config(cls, config: DictConfig, env: Environment) -> "RateEncoder":
+        return cls(env, config.num_of_neurons, config.firing_rate, config.random)
     

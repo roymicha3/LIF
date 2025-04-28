@@ -2,7 +2,9 @@ import torch
 from omegaconf import DictConfig
 
 import torch.nn as nn
-from settings.serializable import YAMLSerializable 
+
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable 
 
 
 @YAMLSerializable.register("CrossEntropyLoss")
@@ -50,5 +52,5 @@ class CrossEntropyLoss(nn.Module):
         return predicted
     
     @staticmethod
-    def from_config(config: DictConfig, env_config: DictConfig):
-        return CrossEntropyLoss(env_config.device)
+    def from_config(config: DictConfig, env: Environment) -> "CrossEntropyLoss":
+        return CrossEntropyLoss(env.device)

@@ -1,6 +1,7 @@
 from network.activation.activation import Activation
 
-from settings.serializable import YAMLSerializable
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable
 
 @YAMLSerializable.register("SubtractActivation")
 class SubtractActivation(Activation, YAMLSerializable):
@@ -17,5 +18,5 @@ class SubtractActivation(Activation, YAMLSerializable):
         return grad_output
     
     @classmethod
-    def from_config(cls, config, env_config):
-        return cls(env_config.v_th)
+    def from_config(cls, config, env: Environment) -> "SubtractActivation":
+        return cls(env.args.v_th)

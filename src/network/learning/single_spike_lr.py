@@ -2,8 +2,10 @@ import torch
 from typing import Tuple
 from omegaconf import DictConfig
 
-from settings.serializable import YAMLSerializable
 from network.learning.learning_rule import LearningRule
+
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable
 
 
 @YAMLSerializable.register("SingleSpikeLR")
@@ -60,5 +62,5 @@ class SingleSpikeLR(LearningRule, YAMLSerializable):
         return weight_grad
     
     @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
-        return cls(env_config.v_th)
+    def from_config(cls, config: DictConfig, env: Environment):
+        return cls(env.args.v_th)

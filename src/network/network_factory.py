@@ -1,7 +1,7 @@
 from omegaconf import DictConfig
 
-from settings.factory import Factory
-from settings.serializable import YAMLSerializable
+from experiment_manager.environment import Environment
+from experiment_manager.common.factory import Factory
 
 from network.kernel.kernel_factory import KernelFactory
 from network.learning.lr_factory import LearningRuleFactory
@@ -24,26 +24,26 @@ class NetworkFactory(Factory):
     """
     
     @staticmethod
-    def build_network(config: DictConfig, env_config: DictConfig) -> Network:
+    def build_network(config: DictConfig, env: Environment) -> Network:
         """
         builds a network out of a config file
         """
-        network = Network(config, learning=True, device=env_config.device)
+        network = Network(config, learning=True, device=env.device)
         
         for layer in config.layers:
-            kernel = KernelFactory.create(layer.kernel.type, layer.kernel, env_config)
-            learning_rule = LearningRuleFactory.create(layer.learning_rule.type, layer.learning_rule, env_config)
-            connection = SimpleConnection(learning_rule, layer.input_size, layer.output_size, device=env_config.device)
-            activation = ActivationFactory.create(layer.activation.type, layer.activation, env_config)
+            kernel = KernelFactory.create(layer.kernel.type, layer.kernel, env)
+            learning_rule = LearningRuleFactory.create(layer.learning_rule.type, layer.learning_rule, env)
+            connection = SimpleConnection(learning_rule, layer.input_size, layer.output_size, device=env.device)
+            activation = ActivationFactory.create(layer.activation.type, layer.activation, env)
             neuron_layer = NeuronLayer(kernel, connection, activation)
             network.add_layer(neuron_layer, layer.name)
             
-        network.to(env_config.device)
+        network.to(env.device)
         
         return network
     
     @staticmethod
-    def create(name: str, config: DictConfig, env_config: DictConfig):
-        return NetworkFactory.build_network(config, env_config)
+    def create(name: str, config: DictConfig, env: Environment) -> Network:
+        return NetworkFactory.build_network(config, env)
 
     

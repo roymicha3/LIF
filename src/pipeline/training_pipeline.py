@@ -4,6 +4,7 @@ from tqdm import tqdm
 from omegaconf import DictConfig, OmegaConf
 
 from experiment_manager.common.common import Metric
+from experiment_manager.common.common import RunStatus
 from experiment_manager.environment import Environment
 from experiment_manager.pipelines.pipeline import Pipeline
 from experiment_manager.common.serializable import YAMLSerializable
@@ -17,7 +18,7 @@ from encoders.encoder_factory import EncoderFactory
 from data.dataset.dataset_factory import DatasetFactory
 from data.dataset.dataset import Dataset, DataType, OutputType
 
-
+@YAMLSerializable.register("TrainingPipeline")
 class TrainingPipeline(Pipeline, YAMLSerializable):
     """
     class that is responsible for the training of the Network
@@ -45,11 +46,11 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
     def from_config(cls, config: DictConfig, env: Environment, id: int = None):
         pipeline = cls(
             env,
-            config.epochs,
-            config.batch_size, 
-            config.validation_split,
-            config.test_split,
-            config.shuffle,
+            config.pipeline.epochs,
+            config.pipeline.batch_size, 
+            config.pipeline.validation_split,
+            config.pipeline.test_split,
+            config.pipeline.shuffle,
             id)
             
         return pipeline
@@ -71,10 +72,16 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         return dataset
     
     @Pipeline.epoch_wrapper
-    def run_epoch(self, epoch_idx, model, train_loader, val_loader, criterion, optimizer, device):
+    def run_epoch(self, epoch_idx, model, *args, **kwargs): # TODO: update the functions signature
         correct_predictions = 0
         total_predictions = 0
-        status = "completed"
+        
+        train_loader    = kwargs["train_loader"]
+        val_loader      = kwargs["val_loader"]
+        criterion       = kwargs["criterion"]
+        optimizer       = kwargs["optimizer"]
+        scheduler       = kwargs["scheduler"]
+        device          = kwargs["device"]
         
         # Training loop
         progress_bar = tqdm(
@@ -108,32 +115,26 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
 
         
         scheduler.step()
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache() # TODO: check if this is needed
         
         # Compute full dataset loss and accuracy after each epoch
         total_loss, total_accuracy = self.evaluate(model, criterion, val_loader)
         
-        epoch_res = \
+        self.epoch_metrics = \
             {
                 Metric.VAL_LOSS: total_loss,
                 Metric.VAL_ACC: total_accuracy,
                 Metric.NETWORK: model
             }
         
-        stop_flag = self.on_epoch_end(epoch_idx, epoch_res) # TODO: fix this logical error that collides with the wrapper logic
-        if stop_flag:
-            status = "stopped"
-            print("A callback issued a stop! \n")
-            return status
-        
         # Print epoch summary
-        print(f"[Epoch {epoch + 1}] Loss: {total_loss:.3f}, Accuracy: {total_accuracy:.2f}%")
+        self.env.logger.info(f"[Epoch {epoch_idx + 1}] Loss: {total_loss:.3f}, Accuracy: {total_accuracy:.2f}%")
 
         if total_accuracy >= 99.9:
-            print(f"Early stopping at epoch {epoch + 1} due to 100% train accuracy.")
-            return status
+            self.env.logger.info(f"Early stopping at epoch {epoch_idx + 1} due to 100% train accuracy.")
+            return RunStatus.SUCCESS
         
-        return status
+        return RunStatus.FINISHED
     
     
     @Pipeline.run_wrapper
@@ -146,15 +147,25 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         val_dataset = torch.utils.data.Subset(dataset, np.arange(1, val_size))
         
         
-        network = NetworkFactory.create(config.model.type, config.model, self.env) # TODO: fix to accept environment
+        network = NetworkFactory.create(
+            config.model.type,
+            config.model,
+            self.env) # TODO: fix to accept environment
         
         optimizer = OptimizerFactory.create(
             config.optimizer.type,
             config.optimizer,
             network.parameters())
         
-        scheduler = LRSchedulerFactory.create(config.lr_scheduler.type, optimizer, config.lr_scheduler)
-        criterion = LossFactory.create(config.loss.type, config.loss, self.env) # TODO: fix to accept environment
+        scheduler = LRSchedulerFactory.create(
+            config.lr_scheduler.type,
+            optimizer,
+            config.lr_scheduler)
+        
+        criterion = LossFactory.create(
+            config.loss.type,
+            config.loss,
+            self.env)
         
         for epoch in range(self.epochs):
             
@@ -166,16 +177,23 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                 batch_size=self.batch_size,
                 shuffle=self.shuffle)
             
-            self.run_epoch(epoch, network, dataloader, val_dataset, criterion, optimizer, scheduler)
-
-    def evaluate(self, network, criterion, dataset):
+            val_dataloader = torch.utils.data.DataLoader(val_dataset,
+                                                         batch_size=self.batch_size,
+                                                         shuffle=False)
+            
+            self.run_epoch(
+                epoch, 
+                network, 
+                dataloader = dataloader, 
+                val_dataloader = val_dataloader,
+                criterion = criterion, 
+                optimizer = optimizer,
+                scheduler = scheduler,
+                device = self.env.device)
+    
+    def evaluate(self, network, criterion, dataset): # TODO: might be a good idea to add a per label accuracy
         """
         Compute the loss, overall accuracy, and accuracy per label type over the entire dataset.
-
-        Args:
-            network: The spiking neural network
-            criterion: The loss function
-            dataset: The dataset to evaluate on
             
         Returns:
             Tuple of (average_loss, overall_accuracy)

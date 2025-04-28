@@ -5,9 +5,10 @@ from omegaconf import DictConfig
 
 from data.dataset.dataset import Dataset, DataType, OutputType
 from data.data_sample import DataSample
-from settings.serializable import YAMLSerializable
 from encoders.encoder import Encoder
 from torchvision.datasets import MNIST
+
+from experiment_manager.common.serializable import YAMLSerializable
 
 @YAMLSerializable.register("MnistDataset")
 class MnistDataset(Dataset):

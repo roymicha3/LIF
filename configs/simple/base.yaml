@@ -20,6 +20,10 @@ model:
         type: "SingleSpikeLR"
         threshold: 0.5
 
+      activation:
+        type: "SubtractActivation"
+        threshold: 0.5
+
 # Optimizer
 optimizer:
   type: MomentumOptimizer
@@ -64,14 +68,11 @@ pipeline:
   # Callbacks (Optional)
   callbacks:
     - type: "MetricsTracker"
+    
     - type: "EarlyStopping"
       metric: "val_loss"
       patience: 3
-      min_delta: 5.0
-      verbose: True
-    - type: "MlflowCallback"
-      experiment_name: ""
-      root_dir: "./outputs"
-    - type: "ModelCheckpoint"
-      filename: "model_{epoch}.pkl"
-      save_best_only: True
+      min_delta_percent: 5.0
+    
+    - type: "CheckpointCallback"
+      interval: 5

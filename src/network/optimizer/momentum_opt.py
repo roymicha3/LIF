@@ -2,7 +2,7 @@ import torch
 from torch.optim import Optimizer
 from omegaconf import DictConfig
 
-from settings.serializable import YAMLSerializable
+from experiment_manager.common.serializable import YAMLSerializable
 
 @YAMLSerializable.register("MomentumOptimizer")
 class MomentumOptimizer(Optimizer, YAMLSerializable):

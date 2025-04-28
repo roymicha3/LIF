@@ -4,13 +4,15 @@ from omegaconf import DictConfig
 from network.kernel.kernel import Kernel
 from network.kernel.leaky_kernel import LeakyKernel
 from data.spike.spike_sample import SpikeSample
-from settings.serializable import YAMLSerializable
+
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable
 
 @YAMLSerializable.register("DENKernel")
 class DENKernel(Kernel, YAMLSerializable):
     def __init__(
         self,
-        env_config : DictConfig,
+        env : Environment,
         n,
         tau_m,
         tau_s,
@@ -19,22 +21,22 @@ class DENKernel(Kernel, YAMLSerializable):
         super(DENKernel, self).__init__(n, (n, n), learning)
         super(YAMLSerializable, self).__init__()
         
-        self.env_config = env_config
+        self.env = env
         self.n = n
-        self.dt = env_config.dt
+        self.dt = env.args.dt
         self.tau_m = tau_m
         self.tau_s = tau_s
-        self.v_0 = env_config.v_0
+        self.v_0 = env.args.v_0
         
-        self.device = env_config.device
+        self.device = env.device
 
-        self._coductness = LeakyKernel(env_config,
+        self._coductness = LeakyKernel(env,
                                        self.n,
                                        self.tau_m,
                                        scale = True,
                                        learning=learning) 
         
-        self._voltage = LeakyKernel(env_config,
+        self._voltage = LeakyKernel(env,
                                     self.n,
                                     self.tau_s,
                                     scale = False,
@@ -77,12 +79,12 @@ class DENKernel(Kernel, YAMLSerializable):
         return response
     
     @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
+    def from_config(cls, config: DictConfig, env: Environment) -> "DENKernel":
         """
         Create an instance from a DictConfig.
         """
         return cls(
-                   env_config,
+                   env,
                    config.n,
                    config.tau_m,
                    config.tau_s,

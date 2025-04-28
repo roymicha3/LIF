@@ -4,7 +4,9 @@ from omegaconf import DictConfig
 
 from network.kernel.kernel import Kernel
 from data.spike.spike_sample import SpikeSample
-from settings.serializable import YAMLSerializable
+
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable
 
 
 @YAMLSerializable.register("LeakyKernel")
@@ -12,7 +14,7 @@ class LeakyKernel(Kernel, YAMLSerializable):
     
     def __init__(
         self,
-        env_config : DictConfig,
+        env : Environment,
         n,
         tau,
         scale = False,
@@ -29,16 +31,16 @@ class LeakyKernel(Kernel, YAMLSerializable):
             bias=False,
             batch_first=True,
             dropout=0.0,
-            device=env_config.device,
+            device=env.device,
         )
         
-        self.env_config = env_config
+        self.env = env
         self.n = n
-        self.dt = env_config.dt
+        self.dt = env.args.dt
         self.tau = tau
-        self.v_0 = env_config.v_0
+        self.v_0 = env.args.v_0
         self.scale = scale
-        self.device = env_config.device
+        self.device = env.device
         
         self._beta = 1 - self.dt / self.tau
         
@@ -82,9 +84,9 @@ class LeakyKernel(Kernel, YAMLSerializable):
         return mem[0]
     
     @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
+    def from_config(cls, config: DictConfig, env: Environment) -> "LeakyKernel":
         return cls(
-            env_config,
+            env,
             config.n,
             config.tau,
             scale=config.scale,

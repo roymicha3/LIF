@@ -2,8 +2,10 @@ import torch
 from typing import Tuple
 from omegaconf import DictConfig
 
-from settings.serializable import YAMLSerializable
 from network.learning.learning_rule import LearningRule
+
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable
 
 
 @YAMLSerializable.register("IntegrateLearningRule")
@@ -58,8 +60,8 @@ class IntegrateLearningRule(LearningRule, YAMLSerializable):
         return gradient
     
     @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
+    def from_config(cls, config: DictConfig, env: Environment):
         return cls(
-            env_config.dt,
-            env_config.v_th,
+            env.args.dt,
+            env.args.v_th,
             config.beta)

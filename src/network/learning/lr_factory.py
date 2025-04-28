@@ -1,7 +1,8 @@
 from omegaconf import DictConfig
 
-from settings.factory import Factory
-from settings.serializable import YAMLSerializable
+from experiment_manager.common.factory import Factory
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable
 
 # Import all the learning rules
 from network.learning.single_spike_lr import SingleSpikeLR
@@ -13,5 +14,5 @@ class LearningRuleFactory(Factory):
     """
     
     @staticmethod
-    def create(name, config: DictConfig, env_config: DictConfig):
-        return YAMLSerializable.get_by_name(name).from_config(config, env_config)
+    def create(name, config: DictConfig, env: Environment):
+        return YAMLSerializable.get_by_name(name).from_config(config, env)

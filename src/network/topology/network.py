@@ -2,8 +2,8 @@ import torch
 import tempfile
 
 from network.topology.neuron import NeuronLayer
-from settings.serializable import YAMLSerializable
 
+from experiment_manager.common.serializable import YAMLSerializable
 
 @YAMLSerializable.register("Network")
 class Network(torch.nn.Module, YAMLSerializable):

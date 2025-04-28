@@ -9,14 +9,16 @@ from omegaconf import DictConfig
 from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
 
+from experiment_manager.environment import Environment
+
 class SpikeSample(DataSample):
     """
     This class represents a spike sample.
     It encapsulates a single spike item and provides a method to access it.
     """
-    def __init__(self, env_config: DictConfig, data: List[SpikeData], size, seq_len, label = None) -> None:
+    def __init__(self, env: Environment, data: List[SpikeData], size, seq_len, label = None) -> None:
         super().__init__(data, label)
-        self.env_config = env_config
+        self.env = env
         self.num_of_neurons = size
         self.seq_len = seq_len
     

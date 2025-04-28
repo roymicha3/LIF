@@ -1,7 +1,7 @@
 from omegaconf import DictConfig
 from torch.optim.lr_scheduler import StepLR, ConstantLR, LinearLR, ExponentialLR, PolynomialLR, CosineAnnealingLR, CosineAnnealingWarmRestarts, CyclicLR, OneCycleLR, ReduceLROnPlateau
 
-from settings.factory import Factory
+from experiment_manager.common.factory import Factory
 
 class LRSchedulerFactory(Factory):
     """

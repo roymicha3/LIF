@@ -10,8 +10,9 @@ from encoders.encoder import Encoder
 from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
-from settings.serializable import YAMLSerializable
 
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable
 
 @YAMLSerializable.register("LatencyEncoder")
 class LatencyEncoder(Encoder, YAMLSerializable):
@@ -24,7 +25,7 @@ class LatencyEncoder(Encoder, YAMLSerializable):
     
     
     def __init__(self,
-                 env_config: DictConfig,
+                 env: Environment,
                  size: int,
                  max_value: int) -> None:
         """
@@ -33,9 +34,9 @@ class LatencyEncoder(Encoder, YAMLSerializable):
         super().__init__()
         super(YAMLSerializable, self).__init__()
         
-        self.env_config     = env_config
-        self.T              = env_config.T
-        self.dt             = env_config.dt
+        self.env            = env
+        self.T              = env.args.T
+        self.dt             = env.args.dt
         self.num_of_neurons = size
         self.max_value      = max_value
 
@@ -57,9 +58,9 @@ class LatencyEncoder(Encoder, YAMLSerializable):
                 continue
             
             spikes = np.array([spike_delay], dtype=np.int32)
-            data.append(SpikeData(self.env_config, neuron_idx, spikes))
+            data.append(SpikeData(self.env, neuron_idx, spikes))
 
-        return SpikeSample(self.env_config, data, self.num_of_neurons, seq_len, sample.get_label())
+        return SpikeSample(self.env, data, self.num_of_neurons, seq_len, sample.get_label())
     
     @override
     def encode(self, data: DataSample) -> SpikeSample:
@@ -69,7 +70,7 @@ class LatencyEncoder(Encoder, YAMLSerializable):
         return self._encode_sample(data)
     
     @classmethod
-    def from_config(cls, config: DictConfig, env_config: DictConfig):
-        return cls(env_config, config.size, config.max_value)
+    def from_config(cls, config: DictConfig, env: Environment) -> "LatencyEncoder":
+        return cls(env, config.size, config.max_value)
         
     

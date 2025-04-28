@@ -1,7 +1,8 @@
 from omegaconf import DictConfig
 
-from settings.factory import Factory
-from settings.serializable import YAMLSerializable
+from experiment_manager.common.factory import Factory
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable
 
 # import all encoders:
 from encoders.identity_encoder import IdentityEncoder
@@ -14,8 +15,8 @@ class EncoderFactory(Factory):
     Factory class for creating kernels.
     """
     @staticmethod
-    def create(name: str, config: DictConfig, env_config: DictConfig):
+    def create(name: str, config: DictConfig, env: Environment) -> YAMLSerializable:
         """
         Create an instance of a registered kernel.
         """
-        return YAMLSerializable.get_by_name(name).from_config(config, env_config)
+        return YAMLSerializable.get_by_name(name).from_config(config, env)

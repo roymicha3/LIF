@@ -2,7 +2,8 @@ from omegaconf import DictConfig
 from torch import nn
 import torch
 
-from settings.serializable import YAMLSerializable
+from experiment_manager.environment import Environment
+from experiment_manager.common.serializable import YAMLSerializable
 
 @YAMLSerializable.register("BinaryLoss")
 class BinaryLoss(nn.Module):
@@ -65,5 +66,5 @@ class BinaryLoss(nn.Module):
         return predicted
     
     @staticmethod
-    def from_config(config: DictConfig, env_config: DictConfig):
-        return BinaryLoss(env_config.device)
+    def from_config(config: DictConfig, env: Environment) -> "BinaryLoss":
+        return BinaryLoss(env.device)
