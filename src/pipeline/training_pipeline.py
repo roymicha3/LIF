@@ -197,8 +197,15 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             
             if status == RunStatus.SUCCESS:
                 break
-            
-            
+        
+        final_accuracy, final_loss = self.evaluate(network, criterion, dataloader)
+         
+        self.run_metrics = \
+            {
+                Metric.NETWORK: network,
+                Metric.TEST_ACC: final_accuracy,
+                Metric.TEST_LOSS: final_loss,
+            }
             
         return status
     

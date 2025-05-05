@@ -1,15 +1,15 @@
-- name: "len=2000"
+- name: "len=1000"
   info: ""
   base_dir: ""
   repeat: 5
   settings:
     dataset:
-      len: 2000
+      len: 1000
 
-- name: "len=2250"
+- name: "len=1250"
   info: ""
   base_dir: ""
   repeat: 5
   settings:
     dataset:
-      len: 2250
+      len: 1250

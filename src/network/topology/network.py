@@ -49,7 +49,8 @@ class Network(torch.nn.Module, YAMLSerializable):
         """
         Serializes the network object to disk.
         """
-        torch.save(self, open(file_name, "wb"))
+        torch.save(self.state_dict(), open(file_name, "wb"))
+        # TODO: implement it better!
 
     def clone(self) -> "Network":
         """
