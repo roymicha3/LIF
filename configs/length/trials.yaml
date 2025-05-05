@@ -1,0 +1,15 @@
+- name: "len=1000"
+  info: ""
+  base_dir: ""
+  repeat: 5
+  settings:
+    dataset:
+      len: 1000
+
+- name: "len=1250"
+  info: ""
+  base_dir: ""
+  repeat: 5
+  settings:
+    dataset:
+      len: 1250
