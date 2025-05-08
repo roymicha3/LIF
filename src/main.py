@@ -8,9 +8,8 @@ from pipeline.pipeline_factory import CustomPipelineFactory
 
 from experiment_manager.experiment import Experiment
 
-
-EXPERIMENT_NAME = "length"
-WORKSPACE = os.path.join("outputs", "length_workspace")
+EXPERIMENT_NAME = "sequential"
+WORKSPACE = os.path.join("outputs", "sequential_workspace")
 
 def main():
     """

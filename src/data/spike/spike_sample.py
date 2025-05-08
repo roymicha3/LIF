@@ -2,9 +2,9 @@
 This module defines the SpikeSample class which encapsulates
 """
 import torch
-from typing import List
 import matplotlib.pyplot as plt 
 from omegaconf import DictConfig
+from typing import List, Generator
 
 from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
@@ -74,3 +74,56 @@ class SpikeSample(DataSample):
         ax.set_ylabel("Neuron Index")
             
         plt.show()
+        
+
+    @staticmethod
+    def collate_fn(batch):
+        """
+        Collate function to combine multiple SpikeSample objects into a batch.
+        """
+        data = [sample[0] for sample in batch]
+        labels = [sample[1] for sample in batch]
+        
+        res = \
+            {
+                "data": data,
+                "labels": torch.tensor(labels),
+            }
+        
+        return res
+
+
+def build_time_index(batch: list):
+    """
+    Build a sparse COO tensor for a batch of SpikeSample objects.
+    Supports any number of spikes per neuron.
+    """
+    batch_map = []
+    for batch_idx, sample in enumerate(batch):
+        time_index_mapping = {}
+        for data in sample._data:
+            spike_times = data.get_spike_times()
+            neuron_index = data.get_index()
+            for spike_time in spike_times:
+                time_index_mapping.setdefault(spike_time, []).append(neuron_index)
+        
+        batch_map.append(time_index_mapping)
+    
+    return batch_map
+
+
+def digest_batch(batch: List[SpikeSample]) -> Generator[torch.Tensor, None, None]:
+    """
+    Generator that yields spikes at each time step for the entire batch.
+    """
+    batch_size = len(batch)
+    num_neurons = batch[0].num_of_neurons
+    batch_map = build_time_index(batch)
+    # batch_spikes shape: [batch_size, seq_len, num_neurons]
+    
+    for t in range(batch[0].seq_len):
+        batch_spikes = torch.zeros((batch_size, num_neurons), dtype=torch.float32)
+        for batch_idx, time_index_mapping in enumerate(batch_map):
+            batch_spikes[batch_idx, time_index_mapping.get(t, [])] = 1.0
+        
+        yield batch_spikes

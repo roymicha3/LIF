@@ -1,5 +1,6 @@
 import torch
 import matplotlib.pyplot as plt
+
 from network.kernel.kernel import Kernel
 from network.topology.connection import Connection
 from network.activation.activation import Activation

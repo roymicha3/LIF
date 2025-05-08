@@ -1,9 +1,10 @@
 import torch
 import tempfile
 
-from network.topology.neuron import NeuronLayer
-
+from experiment_manager.environment import Environment
 from experiment_manager.common.serializable import YAMLSerializable
+
+from network.topology.neuron import NeuronLayer
 
 @YAMLSerializable.register("Network")
 class Network(torch.nn.Module, YAMLSerializable):
@@ -14,6 +15,7 @@ class Network(torch.nn.Module, YAMLSerializable):
     def __init__(
         self,
         config: dict,
+        env : Environment,
         learning: bool = True,
         device = None
     ) -> None:
@@ -27,6 +29,7 @@ class Network(torch.nn.Module, YAMLSerializable):
         
         self.config = config
         self.learning = learning
+        self.env = env
 
         self.layers = []
         
@@ -51,16 +54,6 @@ class Network(torch.nn.Module, YAMLSerializable):
         """
         torch.save(self.state_dict(), open(file_name, "wb"))
         # TODO: implement it better!
-
-    def clone(self) -> "Network":
-        """
-        Returns a cloned network object.
-        :return: A copy of this network.
-        """
-        virtual_file = tempfile.SpooledTemporaryFile()
-        torch.save(self, virtual_file)
-        virtual_file.seek(0)
-        return torch.load(virtual_file)
 
     
     def forward(self, data: torch.Tensor) -> None:

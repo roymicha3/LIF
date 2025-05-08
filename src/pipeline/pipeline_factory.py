@@ -7,6 +7,7 @@ from experiment_manager.pipelines.pipeline_factory import PipelineFactory
 
 # Import all pipelines
 from pipeline.training_pipeline import TrainingPipeline
+from pipeline.sequential_pipeline import SequentialPipeline
 
 
 class CustomPipelineFactory(PipelineFactory):

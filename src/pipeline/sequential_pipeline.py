@@ -9,6 +9,7 @@ from experiment_manager.environment import Environment
 from experiment_manager.pipelines.pipeline import Pipeline
 from experiment_manager.common.serializable import YAMLSerializable
 
+from data.spike.spike_sample import SpikeSample
 from network.loss.loss_factory import LossFactory
 from network.network_factory import NetworkFactory
 from network.optimizer.optimizer_factory import OptimizerFactory
@@ -18,8 +19,8 @@ from encoders.encoder_factory import EncoderFactory
 from data.dataset.dataset_factory import DatasetFactory
 from data.dataset.dataset import Dataset, DataType, OutputType
 
-@YAMLSerializable.register("TrainingPipeline")
-class TrainingPipeline(Pipeline, YAMLSerializable):
+@YAMLSerializable.register("SequentialPipeline")
+class SequentialPipeline(Pipeline, YAMLSerializable):
     """
     class that is responsible for the training of the Network
     """
@@ -32,7 +33,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
                  shuffle: bool = True,
                  id: int = None):
         
-        super(TrainingPipeline, self).__init__(env)
+        super(SequentialPipeline, self).__init__(env)
         super(YAMLSerializable, self).__init__()
         
         self.epochs = epochs
@@ -66,7 +67,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             dataset_config.type, 
             dataset_config, 
             type_, 
-            OutputType.TORCH, 
+            OutputType.NORMAL, 
             encoder)
         
         self.env.logger.info("Loaded dataset successfully")
@@ -92,9 +93,9 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             total=len(train_dataloader),
             desc=f"Epoch [{epoch_idx+1}/{self.epochs}]")
         
-        for _, (inputs, labels) in progress_bar:
-            inputs = inputs.to(self.env.device)
-            labels = labels.to(self.env.device)
+        for _, batch in progress_bar:
+            inputs = batch["data"]
+            labels = batch["labels"]
             
             # Forward pass
             outputs = model.forward(inputs)
@@ -103,6 +104,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             loss = criterion.forward(outputs, labels.unsqueeze(1).float())
 
             # Backward pass
+            # TODO: fix this!
             model.backward(criterion.backward())
             optimizer.step()
             
@@ -146,7 +148,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
     @Pipeline.run_wrapper
     def run(self, config: DictConfig):
         """
-        Train the model using the provided data loader.
+        Train the model.
         """
         status = RunStatus.SKIPPED
         dataset = self.load_dataset(config.dataset, self.env)
@@ -157,7 +159,7 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
         network = NetworkFactory.create(
             config.model.type,
             config.model,
-            self.env) # TODO: fix to accept environment
+            self.env)
         
         optimizer = OptimizerFactory.create(
             config.optimizer.type,
@@ -174,7 +176,12 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             config.loss,
             self.env)
         
+        self.env.logger.info("Started training pipeline!")
+        self.env.logger.info(f"Training {type(network).__name__} with {len(dataset)} samples.")
+        
         for epoch in range(self.epochs):
+            
+            self.env.logger.info(f"Epoch {epoch + 1}/{self.epochs}")
             
             indices = torch.randperm(len(dataset))
             dataset = torch.utils.data.Subset(dataset, indices)
@@ -182,12 +189,15 @@ class TrainingPipeline(Pipeline, YAMLSerializable):
             dataloader = torch.utils.data.DataLoader(
                 dataset,
                 batch_size=self.batch_size,
-                shuffle=self.shuffle)
+                shuffle=self.shuffle,
+                collate_fn=SpikeSample.collate_fn)
             
             val_dataloader = torch.utils.data.DataLoader(val_dataset,
                                                          batch_size=self.batch_size,
-                                                         shuffle=False)
+                                                         shuffle=False,
+                                                         collate_fn=SpikeSample.collate_fn)
             
+            self.env.logger.info(f"Started epoch run")
             try:
                 status = self.run_epoch(
                     epoch, 

@@ -2,14 +2,18 @@ from omegaconf import DictConfig
 
 from experiment_manager.environment import Environment
 from experiment_manager.common.factory import Factory
+from experiment_manager.common.serializable import YAMLSerializable
 
 from network.kernel.kernel_factory import KernelFactory
 from network.learning.lr_factory import LearningRuleFactory
 from network.activation.activation_factory import ActivationFactory
 
-from network.topology.network import Network
 from network.topology.neuron import NeuronLayer
 from network.topology.fully_connected_connection import SimpleConnection
+
+# import networks:
+from network.topology.network import Network
+from network.topology.sequential_network import SequentialNetwork
 
 class NetworkFactory(Factory):
     """
@@ -24,11 +28,9 @@ class NetworkFactory(Factory):
     """
     
     @staticmethod
-    def build_network(config: DictConfig, env: Environment) -> Network:
-        """
-        builds a network out of a config file
-        """
-        network = Network(config, learning=True, device=env.device)
+    def create(name: str, config: DictConfig, env: Environment) -> Network:
+        network_type = YAMLSerializable.get_by_name(name)
+        network = network_type(config, env, learning=True, device=env.device)
         
         for layer in config.layers:
             kernel = KernelFactory.create(layer.kernel.type, layer.kernel, env)
@@ -41,9 +43,5 @@ class NetworkFactory(Factory):
         network.to(env.device)
         
         return network
-    
-    @staticmethod
-    def create(name: str, config: DictConfig, env: Environment) -> Network:
-        return NetworkFactory.build_network(config, env)
 
     
