@@ -1,6 +1,8 @@
+import os
 import torch
 import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 from omegaconf import DictConfig, OmegaConf
 
 from experiment_manager.common.common import Metric
@@ -18,6 +20,59 @@ from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
 from encoders.encoder_factory import EncoderFactory
 from data.dataset.dataset_factory import DatasetFactory
 from data.dataset.dataset import Dataset, DataType, OutputType
+
+
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
+import seaborn as sns
+
+# Configure global plot settings
+sns.set_style("whitegrid")
+plt.rcParams.update({
+    'font.size': 10,
+    'axes.titlesize': 12,
+    'axes.labelsize': 10,
+    'xtick.labelsize': 8,
+    'ytick.labelsize': 8,
+    'figure.dpi': 300,
+    'savefig.bbox': 'tight',
+    'font.family': 'DejaVu Sans'  # Ensures Unicode support
+})
+
+def plot_voltage_profiles(data, plot_type, epoch_idx, b_idx, env):
+    """Professional voltage plotting with consistent styling"""
+    for i in range(4):
+        fig = plt.figure(figsize=(8, 10))
+        try:
+            for j in range(min(len(data[i]), 4)):
+                ax = fig.add_subplot(4, 1, j+1)
+                
+                # Plot data with professional styling
+                ax.plot(data[i][j], 
+                        linewidth=1.5, 
+                        alpha=0.8,
+                        color=sns.color_palette("tab10")[j])
+                
+                # Formatting
+                ax.set_title(f"{plot_type} {i} - Trace {j+1}", pad=12)
+                ax.set_xlabel("Time Step", labelpad=8)
+                ax.set_ylabel("Membrane Potential (mV)", labelpad=8)
+                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+                
+                # Add grid and remove top/right spines
+                ax.grid(True, linestyle='--', alpha=0.6)
+                sns.despine(ax=ax, trim=True)
+
+            plt.tight_layout(pad=2.0)
+            plot_path = os.path.join(
+                env.artifact_dir,
+                f"epoch_{epoch_idx}_batch_{b_idx}_{plot_type.lower()}_{i}_voltage.svg"  # Vector format
+            )
+            plt.savefig(plot_path, format='svg')
+            env.logger.info(f"Saved {plot_type} voltage plot: {plot_path}")
+            
+        finally:
+            plt.close(fig)  # Ensure figure is always closed
 
 @YAMLSerializable.register("SequentialPipeline")
 class SequentialPipeline(Pipeline, YAMLSerializable):
@@ -93,7 +148,7 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
             total=len(train_dataloader),
             desc=f"Epoch [{epoch_idx+1}/{self.epochs}]")
         
-        for _, batch in progress_bar:
+        for b_idx, batch in progress_bar:
             inputs = batch["data"]
             labels = batch["labels"]
             
@@ -102,24 +157,36 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
 
             # Calculate loss
             loss = criterion.forward(outputs, labels.unsqueeze(1).float())
+            
+            kernel = model.layers[0].kernel(inputs)
+            input_v = [v_t for v_t in kernel]
+            input_v = torch.stack(input_v, dim=-1)
+            
+            # plot the voltage:
+            plot_voltage_profiles(input_v, "Kernel", epoch_idx, b_idx, self.env)
+            voltage = model.inner_state(inputs, -1)
+            
+            # plot the voltage:
+            plot_voltage_profiles(voltage, "Neuron", epoch_idx, b_idx, self.env)
 
             # Backward pass
             # TODO: fix this!
-            model.backward(criterion.backward())
-            optimizer.step()
             
-            # Update running loss and accuracy
-            running_loss = torch.sum(loss).item()
-            predicted = criterion.classify(outputs)
-            correct_predictions += (predicted == labels).sum().item()
-            total_predictions += labels.size(0)
+        #     model.backward(criterion.backward())
+        #     optimizer.step()
+            
+        #     # Update running loss and accuracy
+        #     running_loss = torch.sum(loss).item()
+        #     predicted = criterion.classify(outputs)
+        #     correct_predictions += (predicted == labels).sum().item()
+        #     total_predictions += labels.size(0)
 
-            # Update progress bar with loss and accuracy
-            accuracy = 100 * correct_predictions / total_predictions
-            progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
+        #     # Update progress bar with loss and accuracy
+        #     accuracy = 100 * correct_predictions / total_predictions
+        #     progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
 
         
-        scheduler.step()
+        # scheduler.step()
         # torch.cuda.empty_cache() # TODO: check if this is needed
         
         # Compute full dataset loss and accuracy after each epoch

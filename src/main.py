@@ -4,9 +4,10 @@ the main of the project
 import os
 import torch
 
+from experiment_manager.experiment import Experiment
+
 from pipeline.pipeline_factory import CustomPipelineFactory
 
-from experiment_manager.experiment import Experiment
 
 EXPERIMENT_NAME = "sequential"
 WORKSPACE = os.path.join("outputs", "sequential_workspace")
@@ -29,6 +30,7 @@ def main():
                                    factory = CustomPipelineFactory,
                                    workdir=WORKSPACE)
     experiment.run()
-    
+
+
 if __name__ == "__main__":
     main()

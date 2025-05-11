@@ -44,13 +44,13 @@ class SimpleConnection(Connection):
         :param input_: Incoming spikes of shape (batch_size, n_inputs) or (n_inputs,).
         :return: Incoming spikes multiplied by synaptic weights and bias.
         """
-        output = self.partial_forward(input_)
+        output = self.partial_forward(input_) # TODO: the logic here is wrong for sequential data
         spikes = self.learning_rule.forward(output) # Forward pass of the learning rule
 
         if torch.is_grad_enabled():
             self.saved_tensors = input_, output # Save for backward pass
         
-        return spikes
+        return output, spikes
 
     def backward(self, E):
         """

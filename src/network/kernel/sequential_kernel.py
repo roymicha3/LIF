@@ -1,8 +1,9 @@
 import torch
 from omegaconf import DictConfig
 
+from tools.utils import SEQ_LEN
 from network.kernel.kernel import Kernel
-from data.spike.spike_sample import SpikeSample
+from data.spike.spike_sample import SpikeSample, digest_batch
 
 from network.kernel.functional import cpu_based as cpu
 from network.kernel.functional import gpu_based as gpu
@@ -36,6 +37,7 @@ class SequentialLeakyKernel(Kernel, YAMLSerializable):
         self.v_0 = env.args.v_0
         self.v_th = env.args.v_th
         self.device = env.device
+        self.time_seq = SEQ_LEN(env.args.T, self.dt)
         
         self._beta = 1 - self.dt / self.tau
         
@@ -75,6 +77,27 @@ class SequentialLeakyKernel(Kernel, YAMLSerializable):
             return self.v_0 * output / self.dt
         
         return output
+    
+    def __call__(self, input_):
+        """
+        Call the forward function of the kernel
+        """
+        self.reset()
+        generator = digest_batch(input_)
+        
+        for t in range(self.time_seq):
+            data_t = next(generator)
+            
+            res = self.forward(data_t)
+            
+            self.v_prev = res.clone()
+            
+            if self.scale:
+                res = self.v_0 * res / self.dt
+            
+            yield res
+            
+
     
     @classmethod
     def from_config(cls, config: DictConfig, env: Environment) -> "SequentialLeakyKernel":

@@ -33,39 +33,25 @@ class SequentialNetwork(Network):
         """
         forward function of the network
         """
-        # TODO: remember to reset the state after each batch!
-        generator = digest_batch(data)
-        
-        for t in range(self.time_seq):
-            data_t = next(generator)
-            res = []
-            for layer in self.layers:
-                data_t = layer.forward(data_t)
+        for layer in self.layers:
+            data = layer(data)
             
-            res.append(data_t)
-        
-        res = torch.stack(res, dim=0)
-        # TODO: check if the data is in the right shape
-        # data = data.permute(1, 0, 2)
-        
-        return res
+        return data
     
     def inner_state(self, input_, layer_idx: int):
         """
         return the inner state of a layer of a given index
         """
         inner_layer = self.layers[layer_idx]
-        
-        for t in range(self.time_seq):
-            data_t = input_[t]
+        data = input_
+        for layer in self.layers:
+            data = layer(data)
             
-            for layer in self.layers:
-                if layer is inner_layer:
-                    return inner_layer.partial_forward(data_t)
-                
-                data_t = layer.forward(data_t)
-        
-        raise IndexError
+            if layer == inner_layer:
+                break
+            
+        return data
+    
     
     def backward(self, grad: torch.Tensor) -> None:
         """
