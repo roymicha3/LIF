@@ -41,14 +41,17 @@ plt.rcParams.update({
 
 def plot_voltage_profiles(data, plot_type, epoch_idx, b_idx, env):
     """Professional voltage plotting with consistent styling"""
-    for i in range(4):
+    for i in range(min(len(data), 4)):
         fig = plt.figure(figsize=(8, 10))
         try:
             for j in range(min(len(data[i]), 4)):
                 ax = fig.add_subplot(4, 1, j+1)
                 
+                output = data[i][j]
+                if isinstance(output, torch.Tensor):
+                    output = output.cpu().detach().numpy()
                 # Plot data with professional styling
-                ax.plot(data[i][j], 
+                ax.plot(output, 
                         linewidth=1.5, 
                         alpha=0.8,
                         color=sns.color_palette("tab10")[j])
@@ -164,6 +167,8 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
             
             # plot the voltage:
             plot_voltage_profiles(input_v, "Kernel", epoch_idx, b_idx, self.env)
+            
+            
             voltage = model.inner_state(inputs, -1)
             
             # plot the voltage:

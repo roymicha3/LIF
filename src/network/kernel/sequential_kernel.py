@@ -42,7 +42,7 @@ class SequentialLeakyKernel(Kernel, YAMLSerializable):
         self._beta = 1 - self.dt / self.tau
         
         if self.device == "cuda":
-            self.kernel = gpu.numba_lif
+            self.kernel = gpu.lif
         else:
             self.kernel = cpu.lif
         

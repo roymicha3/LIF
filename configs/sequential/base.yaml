@@ -7,16 +7,16 @@ model:
   type: "SequentialNetwork"
   layers:
     - name: "input layer"
-      input_size: 500
+      input_size: 100
       output_size: 1
       kernel:
         type: "SequentialLeakyKernel"
-        n: 500
+        n: 100
         tau: 10
         tau_s: 15
         tau_m: 3.75
         learning: False
-        scale: True
+        scale: False
       
       learning_rule:
         type: "SingleSpikeLR"
@@ -46,15 +46,15 @@ loss:
 # Dataset
 dataset:
   type: "RandomDataset"
-  input_size: 500
-  len: 1000
-  root: "./outputs/data/random"  # Path to the dataset
+  input_size: 100
+  len: 250
+  root: "./outputs/data/random-size-100"  # Path to the dataset
   normalize: False  # Normalize values to [0, 1]
   flatten: True
 
   encoder:
     type: "LatencyEncoder"
-    size: 500
+    size: 100
     max_value: 1.0
 
 # Pipeline
