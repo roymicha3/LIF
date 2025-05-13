@@ -45,7 +45,7 @@ class SimpleConnection(Connection):
         :return: Incoming spikes multiplied by synaptic weights and bias.
         """
         output = self.partial_forward(input_) # TODO: the logic here is wrong for sequential data
-        spikes = self.learning_rule.forward(output) # Forward pass of the learning rule
+        spikes = self.learning_rule.forward(input_, output) # Forward pass of the learning rule
 
         if torch.is_grad_enabled():
             self.saved_tensors = input_, output # Save for backward pass

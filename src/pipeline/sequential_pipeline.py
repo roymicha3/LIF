@@ -161,37 +161,38 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
             # Calculate loss
             loss = criterion.forward(outputs, labels.unsqueeze(1).float())
             
-            kernel = model.layers[0].kernel(inputs)
-            input_v = [v_t for v_t in kernel]
-            input_v = torch.stack(input_v, dim=-1)
-            
-            # plot the voltage:
-            plot_voltage_profiles(input_v, "Kernel", epoch_idx, b_idx, self.env)
-            
-            
-            voltage = model.inner_state(inputs, -1)
-            
-            # plot the voltage:
-            plot_voltage_profiles(voltage, "Neuron", epoch_idx, b_idx, self.env)
+            if epoch_idx % 10 == 0 and b_idx == 0:
+                # Plot the kernel weights
+                kernel = model.layers[0].kernel(inputs)
+                input_v = [v_t for v_t in kernel]
+                input_v = torch.stack(input_v, dim=-1)
+                
+                # plot the voltage:
+                plot_voltage_profiles(input_v, "Kernel", epoch_idx, b_idx, self.env)
+                
+                
+                voltage = model.inner_state(inputs, -1)
+                
+                # plot the voltage:
+                plot_voltage_profiles(voltage, "Neuron", epoch_idx, b_idx, self.env)
 
+            
             # Backward pass
-            # TODO: fix this!
+            model.backward(criterion.backward())
+            optimizer.step()
             
-        #     model.backward(criterion.backward())
-        #     optimizer.step()
-            
-        #     # Update running loss and accuracy
-        #     running_loss = torch.sum(loss).item()
-        #     predicted = criterion.classify(outputs)
-        #     correct_predictions += (predicted == labels).sum().item()
-        #     total_predictions += labels.size(0)
+            # Update running loss and accuracy
+            running_loss = torch.sum(loss).item()
+            predicted = criterion.classify(outputs)
+            correct_predictions += (predicted == labels).sum().item()
+            total_predictions += labels.size(0)
 
-        #     # Update progress bar with loss and accuracy
-        #     accuracy = 100 * correct_predictions / total_predictions
-        #     progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
+            # Update progress bar with loss and accuracy
+            accuracy = 100 * correct_predictions / total_predictions
+            progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
 
         
-        # scheduler.step()
+        scheduler.step()
         # torch.cuda.empty_cache() # TODO: check if this is needed
         
         # Compute full dataset loss and accuracy after each epoch

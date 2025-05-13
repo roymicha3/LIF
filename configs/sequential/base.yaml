@@ -19,7 +19,7 @@ model:
         scale: False
       
       learning_rule:
-        type: "SingleSpikeLR"
+        type: "SequentialSingleSpikeLR"
         threshold: 0.5
 
       activation:
