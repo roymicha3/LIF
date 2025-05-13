@@ -1,0 +1,121 @@
+@startuml LIF Experiment Architecture
+
+package "Experiment" {
+    class Experiment {
+        + experiment_name: str
+        + base_dir: str
+        + config: DictConfig
+        + env_config: DictConfig
+        + experiment_dir: str
+        + id: int
+        + setup_experiment()
+        + run()
+        + evaluate()
+    }
+    
+    class Trial {
+        + network: Network
+        + optimizer: Optimizer
+        + criterion: Loss
+        + callbacks: List[Callback]
+        + run()
+        + evaluate()
+        + train_step()
+        + validation_step()
+    }
+}
+
+package "Data" {
+    interface Dataset {
+        + __getitem__()
+        + __len__()
+    }
+    
+    class MNISTDataset
+    class RandomDataset
+    
+    class DataSample {
+        + data: Tensor
+        + label: Tensor
+    }
+    
+    class SpikeSample {
+        + spikes: Tensor
+        + times: Tensor
+    }
+}
+
+package "Encoders" {
+    interface Encoder {
+        + encode()
+        + decode()
+    }
+    
+    class LatencyEncoder {
+        + threshold: float
+        + tau: float
+    }
+    
+    class RateEncoder {
+        + rate: float
+        + duration: int
+    }
+    
+    class IdentityEncoder
+}
+
+package "Pipeline" {
+    interface Callback {
+        + on_train_begin()
+        + on_train_end()
+        + on_epoch_begin()
+        + on_epoch_end()
+        + on_batch_begin()
+        + on_batch_end()
+    }
+    
+    class Checkpoint {
+        + save_best_only: bool
+        + monitor: str
+    }
+    
+    class EarlyStopping {
+        + patience: int
+        + monitor: str
+    }
+}
+
+package "Database" {
+    class DB {
+        + data_path: str
+        + initialize()
+        + save_trial()
+        + load_trial()
+    }
+    
+    class DBManager {
+        + connection: Connection
+        + create_tables()
+        + insert_experiment()
+        + insert_trial()
+    }
+}
+
+' Relationships
+Experiment "1" *-- "many" Trial
+Trial "1" *-- "1" Dataset
+Dataset <|-- MNISTDataset
+Dataset <|-- RandomDataset
+Trial "1" *-- "1" Encoder
+Encoder <|-- LatencyEncoder
+Encoder <|-- RateEncoder
+Encoder <|-- IdentityEncoder
+Trial "1" *-- "many" Callback
+Callback <|-- Checkpoint
+Callback <|-- EarlyStopping
+Experiment "1" *-- "1" DB
+DB "1" *-- "1" DBManager
+Dataset ..> DataSample: creates
+Encoder ..> SpikeSample: creates
+
+@enduml
