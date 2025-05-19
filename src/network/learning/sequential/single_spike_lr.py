@@ -20,25 +20,32 @@ class SequentialSingleSpikeLR(LearningRule, YAMLSerializable):
         self._threshold = threshold
         self.saved_tensors = None
         self.max_values = None
-        self.t_max = None
-        self.t = 0
     
     def forward(self, input_, output_, **kwargs) -> torch.Tensor:
         
         if self.max_values is None:
-            self.max_values = input_.clone()
-            self.saved_tensors = input_.clone()
-            self.t_max = torch.zeros_like(output_, dtype=torch.long)
+            self.max_values = output_.clone()
         
         
-        self.max_values = torch.max(self.max_values, output_)
-        indices = (self.max_values == output_)
-        self.t_max[indices] = self.t
+        if torch.is_grad_enabled():
+            if self.saved_tensors is None:
+                self.saved_tensors = torch.zeros(size=(input_.size(0),
+                                                    input_.size(1),
+                                                    output_.size(-1)),
+                                                dtype=torch.float32,
+                                                device=input_.device)
+                self.max_values = output_.clone()
             
-        self.saved_tensors[indices] = input_[indices]
             
-        self.t += 1
-        return self.max_values - self._threshold # TODO: make it return a spike data
+        indices = (self.max_values < output_)
+        
+        if torch.is_grad_enabled():
+            for n in range(output_.size(-1)):
+                self.saved_tensors[indices[:, n], :, n] = input_[indices[:, n]]
+        
+        self.max_values[indices] = output_[indices]
+        
+        return self.max_values
     
     
     def backward(self, input_, E: torch.Tensor, **kwargs) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -56,13 +63,12 @@ class SequentialSingleSpikeLR(LearningRule, YAMLSerializable):
         if input_.dim() == 1:  # Single sample
             input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
 
-        weight_grad = E @ self.saved_tensors
+        # weight_grad = (E * self.saved_tensors).sum(0)
+        weight_grad = torch.bmm(self.saved_tensors, E)
         
         # reset the saved tensors
         self.saved_tensors = None
         self.max_values = None
-        self.t_max = None
-        self.t = 0
         
         return weight_grad
     

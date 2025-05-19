@@ -10,7 +10,7 @@ model:
       input_size: 100
       output_size: 1
       kernel:
-        type: "SequentialLeakyKernel"
+        type: "SequentialDenKernel"
         n: 100
         tau: 10
         tau_s: 15
@@ -47,7 +47,7 @@ loss:
 dataset:
   type: "RandomDataset"
   input_size: 100
-  len: 250
+  len: 150
   root: "./outputs/data/random-size-100"  # Path to the dataset
   normalize: False  # Normalize values to [0, 1]
   flatten: True
@@ -60,7 +60,7 @@ dataset:
 # Pipeline
 pipeline:
   type: "SequentialPipeline"
-  epochs: 5
+  epochs: 100
   batch_size: 64
   validation_split: 0.2
   test_split: 0.2

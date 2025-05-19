@@ -153,15 +153,15 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
         
         for b_idx, batch in progress_bar:
             inputs = batch["data"]
-            labels = batch["labels"]
+            labels = batch["labels"].to(self.env.device)
             
             # Forward pass
-            outputs = model.forward(inputs)
+            outputs, spikes = model.forward(inputs)
 
             # Calculate loss
-            loss = criterion.forward(outputs, labels.unsqueeze(1).float())
+            loss = criterion.forward(spikes, labels.unsqueeze(1).float())
             
-            if epoch_idx % 10 == 0 and b_idx == 0:
+            if epoch_idx % 10 == 0 and False: # b_idx == 0:
                 # Plot the kernel weights
                 kernel = model.layers[0].kernel(inputs)
                 input_v = [v_t for v_t in kernel]
@@ -170,11 +170,8 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
                 # plot the voltage:
                 plot_voltage_profiles(input_v, "Kernel", epoch_idx, b_idx, self.env)
                 
-                
-                voltage = model.inner_state(inputs, -1)
-                
                 # plot the voltage:
-                plot_voltage_profiles(voltage, "Neuron", epoch_idx, b_idx, self.env)
+                plot_voltage_profiles(outputs, "Neuron", epoch_idx, b_idx, self.env)
 
             
             # Backward pass
@@ -183,7 +180,7 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
             
             # Update running loss and accuracy
             running_loss = torch.sum(loss).item()
-            predicted = criterion.classify(outputs)
+            predicted = criterion.classify(spikes)
             correct_predictions += (predicted == labels).sum().item()
             total_predictions += labels.size(0)
 
@@ -289,7 +286,7 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
             if status == RunStatus.SUCCESS:
                 break
         
-        final_accuracy, final_loss = self.evaluate(network, criterion, dataloader)
+        final_accuracy, final_loss = self.evaluate(network, criterion, val_dataloader)
          
         self.run_metrics = \
             {
@@ -316,17 +313,17 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
         label_total = {}
 
         with torch.no_grad():
-            for inputs, labels in dataloader:
-                inputs = inputs.to(network.device)
-                labels = labels.to(network.device)
+            for batch in dataloader:
+                inputs = batch["data"]
+                labels = batch["labels"].to(self.env.device)
 
                 # Forward pass
-                outputs = network.forward(inputs)
-                loss = criterion.forward(outputs, labels.unsqueeze(1).float())
+                outputs, spikes = network.forward(inputs)
+                loss = criterion.forward(spikes, labels.unsqueeze(1).float())
                 total_loss += torch.sum(loss).item()
 
                 # Classify the outputs
-                predicted = criterion.classify(outputs)
+                predicted = criterion.classify(spikes)
                 
                 # Ensure predicted has the same shape as labels
                 if predicted.dim() == 0:

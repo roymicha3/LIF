@@ -51,3 +51,36 @@ def lif(
     spike = torch.from_numpy(spike_np)
 
     return v_next, spike
+
+
+# TODO: fix this function according to the den in the gpu based implementation
+def den(
+    x: torch.Tensor,
+    v_prev: torch.Tensor,
+    v_threshold: float,
+    alpha: float,
+    beta: float,
+    hard_reset: bool = False) -> tuple[torch.Tensor, torch.Tensor]:
+    """
+    Wraps the Numba-based LIF function for PyTorch tensors.
+    """
+    assert x.device == torch.device("cpu")
+    assert v_prev.device == torch.device("cpu")
+
+    x_np = x.detach().numpy()
+    v_prev_np = v_prev.detach().numpy()
+    v_next_np = np.zeros_like(x_np)
+    spike_np = np.zeros_like(x_np)
+    
+    numba_lif(x_np, v_prev_np, v_next_np, spike_np, v_threshold, beta)
+    v_prev_np = v_next_np.copy()
+
+    if hard_reset:
+        numba_lif_hard_reset(x_np, v_prev_np, v_next_np, spike_np, v_threshold, beta)
+    else:
+        numba_lif(x_np, v_prev_np, v_next_np, spike_np, v_threshold, beta)
+
+    v_next = torch.from_numpy(v_next_np)
+    spike = torch.from_numpy(spike_np)
+
+    return v_next, spike

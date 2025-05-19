@@ -39,7 +39,7 @@ class NeuronLayer(torch.nn.Module):
         output = self.activation.forward(inner_voltage)
         return output
     
-    def __call__(self, input_):
+    def __call__(self, input_, spikes=True):
 
         kernel = self.kernel(input_)
         
@@ -54,9 +54,11 @@ class NeuronLayer(torch.nn.Module):
         output = torch.stack(res, dim=-1)
         if len(output.size()) == 2:
             output = output.unsqueeze(-1)
+            
+        if spikes:
+            return spikes_t
         
-        # output = output.permute(1, 2, 0)
-        return output
+        return output, spikes_t
     
     
     def backward(self, output_grad):

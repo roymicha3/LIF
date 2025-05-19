@@ -34,9 +34,9 @@ class SequentialNetwork(Network):
         forward function of the network
         """
         for layer in self.layers:
-            data = layer(data)
+            data, spikes = layer(data, spikes=False)
             
-        return data
+        return data, spikes
     
     def inner_state(self, input_, layer_idx: int):
         """
