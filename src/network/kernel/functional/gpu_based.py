@@ -75,7 +75,7 @@ def den(
     i_spike = torch.zeros_like(x)
     v_spike = torch.zeros_like(x)
     
-    threadsperblock = (16, 16)  # 256 total threads
+    threadsperblock = (32, 32)  # 256 total threads
     blockspergrid_x = math.ceil(x.size()[0] / threadsperblock[0])
     blockspergrid_y = math.ceil(x.size()[1] / threadsperblock[1])
     blockspergrid = (blockspergrid_x, blockspergrid_y)

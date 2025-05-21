@@ -7,11 +7,11 @@ model:
   type: "SequentialNetwork"
   layers:
     - name: "input layer"
-      input_size: 100
+      input_size: 500
       output_size: 1
       kernel:
         type: "SequentialDenKernel"
-        n: 100
+        n: 500
         tau: 10
         tau_s: 15
         tau_m: 3.75
@@ -46,15 +46,15 @@ loss:
 # Dataset
 dataset:
   type: "RandomDataset"
-  input_size: 100
-  len: 150
-  root: "./outputs/data/random-size-100"  # Path to the dataset
+  input_size: 500
+  len: 1000
+  root: "./outputs/data/random-size-500"  # Path to the dataset
   normalize: False  # Normalize values to [0, 1]
   flatten: True
 
   encoder:
     type: "LatencyEncoder"
-    size: 100
+    size: 500
     max_value: 1.0
 
 # Pipeline

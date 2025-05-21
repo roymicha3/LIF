@@ -1,6 +1,6 @@
 - name: "Trial 1"
   repeat: 1
   settings:
-    learning_rate: 0.0001
+    learning_rate: 100.0
 
     

@@ -50,6 +50,9 @@ class NeuronLayer(torch.nn.Module):
             output_t = self.activation.forward(inner_voltage_t)
             
             res.append(output_t)
+            
+        if not torch.is_grad_enabled():
+            self.connection.reset()
         
         output = torch.stack(res, dim=-1)
         if len(output.size()) == 2:

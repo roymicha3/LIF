@@ -35,9 +35,13 @@ class SequentialSingleSpikeLR(LearningRule, YAMLSerializable):
                                                 dtype=torch.float32,
                                                 device=input_.device)
                 self.max_values = output_.clone()
+                
+                for n in range(output_.size(-1)):
+                    self.saved_tensors[:, :, n] = input_.clone()
             
             
         indices = (self.max_values < output_)
+        #TODO: handle different batch sizes!
         
         if torch.is_grad_enabled():
             for n in range(output_.size(-1)):
@@ -67,10 +71,16 @@ class SequentialSingleSpikeLR(LearningRule, YAMLSerializable):
         weight_grad = torch.bmm(self.saved_tensors, E)
         
         # reset the saved tensors
-        self.saved_tensors = None
-        self.max_values = None
+        self.reset()
         
         return weight_grad
+    
+    def reset(self):
+        """
+        Reset the saved tensors and max values.
+        """
+        self.saved_tensors = None
+        self.max_values = None
     
     @classmethod
     def from_config(cls, config: DictConfig, env: Environment):

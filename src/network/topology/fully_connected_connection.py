@@ -113,4 +113,10 @@ class SimpleConnection(Connection):
         Reset the state variables of the connection.
         """
         super().reset_state_variables()
+        
+    def reset(self) -> None:
+        """
+        Reset the connection.
+        """
+        self.learning_rule.reset()
 

@@ -161,7 +161,7 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
             # Calculate loss
             loss = criterion.forward(spikes, labels.unsqueeze(1).float())
             
-            if epoch_idx % 10 == 0 and False: # b_idx == 0:
+            if epoch_idx % 10 == 0 and b_idx == 0:
                 # Plot the kernel weights
                 kernel = model.layers[0].kernel(inputs)
                 input_v = [v_t for v_t in kernel]
@@ -206,9 +206,11 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
             }
         
         # Print epoch summary
+        print(f"[Epoch {epoch_idx + 1}] Loss: {total_val_loss:.3f}, Accuracy: {total_val_accuracy:.2f}%")
         self.env.logger.info(f"[Epoch {epoch_idx + 1}] Loss: {total_val_loss:.3f}, Accuracy: {total_val_accuracy:.2f}%")
 
         if total_val_accuracy >= 99.9:
+            print(f"Early stopping at epoch {epoch_idx + 1} due to 100% validation accuracy.")
             self.env.logger.info(f"Early stopping at epoch {epoch_idx + 1} due to 100% train accuracy.")
             return RunStatus.SUCCESS
         
@@ -362,6 +364,7 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
         for label_val in label_correct:
             if label_total[label_val] > 0:  # Avoid division by zero
                 label_accuracy = 100 * label_correct[label_val] / label_total[label_val]
+                self.env.logger.info(f"Label {label_val}: {label_accuracy:.2f}%")
                 print(f"Accuracy for label {label_val}: {label_accuracy:.2f}%")
 
         return average_loss, accuracy
