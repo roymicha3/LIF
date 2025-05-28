@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 import matplotlib.pyplot as plt
 import torch
@@ -13,10 +14,10 @@ class Connection(ABC, Module):
     This class incorporates the activation inside the connection!
     """
 
-    def __init__(self, lr: LearningRule, shape: tuple = None, w: torch.Tensor = None, device=None) -> None:
+    def __init__(self, lr_list: List[LearningRule], shape: tuple = None, w: torch.Tensor = None, device=None) -> None:
         super().__init__()
         self.device = device
-        self.learning_rule = lr
+        self.lr_list = lr_list
         
         if w is not None:
             if not isinstance(w, torch.Tensor):

@@ -1,10 +1,12 @@
+from typing import List
+
 import numpy as np
 import torch
-
-from network.topology.connection import Connection
-from network.learning.learning_rule import LearningRule
-
 from experiment_manager.environment import Environment
+
+from network.learning.learning_rule import LearningRule
+from network.topology.connection import Connection
+
 
 class SimpleConnection(Connection):
     """
@@ -13,7 +15,7 @@ class SimpleConnection(Connection):
 
     def __init__(
                 self,
-                lr: LearningRule,
+                lr_list: List[LearningRule],
                 env: Environment,
                 input_size: int = None,
                 output_size: int = None,
@@ -21,10 +23,12 @@ class SimpleConnection(Connection):
                 device=None,
                 norm: np.int32 = 1) -> None:
         
-        super().__init__(lr, (input_size, output_size), w, device)
+        super().__init__(lr_list, (input_size, output_size), w, device)
         self.env = env
         self.norm = norm
         self.saved_tensors = None
+        
+        self.batch_norm = torch
 
 
     def partial_forward(self, input_: torch.Tensor) -> torch.Tensor:
@@ -45,7 +49,11 @@ class SimpleConnection(Connection):
         :return: Incoming spikes multiplied by synaptic weights and bias.
         """
         output = self.partial_forward(input_) # TODO: the logic here is wrong for sequential data
-        spikes = self.learning_rule.forward(input_, output) # Forward pass of the learning rule
+        
+        spikes = torch.zeros_like(output, device=self.device)  # Initialize spikes tensor
+        
+        for lr in self.lr_list:
+            spikes += lr.forward(input_, output) # Forward pass of the learning rule
 
         if torch.is_grad_enabled():
             self.saved_tensors = input_, output # Save for backward pass
@@ -68,7 +76,13 @@ class SimpleConnection(Connection):
         if input_.dim() == 1:  # Single sample
             input_ = input_.unsqueeze(0)  # Add a batch dimension if necessary
 
-        weight_grad = self.learning_rule.backward(input_, grad)
+        batch_size = input_.size(0)
+        weight_grad = torch.zeros(
+            shape=(batch_size, self.w.size(0), self.w.size(1)),
+            device=self.device)
+        
+        for lr in self.lr_list:
+            weight_grad += lr.backward(input_, grad)
         
         # Compute the gradient of the input
         input_grad = grad @ self.w.t()  # Backpropagate through weights
