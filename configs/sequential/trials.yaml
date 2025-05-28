@@ -1,14 +1,9 @@
-- name: "polynomiallr_s50_lr100_quadratic"
-  info: "polynomial lr, quadratic decay"
+- name: "trial_1"
+  info: "simple"
   repeat: 1
   settings:
     optimizer:
-      lr: 100.0
-    lr_scheduler:
-      type: PolynomialLR
-      args:
-        total_iters: 100
-        power: 2.0
+      lr: 1.0
   # Quadratic decay for faster initial learning rate reduction
 
 

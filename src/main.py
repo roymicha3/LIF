@@ -2,12 +2,11 @@
 the main of the project
 """
 import os
-import torch
 
+import torch
 from experiment_manager.experiment import Experiment
 
 from pipeline.pipeline_factory import CustomPipelineFactory
-
 
 EXPERIMENT_NAME = "sequential"
 WORKSPACE = os.path.join("outputs", "sequential_workspace")
@@ -27,7 +26,7 @@ def main():
         )
     
     experiment = Experiment.create(config_dir_path, 
-                                   factory = CustomPipelineFactory,
+                                   factory=CustomPipelineFactory,
                                    workdir=WORKSPACE)
     experiment.run()
 

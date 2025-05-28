@@ -19,17 +19,18 @@ class PlasticityInduction(LearningRule, YAMLSerializable):
         self.saved_tensors = None
     
     def forward(self, input_, output_, **kwargs) -> torch.Tensor:
+        batch_size = input_.size(0)
         
         if self.saved_tensors is None:
             self.saved_tensors = torch.ones(
-                size=(input_.size(-1), output_.size(-1)),
+                size=(batch_size, input_.size(-1), output_.size(-1)),
                 dtype=torch.float32,
                 device=input_.device)
             
             
         indices = (self._threshold < output_) # neurons that fired
         
-        for b in range(input_.size(0)):
+        for b in range(batch_size):
             self.saved_tensors[b, :, indices[b]] = 0 # overall the nerons that didnt fire
         
         return 0
@@ -46,8 +47,9 @@ class PlasticityInduction(LearningRule, YAMLSerializable):
         for b in range(input_.size(0)):
             # Compute the gradient of the loss with respect to the weights
             silent_output_neurons = E[b] < 0
-            weight_grad[b, :, silent_output_neurons] = \
-                self.saved_tensors[b, :, silent_output_neurons] * self._epsilon
+            if silent_output_neurons.sum().item() > 0:
+                weight_grad[b, :, silent_output_neurons[b]] = \
+                    self.saved_tensors[b, :, silent_output_neurons[b]] * self._epsilon
         
         # reset the saved tensors
         self.reset()

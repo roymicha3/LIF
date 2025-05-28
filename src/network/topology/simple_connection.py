@@ -78,7 +78,7 @@ class SimpleConnection(Connection):
 
         batch_size = input_.size(0)
         weight_grad = torch.zeros(
-            shape=(batch_size, self.w.size(0), self.w.size(1)),
+            size=(batch_size, self.w.size(0), self.w.size(1)),
             device=self.device)
         
         for lr in self.lr_list:

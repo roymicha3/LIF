@@ -18,9 +18,13 @@ model:
         learning: False
         scale: False
       
-      learning_rule:
-        type: "SequentialSingleSpikeLR"
-        threshold: 1.0
+      learning_rules:
+        - type: "SequentialSingleSpikeLR"
+          threshold: 1.0
+        
+        - type: "PlasticityInduction"
+          threshold: 1.0
+          epsilon: 0.01
 
       activation:
         type: "SubtractActivation"
