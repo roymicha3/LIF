@@ -13,18 +13,18 @@ model:
         type: "SequentialDenKernel"
         n: 500
         tau: 10
-        tau_s: 15
-        tau_m: 3.75
+        tau_s: 10
+        tau_m: 2.5
         learning: False
         scale: False
       
       learning_rule:
         type: "SequentialSingleSpikeLR"
-        threshold: 0.5
+        threshold: 1.0
 
       activation:
         type: "SubtractActivation"
-        threshold: 0.5
+        threshold: 1.0
 
 # Optimizer
 optimizer:
@@ -34,10 +34,10 @@ optimizer:
 
 # LR Scheduler
 lr_scheduler:
-  type: StepLR
+  type: PolynomialLR
   args:
-    step_size: 50
-    gamma: 0.9
+    total_iters: 200
+    power: 2.0
 
 # Loss Function
 loss:
@@ -61,8 +61,8 @@ dataset:
 pipeline:
   type: "SequentialPipeline"
   epochs: 100
-  batch_size: 64
-  validation_split: 0.2
+  batch_size: 128
+  validation_split: 0.5
   test_split: 0.2
   early_stopping_patience: 15
   shuffle: True
@@ -77,4 +77,4 @@ pipeline:
       min_delta_percent: 5.0
     
     - type: "CheckpointCallback"
-      interval: 5
+      interval: 10

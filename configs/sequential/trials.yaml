@@ -1,6 +1,57 @@
-- name: "Trial 1"
+- name: "polynomiallr_s50_lr100_quadratic"
+  info: "polynomial lr, quadratic decay"
   repeat: 1
   settings:
-    learning_rate: 100.0
+    optimizer:
+      lr: 100.0
+    lr_scheduler:
+      type: PolynomialLR
+      args:
+        total_iters: 100
+        power: 2.0
+  # Quadratic decay for faster initial learning rate reduction
 
-    
+
+# - name: "cycliclr_s50_lr100_triangular2"
+#   info: "cyclic lr, triangular2 mode"
+#   repeat: 1
+#   settings:
+#     optimizer:
+#       lr: 100
+#     lr_scheduler:
+#       type: CyclicLR
+#       args:
+#         base_lr: 100
+#         max_lr: 200
+#         step_size_up: 50
+#         step_size_down: 50
+#         mode: "triangular2"
+#   # Halves max_lr after each cycle
+
+# - name: "steplr_s25_lr100"
+#   info: "step lr, step_size=25, lr=100"
+#   repeat: 1
+#   settings:
+#     optimizer:
+#       lr: 100
+#     lr_scheduler:
+#       type: StepLR
+#       args:
+#         step_size: 25
+#         gamma: 0.9
+#   # More frequent updates (every 25 epochs) for faster adaptation
+
+
+# - name: "linearlr_s50_lr100_gentle"
+#   info: "linear lr, gentle warmup"
+#   repeat: 1
+#   settings:
+#     optimizer:
+#       lr: 100
+#     lr_scheduler:
+#       type: LinearLR
+#       args:
+#         start_factor: 0.3
+#         end_factor: 1.0
+#         total_iters: 200
+#   # Gentler warmup starting at 30% of base lr over longer period

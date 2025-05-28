@@ -1,11 +1,11 @@
-import torch
 from typing import Tuple
+
+import torch
+from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager.environment import Environment
 from omegaconf import DictConfig
 
 from network.learning.learning_rule import LearningRule
-
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
 
 
 @YAMLSerializable.register("SequentialSingleSpikeLR")
@@ -49,7 +49,7 @@ class SequentialSingleSpikeLR(LearningRule, YAMLSerializable):
         
         self.max_values[indices] = output_[indices]
         
-        return self.max_values
+        return self.max_values - self._threshold  # Return the difference between max values and threshold
     
     
     def backward(self, input_, E: torch.Tensor, **kwargs) -> Tuple[torch.Tensor, torch.Tensor]:

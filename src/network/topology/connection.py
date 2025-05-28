@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 import matplotlib.pyplot as plt
 import torch
 from torch.nn import Module, Parameter
@@ -71,7 +72,9 @@ class Connection(ABC, Module):
         :return: A tensor of sampled weights.
         """
         # Sample from Norm(0.0, 1)
-        weights = torch.normal(0.0, 1.0, size=(input_size, output_size), device=device)
+        mean = 0.0 / ((input_size * output_size) ** 0.5)
+        std = 1.0
+        weights = torch.normal(mean, std, size=(input_size, output_size), device=device)
         return weights
 
     def plot_weights_histogram(self, bins=25):

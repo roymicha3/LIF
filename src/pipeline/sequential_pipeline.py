@@ -11,7 +11,7 @@ from experiment_manager.environment import Environment
 from experiment_manager.pipelines.pipeline import Pipeline
 from experiment_manager.common.serializable import YAMLSerializable
 
-from data.spike.spike_sample import SpikeSample
+from data.spike.spike_sample import SpikeSample, digest_batch
 from network.loss.loss_factory import LossFactory
 from network.network_factory import NetworkFactory
 from network.optimizer.optimizer_factory import OptimizerFactory
@@ -167,6 +167,45 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
                 input_v = [v_t for v_t in kernel]
                 input_v = torch.stack(input_v, dim=-1)
                 
+                
+                # plot the raster plot of the input spikes
+                generator = digest_batch(inputs)
+                inputs = torch.stack([spike_seq for spike_seq in generator], dim=0).permute(1, 2, 0)
+                inputs = inputs.cpu().detach().numpy()
+
+                # inputs shape: (batch, neurons, time)
+                # For raster plot, we need to extract spike times for each neuron
+                fig, ax = plt.subplots(figsize=(10, 6))
+
+                # Plot just the first sample in the batch (or choose a specific sample)
+                sample_idx = 0  # Change this to plot a different sample
+                spike_data = inputs[sample_idx]  # Shape: (neurons, time)
+
+                # Find spike locations (where value > 0)
+                neuron_indices, time_indices = np.where(spike_data > 0)
+
+                # Plot spikes
+                ax.scatter(time_indices, neuron_indices, 
+                        s=2, c='black', marker='|', alpha=0.8)
+
+                ax.set_title(f"Input Spikes at Epoch {epoch_idx + 1}, Batch {b_idx + 1}, Sample {sample_idx + 1}")
+                ax.set_xlabel("Time Step")
+                ax.set_ylabel("Neuron Index")
+                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+                ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
+                # Set y-axis limits to show all neurons
+                ax.set_ylim(-0.5, spike_data.shape[0] - 0.5)
+
+                plt.tight_layout()
+                plot_path = os.path.join(
+                    self.env.artifact_dir,
+                    f"epoch_{epoch_idx}_batch_{b_idx}_input_spikes.svg"
+                )
+                plt.savefig(plot_path, format='svg')
+                self.env.logger.info(f"Saved input spikes plot: {plot_path}")
+                plt.close(fig)
+                
                 # plot the voltage:
                 plot_voltage_profiles(input_v, "Kernel", epoch_idx, b_idx, self.env)
                 
@@ -175,7 +214,9 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
 
             
             # Backward pass
-            model.backward(criterion.backward())
+            propagation_error = criterion.backward()
+            model.backward(propagation_error)
+            
             optimizer.step()
             
             # Update running loss and accuracy
