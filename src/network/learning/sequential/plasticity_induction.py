@@ -46,10 +46,10 @@ class PlasticityInduction(LearningRule, YAMLSerializable):
         
         for b in range(input_.size(0)):
             # Compute the gradient of the loss with respect to the weights
-            silent_output_neurons = E[b] < 0
+            silent_output_neurons = (E[b] < 0).flatten()
             if silent_output_neurons.sum().item() > 0:
-                weight_grad[b, :, silent_output_neurons[b]] = \
-                    self.saved_tensors[b, :, silent_output_neurons[b]] * self._epsilon
+                weight_grad[b, :, silent_output_neurons] = \
+                    self.saved_tensors[b, :, silent_output_neurons] * self._epsilon
         
         # reset the saved tensors
         self.reset()

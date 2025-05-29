@@ -3,7 +3,7 @@
   repeat: 1
   settings:
     optimizer:
-      lr: 1.0
+      lr: 10.0
   # Quadratic decay for faster initial learning rate reduction
 
 

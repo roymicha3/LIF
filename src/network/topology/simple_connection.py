@@ -132,5 +132,6 @@ class SimpleConnection(Connection):
         """
         Reset the connection.
         """
-        self.learning_rule.reset()
+        for lr in self.lr_list:
+            lr.reset()
 
