@@ -1,19 +1,20 @@
+import torch
+from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager.environment import Environment
 from omegaconf import DictConfig
 from torch import nn
-import torch
 
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
 
 @YAMLSerializable.register("BinaryLoss")
 class BinaryLoss(nn.Module):
     
-    def __init__(self, device=None, *args, **kwargs) -> None:
+    def __init__(self, device=None, threshold = 0, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         
         self.relu = nn.ReLU()
         self.saved_tensors = None
         self.device = device
+        self.threshold = threshold
     
     def forward(self, input_, target_) -> torch.Tensor:
         """
@@ -33,10 +34,11 @@ class BinaryLoss(nn.Module):
         if target_.dim() == 1:
             target_ = target_.unsqueeze(0)  # Add batch dimension
         
-        self.saved_tensors = (input_, target_)
+        outputs = input_ - self.threshold
+        self.saved_tensors = (outputs, target_)
         
         # Compute and return the loss, applying ReLU after multiplying target and input
-        return self.relu(- target_ * input_)
+        return self.relu(- target_ * outputs)
     
     def backward(self, grad_output=None):
         """
@@ -44,17 +46,17 @@ class BinaryLoss(nn.Module):
         :return: Gradients with respect to the input and target tensors.
         """
         # Retrieve saved tensors from the forward pass
-        input_, target_ = self.saved_tensors
+        outputs, target_ = self.saved_tensors
         
         # Compute the gradient of the loss with respect to spike values
-        grad_spike_values = torch.zeros_like(input_).to(self.device)
+        grad_spike_values = torch.zeros_like(outputs).to(self.device)
         
         epsilon = 0  # Small value
         
-        grad_spike_values[(input_ * target_) > -epsilon] = 0
-        grad_spike_values[(input_ * target_) <= -epsilon] = 1
+        grad_spike_values[(outputs * target_) > -epsilon] = 0
+        grad_spike_values[(outputs * target_) <= -epsilon] = 1
 
-        # Grad with respect to input_
+        # Grad with respect to outputs
         grad_input = - target_ * grad_spike_values
         
         return grad_input.unsqueeze(-1)
@@ -69,4 +71,5 @@ class BinaryLoss(nn.Module):
     
     @staticmethod
     def from_config(config: DictConfig, env: Environment) -> "BinaryLoss":
-        return BinaryLoss(env.device)
+        threshold = config.get("threshold", 0.0)
+        return BinaryLoss(env.device, threshold)

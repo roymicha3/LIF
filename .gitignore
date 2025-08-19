@@ -4,3 +4,4 @@ data/data/*
 outputs/*
 *.ps1
 mlruns
+.vscode/*

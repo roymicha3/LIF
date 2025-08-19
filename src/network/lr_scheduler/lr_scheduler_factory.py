@@ -1,7 +1,10 @@
-from omegaconf import DictConfig
-from torch.optim.lr_scheduler import StepLR, ConstantLR, LinearLR, ExponentialLR, PolynomialLR, CosineAnnealingLR, CosineAnnealingWarmRestarts, CyclicLR, OneCycleLR, ReduceLROnPlateau
-
 from experiment_manager.common.factory import Factory
+from omegaconf import DictConfig
+from torch.optim.lr_scheduler import (ConstantLR, CosineAnnealingLR,
+                                      CosineAnnealingWarmRestarts, CyclicLR,
+                                      ExponentialLR, LinearLR, OneCycleLR,
+                                      PolynomialLR, ReduceLROnPlateau, StepLR)
+
 
 class LRSchedulerFactory(Factory):
     """
@@ -30,6 +33,9 @@ class LRSchedulerFactory(Factory):
         scheduler_class = LRSchedulerFactory._registry[name]
 
         try:
+            if config.args is None:
+                return scheduler_class(optimizer)
+            
             return scheduler_class(optimizer, **config.args)  # Unpack DictConfig into keyword arguments
         except TypeError as e:
             raise ValueError(f"Invalid parameters for scheduler '{name}': {e}") from e

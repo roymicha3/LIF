@@ -21,15 +21,14 @@ class NeuronLayer(torch.nn.Module):
         
         super().__init__()
         
-        self.kernel = kernel
-        self.connection = connection
-        self.activation = activation
-        self.env = env
+        self.kernel: Kernel         = kernel
+        self.connection: Connection = connection
+        self.activation: Activation = activation
+        self.env: Environment       = env
         
-        self.dt = env.args.dt
-        self.T = env.args.T
-        
-        self.time_seq = SEQ_LEN(self.T, self.dt)
+        self.dt: float      = env.args.dt
+        self.T: int         = env.args.T
+        self.time_seq : int = SEQ_LEN(self.T, self.dt)
         
     
     def forward(self, input_):

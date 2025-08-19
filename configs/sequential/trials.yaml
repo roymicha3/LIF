@@ -1,52 +1,143 @@
-- name: "trial_1"
-  info: "simple"
-  repeat: 1
+- name: "trial_lr_0.01_batch_4_len_50"
+  info: "Trial with learning rate 0.01, batch size 4, dataset length 50"
+  repeat: 5
   settings:
     optimizer:
-      lr: 10.0
-  # Quadratic decay for faster initial learning rate reduction
+      lr: 0.01
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 50
 
+- name: "trial_lr_0.01_batch_4_len_75"
+  info: "Trial with learning rate 0.01, batch size 4, dataset length 75"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 75
 
-# - name: "cycliclr_s50_lr100_triangular2"
-#   info: "cyclic lr, triangular2 mode"
-#   repeat: 1
-#   settings:
-#     optimizer:
-#       lr: 100
-#     lr_scheduler:
-#       type: CyclicLR
-#       args:
-#         base_lr: 100
-#         max_lr: 200
-#         step_size_up: 50
-#         step_size_down: 50
-#         mode: "triangular2"
-#   # Halves max_lr after each cycle
+- name: "trial_lr_0.01_batch_4_len_100"
+  info: "Trial with learning rate 0.01, batch size 4, dataset length 100"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 100
 
-# - name: "steplr_s25_lr100"
-#   info: "step lr, step_size=25, lr=100"
-#   repeat: 1
-#   settings:
-#     optimizer:
-#       lr: 100
-#     lr_scheduler:
-#       type: StepLR
-#       args:
-#         step_size: 25
-#         gamma: 0.9
-#   # More frequent updates (every 25 epochs) for faster adaptation
+- name: "trial_lr_0.1_batch_4_len_50"
+  info: "Trial with learning rate 0.1, batch size 4, dataset length 50"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 50
 
+- name: "trial_lr_0.1_batch_4_len_75"
+  info: "Trial with learning rate 0.1, batch size 4, dataset length 75"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 75
 
-# - name: "linearlr_s50_lr100_gentle"
-#   info: "linear lr, gentle warmup"
-#   repeat: 1
-#   settings:
-#     optimizer:
-#       lr: 100
-#     lr_scheduler:
-#       type: LinearLR
-#       args:
-#         start_factor: 0.3
-#         end_factor: 1.0
-#         total_iters: 200
-#   # Gentler warmup starting at 30% of base lr over longer period
+- name: "trial_lr_0.1_batch_4_len_100"
+  info: "Trial with learning rate 0.1, batch size 4, dataset length 100"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 100
+
+- name: "trial_lr_1_batch_4_len_50"
+  info: "Trial with learning rate 1, batch size 4, dataset length 50"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 50
+
+- name: "trial_lr_1_batch_4_len_75"
+  info: "Trial with learning rate 1, batch size 4, dataset length 75"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 75
+
+- name: "trial_lr_1_batch_4_len_100"
+  info: "Trial with learning rate 1, batch size 4, dataset length 100"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 100
+
+- name: "trial_lr_10_batch_4_len_50"
+  info: "Trial with learning rate 10, batch size 4, dataset length 50"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 10
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 50
+
+- name: "trial_lr_10_batch_4_len_75"
+  info: "Trial with learning rate 10, batch size 4, dataset length 75"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 10
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 75
+
+- name: "trial_lr_10_batch_4_len_100"
+  info: "Trial with learning rate 10, batch size 4, dataset length 100"
+  repeat: 5
+  settings:
+    optimizer:
+      lr: 10
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    dataset:
+      len: 100

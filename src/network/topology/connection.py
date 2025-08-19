@@ -14,10 +14,14 @@ class Connection(ABC, Module):
     This class incorporates the activation inside the connection!
     """
 
-    def __init__(self, lr_list: List[LearningRule], shape: tuple = None, w: torch.Tensor = None, device=None) -> None:
+    def __init__(self, 
+                 lr_list: List[LearningRule], 
+                 shape: tuple = None, 
+                 w: torch.Tensor = None, 
+                 device: str = None) -> None:
         super().__init__()
-        self.device = device
-        self.lr_list = lr_list
+        self.device: str                    = device
+        self.lr_list: List[LearningRule]    = lr_list
         
         if w is not None:
             if not isinstance(w, torch.Tensor):

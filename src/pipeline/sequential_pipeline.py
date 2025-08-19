@@ -1,30 +1,25 @@
 import os
-import torch
-import numpy as np
-from tqdm import tqdm
-import matplotlib.pyplot as plt
-from omegaconf import DictConfig, OmegaConf
 
-from experiment_manager.common.common import Metric
-from experiment_manager.common.common import RunStatus
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import torch
+from experiment_manager.common.common import Metric, RunStatus
+from experiment_manager.common.serializable import YAMLSerializable
 from experiment_manager.environment import Environment
 from experiment_manager.pipelines.pipeline import Pipeline
-from experiment_manager.common.serializable import YAMLSerializable
+from matplotlib.ticker import MaxNLocator
+from omegaconf import DictConfig, OmegaConf
+from tqdm import tqdm
 
+from data.dataset.dataset import Dataset, DataType, OutputType
+from data.dataset.dataset_factory import DatasetFactory
 from data.spike.spike_sample import SpikeSample, digest_batch
+from encoders.encoder_factory import EncoderFactory
 from network.loss.loss_factory import LossFactory
+from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
 from network.network_factory import NetworkFactory
 from network.optimizer.optimizer_factory import OptimizerFactory
-from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
-
-from encoders.encoder_factory import EncoderFactory
-from data.dataset.dataset_factory import DatasetFactory
-from data.dataset.dataset import Dataset, DataType, OutputType
-
-
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
-import seaborn as sns
 
 # Configure global plot settings
 sns.set_style("whitegrid")
@@ -231,9 +226,7 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
 
         
         scheduler.step()
-        # torch.cuda.empty_cache() # TODO: check if this is needed
         
-        # Compute full dataset loss and accuracy after each epoch
         # total_train_loss, total_train_accuracy = self.evaluate(model, criterion, train_dataloader)
         total_val_loss, total_val_accuracy = self.evaluate(model, criterion, val_dataloader)
         
@@ -306,7 +299,7 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
                 collate_fn=SpikeSample.collate_fn)
             
             val_dataloader = torch.utils.data.DataLoader(val_dataset,
-                                                         batch_size=self.batch_size,
+                                                         batch_size=256, #self.batch_size,
                                                          shuffle=False,
                                                          collate_fn=SpikeSample.collate_fn)
             

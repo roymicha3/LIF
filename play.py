@@ -1,5 +1,6 @@
 import torch
 
+
 class LR:
     
     def __init__(self):
@@ -44,7 +45,7 @@ epochs = 100
 lr = LR()
 
 for epoch in range(epochs):
-    x = torch.randn(B, N, T)
+    x = torch.randn(B, N, T) + 1
     W = torch.randn(N, d)
 
     y = x.permute(0, 2, 1) @ W
