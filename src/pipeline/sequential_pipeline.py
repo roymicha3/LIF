@@ -72,6 +72,54 @@ def plot_voltage_profiles(data, plot_type, epoch_idx, b_idx, env):
         finally:
             plt.close(fig)  # Ensure figure is always closed
 
+def plot_input_spikes_raster(inputs, epoch_idx, b_idx, env):
+    """
+    Plot raster plot of input spikes.
+    
+    Args:
+        inputs: Input spike data
+        epoch_idx: Current epoch index
+        b_idx: Current batch index
+        env: Environment object for logging and artifact directory
+    """
+    # Convert inputs to numpy array for plotting
+    generator = digest_batch(inputs)
+    inputs_np = torch.stack([spike_seq for spike_seq in generator], dim=0).permute(1, 2, 0)
+    inputs_np = inputs_np.cpu().detach().numpy()
+
+    # inputs_np shape: (batch, neurons, time)
+    # For raster plot, we need to extract spike times for each neuron
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plot just the first sample in the batch (or choose a specific sample)
+    sample_idx = 0  # Change this to plot a different sample
+    spike_data = inputs_np[sample_idx]  # Shape: (neurons, time)
+
+    # Find spike locations (where value > 0)
+    neuron_indices, time_indices = np.where(spike_data > 0)
+
+    # Plot spikes
+    ax.scatter(time_indices, neuron_indices, 
+            s=2, c='black', marker='|', alpha=0.8)
+
+    ax.set_title(f"Input Spikes at Epoch {epoch_idx + 1}, Batch {b_idx + 1}, Sample {sample_idx + 1}")
+    ax.set_xlabel("Time Step")
+    ax.set_ylabel("Neuron Index")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
+    # Set y-axis limits to show all neurons
+    ax.set_ylim(-0.5, spike_data.shape[0] - 0.5)
+
+    plt.tight_layout()
+    plot_path = os.path.join(
+        env.artifact_dir,
+        f"epoch_{epoch_idx}_batch_{b_idx}_input_spikes.svg"
+    )
+    plt.savefig(plot_path, format='svg')
+    env.logger.info(f"Saved input spikes plot: {plot_path}")
+    plt.close(fig)
+
 @YAMLSerializable.register("SequentialPipeline")
 class SequentialPipeline(Pipeline, YAMLSerializable):
     """
@@ -126,6 +174,66 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
         self.env.logger.info("Loaded dataset successfully")
         return dataset
     
+    
+    @Pipeline.batch_wrapper
+    def run_batch(self, batch_idx, model, *args, **kwargs):
+        
+        epoch_idx = kwargs["epoch_idx"]
+        criterion = kwargs["criterion"]
+        optimizer = kwargs["optimizer"]
+        progress_bar = kwargs["progress_bar"]
+        batch = kwargs["batch"]
+        
+        inputs = batch["data"]
+        labels = batch["labels"].to(self.env.device)
+        
+        # Forward pass
+        outputs, spikes = model.forward(inputs)
+
+        # Calculate loss
+        loss = criterion.forward(spikes, labels.unsqueeze(1).float())
+        
+        if epoch_idx % 10 == 0 and batch_idx == 0:
+            # Plot the kernel weights
+            kernel = model.layers[0].kernel(inputs)
+            input_v = [v_t for v_t in kernel]
+            input_v = torch.stack(input_v, dim=-1)
+            
+            # plot the raster plot of the input spikes
+            plot_input_spikes_raster(inputs, epoch_idx, batch_idx, self.env)
+            
+            # plot the voltage:
+            plot_voltage_profiles(input_v, "Kernel", epoch_idx, batch_idx, self.env)
+            
+            # plot the voltage:
+            plot_voltage_profiles(outputs, "Neuron", epoch_idx, batch_idx, self.env)
+
+            
+        # Backward pass
+        propagation_error = criterion.backward()
+        model.backward(propagation_error)
+        
+        optimizer.step()
+        
+        self.batch_metrics = \
+            {
+                Metric.LOSS: loss,
+                Metric.NETWORK: model
+            }
+            
+        # Update running loss and accuracy
+        running_loss = torch.sum(loss).item()
+        predicted = criterion.classify(spikes)
+        correct_predictions += (predicted == labels).sum().item()
+        total_predictions += labels.size(0)
+
+        # Update progress bar with loss and accuracy
+        accuracy = 100 * correct_predictions / total_predictions
+        progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
+        
+        return RunStatus.FINISHED
+
+    
     @Pipeline.epoch_wrapper
     def run_epoch(self, epoch_idx, model, *args, **kwargs): # TODO: update the functions signature
         correct_predictions = 0
@@ -150,80 +258,13 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
             inputs = batch["data"]
             labels = batch["labels"].to(self.env.device)
             
-            # Forward pass
-            outputs, spikes = model.forward(inputs)
-
-            # Calculate loss
-            loss = criterion.forward(spikes, labels.unsqueeze(1).float())
-            
-            if epoch_idx % 10 == 0 and b_idx == 0:
-                # Plot the kernel weights
-                kernel = model.layers[0].kernel(inputs)
-                input_v = [v_t for v_t in kernel]
-                input_v = torch.stack(input_v, dim=-1)
-                
-                
-                # plot the raster plot of the input spikes
-                generator = digest_batch(inputs)
-                inputs = torch.stack([spike_seq for spike_seq in generator], dim=0).permute(1, 2, 0)
-                inputs = inputs.cpu().detach().numpy()
-
-                # inputs shape: (batch, neurons, time)
-                # For raster plot, we need to extract spike times for each neuron
-                fig, ax = plt.subplots(figsize=(10, 6))
-
-                # Plot just the first sample in the batch (or choose a specific sample)
-                sample_idx = 0  # Change this to plot a different sample
-                spike_data = inputs[sample_idx]  # Shape: (neurons, time)
-
-                # Find spike locations (where value > 0)
-                neuron_indices, time_indices = np.where(spike_data > 0)
-
-                # Plot spikes
-                ax.scatter(time_indices, neuron_indices, 
-                        s=2, c='black', marker='|', alpha=0.8)
-
-                ax.set_title(f"Input Spikes at Epoch {epoch_idx + 1}, Batch {b_idx + 1}, Sample {sample_idx + 1}")
-                ax.set_xlabel("Time Step")
-                ax.set_ylabel("Neuron Index")
-                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-                ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-
-                # Set y-axis limits to show all neurons
-                ax.set_ylim(-0.5, spike_data.shape[0] - 0.5)
-
-                plt.tight_layout()
-                plot_path = os.path.join(
-                    self.env.artifact_dir,
-                    f"epoch_{epoch_idx}_batch_{b_idx}_input_spikes.svg"
-                )
-                plt.savefig(plot_path, format='svg')
-                self.env.logger.info(f"Saved input spikes plot: {plot_path}")
-                plt.close(fig)
-                
-                # plot the voltage:
-                plot_voltage_profiles(input_v, "Kernel", epoch_idx, b_idx, self.env)
-                
-                # plot the voltage:
-                plot_voltage_profiles(outputs, "Neuron", epoch_idx, b_idx, self.env)
-
-            
-            # Backward pass
-            propagation_error = criterion.backward()
-            model.backward(propagation_error)
-            
-            optimizer.step()
-            
-            # Update running loss and accuracy
-            running_loss = torch.sum(loss).item()
-            predicted = criterion.classify(spikes)
-            correct_predictions += (predicted == labels).sum().item()
-            total_predictions += labels.size(0)
-
-            # Update progress bar with loss and accuracy
-            accuracy = 100 * correct_predictions / total_predictions
-            progress_bar.set_postfix(loss=running_loss, accuracy=accuracy)
-
+            self.run_batch(b_idx,
+                           model, 
+                           epoch_idx=epoch_idx, 
+                           criterion=criterion, 
+                           optimizer=optimizer, 
+                           batch=batch,
+                           progress_bar=progress_bar)
         
         scheduler.step()
         
