@@ -1,6 +1,12 @@
 import torch
 import numpy as np
-from numba import njit, prange
+import multiprocessing
+from numba import njit, prange, set_num_threads
+
+
+# Use only quarter of available cores
+max_threads = max(1, multiprocessing.cpu_count() // 4)
+set_num_threads(max_threads)
 
 
 @njit(parallel=True)

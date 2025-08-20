@@ -217,15 +217,20 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
         
         self.batch_metrics = \
             {
-                Metric.LOSS: loss,
-                Metric.NETWORK: model
+                Metric.TRAIN_LOSS: torch.sum(loss).item(),
+                Metric.NETWORK: model,
+                Metric.CUSTOM: ("gradient_min", model.layers[0].connection.w.grad.min().item()),
+                Metric.CUSTOM: ("gradient_max", model.layers[0].connection.w.grad.max().item()),
+                Metric.CUSTOM: ("gradient_mean", model.layers[0].connection.w.grad.mean().item()),
+                Metric.CUSTOM: ("gradient_std", model.layers[0].connection.w.grad.std().item()),
+                Metric.CUSTOM: ("gradient_l2_norm", model.layers[0].connection.w.grad.norm().item()) 
             }
             
         # Update running loss and accuracy
         running_loss = torch.sum(loss).item()
         predicted = criterion.classify(spikes)
-        correct_predictions += (predicted == labels).sum().item()
-        total_predictions += labels.size(0)
+        correct_predictions = (predicted == labels).sum().item()
+        total_predictions = labels.size(0)
 
         # Update progress bar with loss and accuracy
         accuracy = 100 * correct_predictions / total_predictions
@@ -255,8 +260,6 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
             desc=f"Epoch [{epoch_idx+1}/{self.epochs}]")
         
         for b_idx, batch in progress_bar:
-            inputs = batch["data"]
-            labels = batch["labels"].to(self.env.device)
             
             self.run_batch(b_idx,
                            model, 
