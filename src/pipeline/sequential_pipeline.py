@@ -219,11 +219,14 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
             {
                 Metric.TRAIN_LOSS: torch.sum(loss).item(),
                 Metric.NETWORK: model,
-                Metric.CUSTOM: ("gradient_min", model.layers[0].connection.w.grad.min().item()),
-                Metric.CUSTOM: ("gradient_max", model.layers[0].connection.w.grad.max().item()),
-                Metric.CUSTOM: ("gradient_mean", model.layers[0].connection.w.grad.mean().item()),
-                Metric.CUSTOM: ("gradient_std", model.layers[0].connection.w.grad.std().item()),
-                Metric.CUSTOM: ("gradient_l2_norm", model.layers[0].connection.w.grad.norm().item()) 
+                Metric.CUSTOM: \
+                    [
+                        ("gradient_min", model.layers[0].connection.w.grad.min().item()),
+                        ("gradient_max", model.layers[0].connection.w.grad.max().item()),
+                        ("gradient_mean", model.layers[0].connection.w.grad.mean().item()),
+                        ("gradient_std", model.layers[0].connection.w.grad.std().item()),
+                        ("gradient_l2_norm", model.layers[0].connection.w.grad.norm().item()) 
+                    ]
             }
             
         # Update running loss and accuracy
