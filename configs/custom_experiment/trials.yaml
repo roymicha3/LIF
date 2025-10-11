@@ -1,0 +1,233 @@
+# Custom Experiment Trials
+# Batch size: 4 (fixed)
+# Epsilon: [1e-3, 1e-4, 1e-5]
+# Learning rate: [0.01, 0.05, 0.1, 0.25]
+# Total combinations: 3 × 4 = 12 trials
+
+# Trial 1: lr=0.01, eps=1e-3
+- name: "trial_lr_0.01_batch_4_eps_1e-3"
+  info: "Trial with learning rate 0.01, batch size 4, plasticity induction epsilon 1.0e-3"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-3
+
+# Trial 2: lr=0.01, eps=1e-4
+- name: "trial_lr_0.01_batch_4_eps_1e-4"
+  info: "Trial with learning rate 0.01, batch size 4, plasticity induction epsilon 1.0e-4"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+# Trial 3: lr=0.01, eps=1e-5
+- name: "trial_lr_0.01_batch_4_eps_1e-5"
+  info: "Trial with learning rate 0.01, batch size 4, plasticity induction epsilon 1.0e-5"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+# Trial 4: lr=0.05, eps=1e-3
+- name: "trial_lr_0.05_batch_4_eps_1e-3"
+  info: "Trial with learning rate 0.05, batch size 4, plasticity induction epsilon 1.0e-3"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.05
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-3
+
+# Trial 5: lr=0.05, eps=1e-4
+- name: "trial_lr_0.05_batch_4_eps_1e-4"
+  info: "Trial with learning rate 0.05, batch size 4, plasticity induction epsilon 1.0e-4"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.05
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+# Trial 6: lr=0.05, eps=1e-5
+- name: "trial_lr_0.05_batch_4_eps_1e-5"
+  info: "Trial with learning rate 0.05, batch size 4, plasticity induction epsilon 1.0e-5"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.05
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+# Trial 7: lr=0.1, eps=1e-3
+- name: "trial_lr_0.1_batch_4_eps_1e-3"
+  info: "Trial with learning rate 0.1, batch size 4, plasticity induction epsilon 1.0e-3"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-3
+
+# Trial 8: lr=0.1, eps=1e-4
+- name: "trial_lr_0.1_batch_4_eps_1e-4"
+  info: "Trial with learning rate 0.1, batch size 4, plasticity induction epsilon 1.0e-4"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+# Trial 9: lr=0.1, eps=1e-5
+- name: "trial_lr_0.1_batch_4_eps_1e-5"
+  info: "Trial with learning rate 0.1, batch size 4, plasticity induction epsilon 1.0e-5"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+# Trial 10: lr=0.25, eps=1e-3
+- name: "trial_lr_0.25_batch_4_eps_1e-3"
+  info: "Trial with learning rate 0.25, batch size 4, plasticity induction epsilon 1.0e-3"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.25
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-3
+
+# Trial 11: lr=0.25, eps=1e-4
+- name: "trial_lr_0.25_batch_4_eps_1e-4"
+  info: "Trial with learning rate 0.25, batch size 4, plasticity induction epsilon 1.0e-4"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.25
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+# Trial 12: lr=0.25, eps=1e-5
+- name: "trial_lr_0.25_batch_4_eps_1e-5"
+  info: "Trial with learning rate 0.25, batch size 4, plasticity induction epsilon 1.0e-5"
+  repeat: 1
+  settings:
+    optimizer:
+      lr: 0.25
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5

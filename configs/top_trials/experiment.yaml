@@ -1,0 +1,11 @@
+#####################################################################################
+#   Experiment Configuration - Top 5 Best Trials    #
+#####################################################################################
+
+name: "top_trials"
+desc: "Top 5 best performing trials from focused induction study"
+
+settings:
+  debug: true # set to false for production
+
+trials: # each trial changes the parameters it chooses - this is later merged with the trials.yaml

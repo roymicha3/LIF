@@ -1,3 +1,4 @@
+# Original trials without plasticity induction
 - name: "trial_lr_0.01_batch_4_len_50"
   info: "Trial with learning rate 0.01, batch size 4, dataset length 50"
   repeat: 5
@@ -64,78 +65,6 @@
   settings:
     optimizer:
       lr: 0.1
-    pipeline:
-      type: "SequentialPipeline"
-      batch_size: 4
-    dataset:
-      len: 100
-
-- name: "trial_lr_1_batch_4_len_50"
-  info: "Trial with learning rate 1, batch size 4, dataset length 50"
-  repeat: 5
-  settings:
-    optimizer:
-      lr: 1
-    pipeline:
-      type: "SequentialPipeline"
-      batch_size: 4
-    dataset:
-      len: 50
-
-- name: "trial_lr_1_batch_4_len_75"
-  info: "Trial with learning rate 1, batch size 4, dataset length 75"
-  repeat: 5
-  settings:
-    optimizer:
-      lr: 1
-    pipeline:
-      type: "SequentialPipeline"
-      batch_size: 4
-    dataset:
-      len: 75
-
-- name: "trial_lr_1_batch_4_len_100"
-  info: "Trial with learning rate 1, batch size 4, dataset length 100"
-  repeat: 5
-  settings:
-    optimizer:
-      lr: 1
-    pipeline:
-      type: "SequentialPipeline"
-      batch_size: 4
-    dataset:
-      len: 100
-
-- name: "trial_lr_10_batch_4_len_50"
-  info: "Trial with learning rate 10, batch size 4, dataset length 50"
-  repeat: 5
-  settings:
-    optimizer:
-      lr: 10
-    pipeline:
-      type: "SequentialPipeline"
-      batch_size: 4
-    dataset:
-      len: 50
-
-- name: "trial_lr_10_batch_4_len_75"
-  info: "Trial with learning rate 10, batch size 4, dataset length 75"
-  repeat: 5
-  settings:
-    optimizer:
-      lr: 10
-    pipeline:
-      type: "SequentialPipeline"
-      batch_size: 4
-    dataset:
-      len: 75
-
-- name: "trial_lr_10_batch_4_len_100"
-  info: "Trial with learning rate 10, batch size 4, dataset length 100"
-  repeat: 5
-  settings:
-    optimizer:
-      lr: 10
     pipeline:
       type: "SequentialPipeline"
       batch_size: 4

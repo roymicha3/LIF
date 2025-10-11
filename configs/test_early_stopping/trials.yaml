@@ -1,0 +1,39 @@
+# Test Early Stopping - Single Trial
+# Using trial_lr_0.1_batch_4_eps_1e-5 from custom_experiment
+# This trial had the highest "No improvement" count (27 epochs) in the original experiment
+
+- name: "test_trial_lr_0.1_batch_4_eps_1e-5"
+  info: "Test trial with learning rate 0.1, batch size 4, plasticity induction epsilon 1.0e-5 - should trigger early stopping"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+- name: "test_trial_lr_1.0_batch_4_eps_1e-5"
+  info: "Test trial with learning rate 0.1, batch size 4, plasticity induction epsilon 1.0e-5 - should trigger early stopping"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 1.0
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5

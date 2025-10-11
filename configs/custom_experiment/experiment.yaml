@@ -1,0 +1,11 @@
+#####################################################################################
+#   Experiment Configuration - Custom Parameter Grid    #
+#####################################################################################
+
+name: "custom_experiment"
+desc: "Custom experiment with batch size 4, epsilon [1e-3, 1e-4, 1e-5], lr [0.01, 0.05, 0.1, 0.25]"
+
+settings:
+  debug: true # set to false for production
+
+trials: # each trial changes the parameters it chooses - this is later merged with the trials.yaml

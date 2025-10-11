@@ -33,6 +33,8 @@ class SequentialNetwork(Network):
         """
         forward function of the network
         """
+        # TODO: this function recieves spike samples and so is the neuron __call__ function,
+        # but the second iteration returns voltage tensor
         for layer in self.layers:
             data, spikes = layer(data, spikes=False)
             

@@ -1,0 +1,11 @@
+#####################################################################################
+#   Experiment Configuration - Focused Induction Study    #
+#####################################################################################
+
+name: "focused_induction"
+desc: "Focused plasticity induction experiment with fixed sequence length 50"
+
+settings:
+  debug: true # set to false for production
+
+trials: # each trial changes the parameters it chooses - this is later merged with the trials.yaml

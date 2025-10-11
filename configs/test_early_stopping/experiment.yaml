@@ -1,0 +1,11 @@
+#####################################################################################
+#   Experiment Configuration - Test Early Stopping    #
+#####################################################################################
+
+name: "test_early_stopping"
+desc: "Test early stopping functionality with a single trial"
+
+settings:
+  debug: true # set to false for production
+
+trials: # each trial changes the parameters it chooses - this is later merged with the trials.yaml

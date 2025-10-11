@@ -111,7 +111,7 @@ class SimpleConnection(Connection):
                 self.env.logger.warning("Large values in weight gradients")
                 
             if self.w.grad.max() < 1e-3 and self.w.grad.min() > -1e-3:
-                self.env.logger.info("\nSmall values in weight gradients \n")
+                self.env.logger.debug("\nSmall values in weight gradients \n")
 
     def normalize(self) -> None:
         """

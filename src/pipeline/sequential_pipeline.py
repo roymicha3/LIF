@@ -193,20 +193,20 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
         # Calculate loss
         loss = criterion.forward(spikes, labels.unsqueeze(1).float())
         
-        if epoch_idx % 10 == 0 and batch_idx == 0:
-            # Plot the kernel weights
-            kernel = model.layers[0].kernel(inputs)
-            input_v = [v_t for v_t in kernel]
-            input_v = torch.stack(input_v, dim=-1)
+        # if epoch_idx % 10 == 0 and batch_idx == 0:
+        #     # Plot the kernel weights
+        #     kernel = model.layers[0].kernel(inputs)
+        #     input_v = [v_t for v_t in kernel]
+        #     input_v = torch.stack(input_v, dim=-1)
             
-            # plot the raster plot of the input spikes
-            plot_input_spikes_raster(inputs, epoch_idx, batch_idx, self.env)
+        #     # plot the raster plot of the input spikes
+        #     plot_input_spikes_raster(inputs, epoch_idx, batch_idx, self.env)
             
-            # plot the voltage:
-            plot_voltage_profiles(input_v, "Kernel", epoch_idx, batch_idx, self.env)
+        #     # plot the voltage:
+        #     plot_voltage_profiles(input_v, "Kernel", epoch_idx, batch_idx, self.env)
             
-            # plot the voltage:
-            plot_voltage_profiles(outputs, "Neuron", epoch_idx, batch_idx, self.env)
+        #     # plot the voltage:
+        #     plot_voltage_profiles(outputs, "Neuron", epoch_idx, batch_idx, self.env)
 
             
         # Backward pass
@@ -361,12 +361,15 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
                     optimizer = optimizer,
                     scheduler = scheduler,
                     device = self.env.device)
+            except StopIteration as e:
+                self.env.logger.info(f"Epoch stopped: {e}")
+                status = RunStatus.STOPPED
                 
             except Exception as e:
                 self.env.logger.error(f"Epoch Failed: {e}")
                 status = RunStatus.FAILED
             
-            if status == RunStatus.SUCCESS:
+            if status != RunStatus.FINISHED:
                 break
         
         final_accuracy, final_loss = self.evaluate(network, criterion, val_dataloader)

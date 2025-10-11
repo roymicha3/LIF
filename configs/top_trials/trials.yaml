@@ -1,0 +1,97 @@
+# Top 5 Best Performing Trials from Focused Induction Study
+# Based on final validation accuracy results
+
+# 1st Place: 100.00% accuracy
+- name: "trial_lr_0.1_batch_16_eps_1e-1"
+  info: "Top performer: Trial with learning rate 0.1, batch size 16, dataset length 50, plasticity induction epsilon 1.0e-1 - 100.00% accuracy"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 16
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-1
+
+# 2nd Place: 94.44% accuracy
+- name: "trial_lr_0.1_batch_4_eps_1e-2"
+  info: "Second best: Trial with learning rate 0.1, batch size 4, dataset length 50, plasticity induction epsilon 1.0e-2 - 94.44% accuracy"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-2
+
+# 3rd Place: 93.75% accuracy
+- name: "trial_lr_0.1_batch_4_eps_1e-5"
+  info: "Third best: Trial with learning rate 0.1, batch size 4, dataset length 50, plasticity induction epsilon 1.0e-5 - 93.75% accuracy"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+# 4th Place: 91.67% accuracy
+- name: "trial_lr_0.1_batch_16_eps_1e-4"
+  info: "Fourth best: Trial with learning rate 0.1, batch size 16, dataset length 50, plasticity induction epsilon 1.0e-4 - 91.67% accuracy"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 16
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+# 5th Place: 91.67% accuracy
+- name: "trial_lr_0.25_batch_4_eps_1e-3"
+  info: "Fifth best: Trial with learning rate 0.25, batch size 4, dataset length 50, plasticity induction epsilon 1.0e-3 - 91.67% accuracy"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.25
+    pipeline:
+      type: "SequentialPipeline"
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-3
