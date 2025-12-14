@@ -1,0 +1,314 @@
+# Grid Search Experiment
+# batch_size: [1, 4, 16]
+# lr: [0.1, 0.05, 0.01]
+# epsilon: [1e-4, 1e-5]
+# Total: 3 × 3 × 2 = 18 trials
+
+# Batch size 1 trials
+- name: "trial_lr_0.1_batch_1_eps_1e-4"
+  info: "Grid search: lr=0.1, batch=1, eps=1e-4"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      batch_size: 1
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+- name: "trial_lr_0.1_batch_1_eps_1e-5"
+  info: "Grid search: lr=0.1, batch=1, eps=1e-5"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      batch_size: 1
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+- name: "trial_lr_0.05_batch_1_eps_1e-4"
+  info: "Grid search: lr=0.05, batch=1, eps=1e-4"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.05
+    pipeline:
+      batch_size: 1
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+- name: "trial_lr_0.05_batch_1_eps_1e-5"
+  info: "Grid search: lr=0.05, batch=1, eps=1e-5"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.05
+    pipeline:
+      batch_size: 1
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+- name: "trial_lr_0.01_batch_1_eps_1e-4"
+  info: "Grid search: lr=0.01, batch=1, eps=1e-4"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      batch_size: 1
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+- name: "trial_lr_0.01_batch_1_eps_1e-5"
+  info: "Grid search: lr=0.01, batch=1, eps=1e-5"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      batch_size: 1
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+# Batch size 4 trials
+- name: "trial_lr_0.1_batch_4_eps_1e-4"
+  info: "Grid search: lr=0.1, batch=4, eps=1e-4"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+- name: "trial_lr_0.1_batch_4_eps_1e-5"
+  info: "Grid search: lr=0.1, batch=4, eps=1e-5"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+- name: "trial_lr_0.05_batch_4_eps_1e-4"
+  info: "Grid search: lr=0.05, batch=4, eps=1e-4"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.05
+    pipeline:
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+- name: "trial_lr_0.05_batch_4_eps_1e-5"
+  info: "Grid search: lr=0.05, batch=4, eps=1e-5"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.05
+    pipeline:
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+- name: "trial_lr_0.01_batch_4_eps_1e-4"
+  info: "Grid search: lr=0.01, batch=4, eps=1e-4"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+- name: "trial_lr_0.01_batch_4_eps_1e-5"
+  info: "Grid search: lr=0.01, batch=4, eps=1e-5"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      batch_size: 4
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+# Batch size 16 trials
+- name: "trial_lr_0.1_batch_16_eps_1e-4"
+  info: "Grid search: lr=0.1, batch=16, eps=1e-4"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      batch_size: 16
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+- name: "trial_lr_0.1_batch_16_eps_1e-5"
+  info: "Grid search: lr=0.1, batch=16, eps=1e-5"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.1
+    pipeline:
+      batch_size: 16
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+- name: "trial_lr_0.05_batch_16_eps_1e-4"
+  info: "Grid search: lr=0.05, batch=16, eps=1e-4"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.05
+    pipeline:
+      batch_size: 16
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+- name: "trial_lr_0.05_batch_16_eps_1e-5"
+  info: "Grid search: lr=0.05, batch=16, eps=1e-5"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.05
+    pipeline:
+      batch_size: 16
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5
+
+- name: "trial_lr_0.01_batch_16_eps_1e-4"
+  info: "Grid search: lr=0.01, batch=16, eps=1e-4"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      batch_size: 16
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4
+
+- name: "trial_lr_0.01_batch_16_eps_1e-5"
+  info: "Grid search: lr=0.01, batch=16, eps=1e-5"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      batch_size: 16
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-5

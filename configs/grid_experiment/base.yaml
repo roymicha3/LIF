@@ -1,0 +1,84 @@
+#####################################################################################
+#   Base Configuration - contains all the objects that are used in the experiment   #
+#####################################################################################
+
+# Model Architecture
+model:
+  type: "SequentialNetwork"
+  layers:
+    - name: "input layer"
+      input_size: 500
+      output_size: 1
+      kernel:
+        type: "SequentialDenKernel"
+        n: 500
+        tau: 10
+        tau_s: 10
+        tau_m: 2.5
+        learning: False
+        scale: False
+
+      learning_rules:
+        - type: "SequentialSingleSpikeLR"
+          threshold: 1.0
+
+        - type: "PlasticityInduction"
+          threshold: 1.0
+          epsilon: 1.0e-5
+
+      activation:
+        type: "SubtractActivation"
+        threshold: 0.0
+
+# Optimizer
+optimizer:
+  type: MomentumOptimizer
+  lr: 0.1
+  momentum: 0.99
+
+# LR Scheduler
+lr_scheduler:
+  type: ConstantLR # PolynomialLR
+  args:
+  #   total_iters: 200
+  #   power: 2.0
+
+# Loss Function
+loss:
+  type: "BinaryLoss"
+
+# Dataset
+dataset:
+  type: "RandomDataset"
+  input_size: 500
+  len: 1000
+  root: "./outputs/data/random-size-500" # Path to the dataset
+  normalize: False # Normalize values to [0, 1]
+  flatten: True
+
+  encoder:
+    type: "LatencyEncoder"
+    size: 500
+    max_value: 1.0
+
+# Pipeline
+pipeline:
+  type: "SequentialPipeline"
+  epochs: 100
+  batch_size: 4
+  validation_split: 0.5
+  test_split: 0.0
+  early_stopping_patience: 15
+  shuffle: True
+
+  # Callbacks (Optional)
+  callbacks:
+    - type: "MetricsTracker"
+
+    - type: "EarlyStopping"
+      metric: "val_loss"
+      patience: 15
+      min_delta_percent: 5.0
+
+    - type: "CheckpointCallback"
+      interval: 10

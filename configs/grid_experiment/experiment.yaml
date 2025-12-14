@@ -1,0 +1,11 @@
+#####################################################################################
+#   Experiment Configuration - Grid Search Experiment    #
+#####################################################################################
+
+name: "grid_experiment"
+desc: "Grid search experiment with batch_size: [1, 4, 16], lr: [0.1, 0.05, 0.01], epsilon: [1e-4, 1e-5]"
+
+settings:
+  debug: true # set to false for production
+
+trials: # each trial changes the parameters it chooses - this is later merged with the trials.yaml

@@ -1,0 +1,85 @@
+#####################################################################################
+#   Base Configuration - Optimal Configuration from Grid Search Analysis           #
+#####################################################################################
+
+# Model Architecture
+model:
+  type: "SequentialNetwork"
+  layers:
+    - name: "input layer"
+      input_size: 500
+      output_size: 1
+      kernel:
+        type: "SequentialDenKernel"
+        n: 500
+        tau: 10
+        tau_s: 10
+        tau_m: 2.5
+        learning: False
+        scale: False
+
+      learning_rules:
+        - type: "SequentialSingleSpikeLR"
+          threshold: 1.0
+
+        - type: "PlasticityInduction"
+          threshold: 1.0
+          epsilon: 1.0e-4
+
+      activation:
+        type: "SubtractActivation"
+        threshold: 0.0 #TODO: check it out
+
+# Optimizer
+optimizer:
+  type: MomentumOptimizer
+  lr: 0.01
+  momentum: 0.99
+
+# LR Scheduler
+lr_scheduler:
+  type: ConstantLR # PolynomialLR
+  args:
+  #   total_iters: 200
+  #   power: 2.0
+
+# Loss Function
+loss:
+  type: "BinaryLoss"
+  threshold: 1.0
+
+# Dataset
+dataset:
+  type: "RandomDataset"
+  input_size: 500
+  len: 1000
+  root: "./outputs/data/random-size-500" # Path to the dataset
+  normalize: False # Normalize values to [0, 1]
+  flatten: True
+
+  encoder:
+    type: "LatencyEncoder"
+    size: 500
+    max_value: 1.0
+
+# Pipeline
+pipeline:
+  type: "SequentialPipeline"
+  epochs: 200
+  batch_size: 1
+  validation_split: 0.9
+  test_split: 0.0
+  early_stopping_patience: 10
+  shuffle: True
+
+  # Callbacks (Optional)
+  callbacks:
+    - type: "MetricsTracker"
+
+    - type: "EarlyStopping"
+      metric: "val_loss"
+      patience: 10
+      min_delta_percent: 5.0
+
+    - type: "CheckpointCallback"
+      interval: 10

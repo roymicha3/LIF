@@ -1,0 +1,21 @@
+# Optimal Configuration from Grid Search Analysis
+# Best performing trial: lr=0.01, batch=1, eps=1e-4
+# Validation accuracy: 92.59%
+# This configuration showed the best balance of performance and stability
+
+- name: "optimal_trial_lr_0.01_batch_1_eps_1e-4"
+  info: "Optimal configuration from grid search: lr=0.01, batch=1, eps=1e-4 - Best validation accuracy: 92.59%"
+  repeat: 2
+  settings:
+    optimizer:
+      lr: 0.01
+    pipeline:
+      batch_size: 1
+    model:
+      layers:
+        - learning_rules:
+            - type: "SequentialSingleSpikeLR"
+              threshold: 1.0
+            - type: "PlasticityInduction"
+              threshold: 1.0
+              epsilon: 1.0e-4

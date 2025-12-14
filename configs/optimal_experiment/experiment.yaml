@@ -1,0 +1,12 @@
+#####################################################################################
+#   Experiment Configuration - Optimal Configuration from Grid Search              #
+#####################################################################################
+
+name: "optimal_experiment"
+desc: "Optimal configuration from grid search: lr=0.01, batch=1, eps=1e-4 (best validation accuracy: 92.59%)"
+
+settings:
+  debug: true # set to false for production
+
+trials: # each trial changes the parameters it chooses - this is later merged with the trials.yaml
+

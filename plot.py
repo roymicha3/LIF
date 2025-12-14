@@ -1952,8 +1952,8 @@ def main():
     print("=== LIF Comprehensive Analysis - Per-Trial Analysis ===")
     
     # Configuration
-    db_path = r'outputs\test_early_stopping\artifacts\experiment.db'
-    base_dir = r'outputs\test_early_stopping'
+    db_path = r'outputs\grid_experiment\artifacts\experiment.db'
+    base_dir = r'outputs\grid_experiment'
     
     # Step 1: Extract all metrics
     print("\n1. Extracting all metrics...")

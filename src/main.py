@@ -8,7 +8,7 @@ from experiment_manager.experiment import Experiment
 
 from pipeline.pipeline_factory import CustomPipelineFactory
 
-EXPERIMENT_NAME = "test_early_stopping"
+EXPERIMENT_NAME = "optimal_experiment"
 WORKSPACE = os.path.join("outputs", EXPERIMENT_NAME)
 
 def main():

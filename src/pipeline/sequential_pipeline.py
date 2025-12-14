@@ -4,10 +4,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import torch
+
 from experiment_manager.common.common import Metric, RunStatus
 from experiment_manager.common.serializable import YAMLSerializable
 from experiment_manager.environment import Environment
 from experiment_manager.pipelines.pipeline import Pipeline
+
 from matplotlib.ticker import MaxNLocator
 from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
@@ -193,20 +195,20 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
         # Calculate loss
         loss = criterion.forward(spikes, labels.unsqueeze(1).float())
         
-        # if epoch_idx % 10 == 0 and batch_idx == 0:
-        #     # Plot the kernel weights
-        #     kernel = model.layers[0].kernel(inputs)
-        #     input_v = [v_t for v_t in kernel]
-        #     input_v = torch.stack(input_v, dim=-1)
+        if epoch_idx % 10 == 0 and batch_idx == 0:
+            # Plot the kernel weights
+            kernel = model.layers[0].kernel(inputs)
+            input_v = [v_t for v_t in kernel]
+            input_v = torch.stack(input_v, dim=-1)
             
-        #     # plot the raster plot of the input spikes
-        #     plot_input_spikes_raster(inputs, epoch_idx, batch_idx, self.env)
+            # plot the raster plot of the input spikes
+            plot_input_spikes_raster(inputs, epoch_idx, batch_idx, self.env)
             
-        #     # plot the voltage:
-        #     plot_voltage_profiles(input_v, "Kernel", epoch_idx, batch_idx, self.env)
+            # plot the voltage:
+            plot_voltage_profiles(input_v, "Kernel", epoch_idx, batch_idx, self.env)
             
-        #     # plot the voltage:
-        #     plot_voltage_profiles(outputs, "Neuron", epoch_idx, batch_idx, self.env)
+            # plot the voltage:
+            plot_voltage_profiles(outputs, "Neuron", epoch_idx, batch_idx, self.env)
 
             
         # Backward pass

@@ -5,3 +5,4 @@ outputs/*
 *.ps1
 mlruns
 .vscode/*
+temp/*
