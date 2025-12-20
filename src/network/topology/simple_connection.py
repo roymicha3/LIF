@@ -2,7 +2,7 @@ from typing import List
 
 import numpy as np
 import torch
-from experiment_manager.environment import Environment
+from experiment_manager import Environment
 
 from network.learning.learning_rule import LearningRule
 from network.topology.connection import Connection

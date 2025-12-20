@@ -6,8 +6,8 @@ callback creation logic while allowing registration of custom callbacks.
 """
 from omegaconf import DictConfig
 
-from experiment_manager.environment import Environment
-from experiment_manager.pipelines.callbacks.callback_factory import CallbackFactory
+from experiment_manager import Environment
+from experiment_manager.pipelines import CallbackFactory
 
 # Import to register via @YAMLSerializable.register decorator
 from pipeline.callbacks.visualization_callback import VisualizationCallback

@@ -4,8 +4,8 @@ from omegaconf import DictConfig
 
 from network.learning.learning_rule import LearningRule
 
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager import Environment
+from experiment_manager.common import YAMLSerializable
 
 
 @YAMLSerializable.register("IntegrateLearningRule")

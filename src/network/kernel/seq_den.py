@@ -8,8 +8,8 @@ from data.spike.spike_sample import SpikeSample, digest_batch
 from network.kernel.functional import cpu_based as cpu
 from network.kernel.functional import gpu_based as gpu
 
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager import Environment
+from experiment_manager.common import YAMLSerializable
 
 
 

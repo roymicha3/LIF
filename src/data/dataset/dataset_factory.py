@@ -3,8 +3,7 @@ from omegaconf import DictConfig
 from encoders.encoder import Encoder
 from data.dataset.dataset import DataType, OutputType
 
-from experiment_manager.common.factory import Factory
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager.common import Factory, YAMLSerializable
 
 # import all the datesets:
 from data.dataset.random_dataset import RandomDataset

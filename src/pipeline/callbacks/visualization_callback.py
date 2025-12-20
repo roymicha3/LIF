@@ -7,10 +7,8 @@ avoiding the need for intermediate state management in the pipeline.
 from typing import Dict, Any, Optional
 from omegaconf import DictConfig
 
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
-from experiment_manager.common.common import Metric
-from experiment_manager.pipelines.callbacks.callback import Callback
+from experiment_manager import Environment, Callback, Metric
+from experiment_manager.common import YAMLSerializable
 
 from analysis.training_visualization import TrainingVisualizer
 

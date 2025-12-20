@@ -1,8 +1,7 @@
 from omegaconf import DictConfig
 
-from experiment_manager.common.factory import Factory
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager import Environment
+from experiment_manager.common import Factory, YAMLSerializable
 
 # import all encoders:
 from encoders.identity_encoder import IdentityEncoder

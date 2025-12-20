@@ -11,8 +11,8 @@ from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
 from data.spike.spike_sample import SpikeSample
 
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager import Environment
+from experiment_manager.common import YAMLSerializable
 
 @YAMLSerializable.register("LatencyEncoder")
 class LatencyEncoder(Encoder, YAMLSerializable):

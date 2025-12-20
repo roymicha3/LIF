@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from omegaconf import DictConfig
 from typing_extensions import override
 
-from experiment_manager.environment import Environment
+from experiment_manager import Environment
 
 # TODO: add spike values to the data as optional!
 

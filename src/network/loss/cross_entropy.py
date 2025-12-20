@@ -3,8 +3,8 @@ from omegaconf import DictConfig
 
 import torch.nn as nn
 
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable 
+from experiment_manager import Environment
+from experiment_manager.common import YAMLSerializable 
 
 
 @YAMLSerializable.register("CrossEntropyLoss")

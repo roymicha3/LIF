@@ -1,8 +1,8 @@
 import torch
 from typing import List
 
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager import Environment
+from experiment_manager.common import YAMLSerializable
 
 from tools.utils import SEQ_LEN
 from network.topology.network import Network

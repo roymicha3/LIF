@@ -4,8 +4,8 @@ the main of the project
 import os
 
 import torch
-from experiment_manager.experiment import Experiment
-from experiment_manager.common.factory_registry import FactoryRegistry, FactoryType
+from experiment_manager import Experiment
+from experiment_manager.common import FactoryRegistry, FactoryType
 
 from pipeline.pipeline_factory import CustomPipelineFactory
 from pipeline.callbacks.callback_factory import CustomCallbackFactory

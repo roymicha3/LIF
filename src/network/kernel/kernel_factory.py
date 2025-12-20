@@ -1,8 +1,7 @@
 from omegaconf import DictConfig
 
-from experiment_manager.common.factory import Factory
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager import Environment
+from experiment_manager.common import Factory, YAMLSerializable
 
 # import the kernel classes
 from network.kernel.den_kernel import DENKernel

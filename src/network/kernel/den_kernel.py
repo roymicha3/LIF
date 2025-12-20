@@ -5,8 +5,8 @@ from network.kernel.kernel import Kernel
 from network.kernel.leaky_kernel import LeakyKernel
 from data.spike.spike_sample import SpikeSample
 
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager import Environment
+from experiment_manager.common import YAMLSerializable
 
 @YAMLSerializable.register("DENKernel")
 class DENKernel(Kernel, YAMLSerializable):

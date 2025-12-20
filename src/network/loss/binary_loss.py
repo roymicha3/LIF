@@ -1,6 +1,6 @@
 import torch
-from experiment_manager.common.serializable import YAMLSerializable
-from experiment_manager.environment import Environment
+from experiment_manager import Environment
+from experiment_manager.common import YAMLSerializable
 from omegaconf import DictConfig
 from torch import nn
 

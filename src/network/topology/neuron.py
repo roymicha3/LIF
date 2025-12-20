@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 
-from experiment_manager.environment import Environment
+from experiment_manager import Environment
 
 from tools.utils import SEQ_LEN
 from network.kernel.kernel import Kernel

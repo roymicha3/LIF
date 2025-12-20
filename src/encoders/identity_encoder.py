@@ -4,7 +4,7 @@ This module contains the IdentityEncoder class.
 import numpy as np
 
 from encoders.encoder import Encoder
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager.common import YAMLSerializable
 
 
 @YAMLSerializable.register("IdentityEncoder")

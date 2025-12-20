@@ -1,4 +1,4 @@
-from experiment_manager.common.factory import Factory
+from experiment_manager.common import Factory
 from omegaconf import DictConfig
 from torch.optim.lr_scheduler import (ConstantLR, CosineAnnealingLR,
                                       CosineAnnealingWarmRestarts, CyclicLR,

@@ -1,7 +1,7 @@
 from network.activation.activation import Activation
 
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager import Environment
+from experiment_manager.common import YAMLSerializable
 
 @YAMLSerializable.register("SubtractActivation")
 class SubtractActivation(Activation, YAMLSerializable):

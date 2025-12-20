@@ -8,7 +8,7 @@ from data.data_sample import DataSample
 from encoders.encoder import Encoder
 from torchvision.datasets import MNIST
 
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager.common import YAMLSerializable
 
 @YAMLSerializable.register("MnistDataset")
 class MnistDataset(Dataset):

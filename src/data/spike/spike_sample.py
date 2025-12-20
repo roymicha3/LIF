@@ -9,7 +9,7 @@ from typing import List, Generator
 from data.data_sample import DataSample
 from data.spike.spike_data import SpikeData
 
-from experiment_manager.environment import Environment
+from experiment_manager import Environment
 
 class SpikeSample(DataSample):
     """

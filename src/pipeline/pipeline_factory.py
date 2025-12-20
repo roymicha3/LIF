@@ -1,9 +1,6 @@
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
-from experiment_manager.pipelines.pipeline import Pipeline
-
-# the pipeline factory logic is already implemented in the parent class
-from experiment_manager.pipelines.pipeline_factory import PipelineFactory
+from experiment_manager import Environment, Pipeline
+from experiment_manager.common import YAMLSerializable
+from experiment_manager.pipelines import PipelineFactory
 
 # Import all pipelines
 from pipeline.training_pipeline import TrainingPipeline

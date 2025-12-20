@@ -1,8 +1,8 @@
 import torch
 import tempfile
 
-from experiment_manager.environment import Environment
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager import Environment
+from experiment_manager.common import YAMLSerializable
 
 from network.topology.neuron import NeuronLayer
 

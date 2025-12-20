@@ -9,7 +9,7 @@ from data.dataset.dataset import Dataset, DataType, OutputType
 from data.data_sample import DataSample
 from encoders.encoder import Encoder
 
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager.common import YAMLSerializable
 
 @YAMLSerializable.register("RandomDataset")
 class RandomDataset(Dataset):

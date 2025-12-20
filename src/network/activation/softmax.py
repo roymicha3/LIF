@@ -2,7 +2,7 @@ import torch.nn.functional as F
 
 from network.activation.activation import Activation
 
-from experiment_manager.common.serializable import YAMLSerializable
+from experiment_manager.common import YAMLSerializable
 
 @YAMLSerializable.register("SoftmaxActivation")
 class SoftmaxActivation(Activation, YAMLSerializable):
