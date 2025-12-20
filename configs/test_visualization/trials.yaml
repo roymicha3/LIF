@@ -1,0 +1,9 @@
+# Test Visualization Trials
+# Single trial for testing the VisualizationCallback
+
+- name: "test_trial"
+  info: "Single trial to test VisualizationCallback"
+  repeat: 1
+  settings: {}
+
+

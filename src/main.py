@@ -5,19 +5,22 @@ import os
 
 import torch
 from experiment_manager.experiment import Experiment
+from experiment_manager.common.factory_registry import FactoryRegistry, FactoryType
 
 from pipeline.pipeline_factory import CustomPipelineFactory
+from pipeline.callbacks.callback_factory import CustomCallbackFactory
 
 EXPERIMENT_NAME = "optimal_experiment"
-WORKSPACE = os.path.join("outputs", EXPERIMENT_NAME)
+
+# Workspace at project root level (not inside src/)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.path.join(PROJECT_ROOT, "outputs", EXPERIMENT_NAME)
+
 
 def main():
     """
     runs the main logic
     """
-    
-    if not torch.cuda.is_available():
-        raise RuntimeError("CUDA is not available. Please check your installation.")
     
     config_dir_path = os.path.join(
         os.path.dirname(__file__), 
@@ -25,9 +28,16 @@ def main():
         "configs", EXPERIMENT_NAME
         )
     
-    experiment = Experiment.create(config_dir_path, 
-                                   factory=CustomPipelineFactory,
-                                   workdir=WORKSPACE)
+    # Create factory registry with custom factories
+    registry = FactoryRegistry()
+    registry.register(FactoryType.PIPELINE, CustomPipelineFactory())
+    registry.register(FactoryType.CALLBACK, CustomCallbackFactory())
+    
+    experiment = Experiment.create(
+        config_dir_path, 
+        factory_registry=registry,
+        workdir=WORKSPACE
+    )
     experiment.run()
 
 

@@ -1,8 +1,6 @@
 import os
 
-import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 import torch
 
 from experiment_manager.common.common import Metric, RunStatus
@@ -10,117 +8,18 @@ from experiment_manager.common.serializable import YAMLSerializable
 from experiment_manager.environment import Environment
 from experiment_manager.pipelines.pipeline import Pipeline
 
-from matplotlib.ticker import MaxNLocator
 from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
 
 from data.dataset.dataset import Dataset, DataType, OutputType
 from data.dataset.dataset_factory import DatasetFactory
-from data.spike.spike_sample import SpikeSample, digest_batch
+from data.spike.spike_sample import SpikeSample
 from encoders.encoder_factory import EncoderFactory
 from network.loss.loss_factory import LossFactory
 from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
 from network.network_factory import NetworkFactory
 from network.optimizer.optimizer_factory import OptimizerFactory
 
-# Configure global plot settings
-sns.set_style("whitegrid")
-plt.rcParams.update({
-    'font.size': 10,
-    'axes.titlesize': 12,
-    'axes.labelsize': 10,
-    'xtick.labelsize': 8,
-    'ytick.labelsize': 8,
-    'figure.dpi': 300,
-    'savefig.bbox': 'tight',
-    'font.family': 'DejaVu Sans'  # Ensures Unicode support
-})
-
-def plot_voltage_profiles(data, plot_type, epoch_idx, b_idx, env):
-    """Professional voltage plotting with consistent styling"""
-    for i in range(min(len(data), 4)):
-        fig = plt.figure(figsize=(8, 10))
-        try:
-            for j in range(min(len(data[i]), 4)):
-                ax = fig.add_subplot(4, 1, j+1)
-                
-                output = data[i][j]
-                if isinstance(output, torch.Tensor):
-                    output = output.cpu().detach().numpy()
-                # Plot data with professional styling
-                ax.plot(output, 
-                        linewidth=1.5, 
-                        alpha=0.8,
-                        color=sns.color_palette("tab10")[j])
-                
-                # Formatting
-                ax.set_title(f"{plot_type} {i} - Trace {j+1}", pad=12)
-                ax.set_xlabel("Time Step", labelpad=8)
-                ax.set_ylabel("Membrane Potential (mV)", labelpad=8)
-                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-                
-                # Add grid and remove top/right spines
-                ax.grid(True, linestyle='--', alpha=0.6)
-                sns.despine(ax=ax, trim=True)
-
-            plt.tight_layout(pad=2.0)
-            plot_path = os.path.join(
-                env.artifact_dir,
-                f"epoch_{epoch_idx}_batch_{b_idx}_{plot_type.lower()}_{i}_voltage.svg"  # Vector format
-            )
-            plt.savefig(plot_path, format='svg')
-            env.logger.info(f"Saved {plot_type} voltage plot: {plot_path}")
-            
-        finally:
-            plt.close(fig)  # Ensure figure is always closed
-
-def plot_input_spikes_raster(inputs, epoch_idx, b_idx, env):
-    """
-    Plot raster plot of input spikes.
-    
-    Args:
-        inputs: Input spike data
-        epoch_idx: Current epoch index
-        b_idx: Current batch index
-        env: Environment object for logging and artifact directory
-    """
-    # Convert inputs to numpy array for plotting
-    generator = digest_batch(inputs)
-    inputs_np = torch.stack([spike_seq for spike_seq in generator], dim=0).permute(1, 2, 0)
-    inputs_np = inputs_np.cpu().detach().numpy()
-
-    # inputs_np shape: (batch, neurons, time)
-    # For raster plot, we need to extract spike times for each neuron
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    # Plot just the first sample in the batch (or choose a specific sample)
-    sample_idx = 0  # Change this to plot a different sample
-    spike_data = inputs_np[sample_idx]  # Shape: (neurons, time)
-
-    # Find spike locations (where value > 0)
-    neuron_indices, time_indices = np.where(spike_data > 0)
-
-    # Plot spikes
-    ax.scatter(time_indices, neuron_indices, 
-            s=2, c='black', marker='|', alpha=0.8)
-
-    ax.set_title(f"Input Spikes at Epoch {epoch_idx + 1}, Batch {b_idx + 1}, Sample {sample_idx + 1}")
-    ax.set_xlabel("Time Step")
-    ax.set_ylabel("Neuron Index")
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-
-    # Set y-axis limits to show all neurons
-    ax.set_ylim(-0.5, spike_data.shape[0] - 0.5)
-
-    plt.tight_layout()
-    plot_path = os.path.join(
-        env.artifact_dir,
-        f"epoch_{epoch_idx}_batch_{b_idx}_input_spikes.svg"
-    )
-    plt.savefig(plot_path, format='svg')
-    env.logger.info(f"Saved input spikes plot: {plot_path}")
-    plt.close(fig)
 
 @YAMLSerializable.register("SequentialPipeline")
 class SequentialPipeline(Pipeline, YAMLSerializable):
@@ -195,41 +94,39 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
         # Calculate loss
         loss = criterion.forward(spikes, labels.unsqueeze(1).float())
         
-        if epoch_idx % 10 == 0 and batch_idx == 0:
-            # Plot the kernel weights
-            kernel = model.layers[0].kernel(inputs)
-            input_v = [v_t for v_t in kernel]
-            input_v = torch.stack(input_v, dim=-1)
-            
-            # plot the raster plot of the input spikes
-            plot_input_spikes_raster(inputs, epoch_idx, batch_idx, self.env)
-            
-            # plot the voltage:
-            plot_voltage_profiles(input_v, "Kernel", epoch_idx, batch_idx, self.env)
-            
-            # plot the voltage:
-            plot_voltage_profiles(outputs, "Neuron", epoch_idx, batch_idx, self.env)
-
-            
         # Backward pass
         propagation_error = criterion.backward()
         model.backward(propagation_error)
         
         optimizer.step()
         
-        self.batch_metrics = \
-            {
-                Metric.TRAIN_LOSS: torch.sum(loss).item(),
-                Metric.NETWORK: model,
-                Metric.CUSTOM: \
-                    [
-                        ("gradient_min", model.layers[0].connection.w.grad.min().item()),
-                        ("gradient_max", model.layers[0].connection.w.grad.max().item()),
-                        ("gradient_mean", model.layers[0].connection.w.grad.mean().item()),
-                        ("gradient_std", model.layers[0].connection.w.grad.std().item()),
-                        ("gradient_l2_norm", model.layers[0].connection.w.grad.norm().item()) 
-                    ]
-            }
+        # Build batch metrics
+        self.batch_metrics = {
+            Metric.TRAIN_LOSS: torch.sum(loss).item(),
+            Metric.NETWORK: model,
+            Metric.CUSTOM: [
+                ("gradient_min", model.layers[0].connection.w.grad.min().item()),
+                ("gradient_max", model.layers[0].connection.w.grad.max().item()),
+                ("gradient_mean", model.layers[0].connection.w.grad.mean().item()),
+                ("gradient_std", model.layers[0].connection.w.grad.std().item()),
+                ("gradient_l2_norm", model.layers[0].connection.w.grad.norm().item()) 
+            ]
+        }
+        
+        # Add visualization data directly to batch_metrics
+        # VisualizationCallback receives this via on_batch_end
+        # Using CUSTOM_UNTRACKED ensures it's not persisted to DB/MLflow
+        kernel = model.layers[0].kernel(inputs)
+        input_v = [v_t for v_t in kernel]
+        input_v = torch.stack(input_v, dim=-1)
+        
+        self.batch_metrics[Metric.CUSTOM_UNTRACKED] = [
+            ("viz_inputs", inputs),
+            ("viz_kernel_voltage", input_v.cpu().detach()),
+            ("viz_neuron_outputs", outputs.cpu().detach() if isinstance(outputs, torch.Tensor) else outputs),
+            ("viz_epoch_idx", epoch_idx),
+            ("viz_batch_idx", batch_idx),
+        ]
             
         # Update running loss and accuracy
         running_loss = torch.sum(loss).item()
@@ -279,14 +176,14 @@ class SequentialPipeline(Pipeline, YAMLSerializable):
         # total_train_loss, total_train_accuracy = self.evaluate(model, criterion, train_dataloader)
         total_val_loss, total_val_accuracy = self.evaluate(model, criterion, val_dataloader)
         
-        self.epoch_metrics = \
-            {
-                # Metric.TRAIN_LOSS: total_train_loss,
-                # Metric.TRAIN_ACC: total_train_accuracy,
-                Metric.VAL_LOSS: total_val_loss,
-                Metric.VAL_ACC: total_val_accuracy,
-                Metric.NETWORK: model
-            }
+        # Build epoch metrics
+        self.epoch_metrics = {
+            # Metric.TRAIN_LOSS: total_train_loss,
+            # Metric.TRAIN_ACC: total_train_accuracy,
+            Metric.VAL_LOSS: total_val_loss,
+            Metric.VAL_ACC: total_val_accuracy,
+            Metric.NETWORK: model
+        }
         
         # Print epoch summary
         print(f"[Epoch {epoch_idx + 1}] Loss: {total_val_loss:.3f}, Accuracy: {total_val_accuracy:.2f}%")

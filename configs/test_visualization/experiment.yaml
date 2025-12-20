@@ -1,0 +1,13 @@
+#####################################################################################
+#   Experiment Configuration - Test VisualizationCallback                           #
+#####################################################################################
+
+name: "test_visualization"
+desc: "Test experiment for VisualizationCallback with small dataset and network"
+
+settings:
+  debug: true
+
+trials:
+
+
