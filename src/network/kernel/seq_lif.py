@@ -3,7 +3,7 @@ from omegaconf import DictConfig
 
 from tools.utils import SEQ_LEN
 from network.kernel.kernel import Kernel
-from data.spike.spike_sample import SpikeSample, digest_batch
+from data.spike import SpikeSample, digest_batch
 
 from network.kernel.functional import cpu_based as cpu
 from network.kernel.functional import gpu_based as gpu

@@ -12,8 +12,7 @@ from network.optimizer.optimizer_factory import OptimizerFactory
 from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory
 
 from encoders.encoder_factory import EncoderFactory
-from data.dataset.dataset_factory import DatasetFactory
-from data.dataset.dataset import Dataset, DataType, OutputType
+from data.dataset import Dataset, DataType, OutputType, DatasetFactory
 
 @YAMLSerializable.register("TrainingPipeline")
 class TrainingPipeline(Pipeline, YAMLSerializable):

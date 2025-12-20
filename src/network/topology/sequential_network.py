@@ -6,7 +6,7 @@ from experiment_manager.common import YAMLSerializable
 
 from tools.utils import SEQ_LEN
 from network.topology.network import Network
-from data.spike.spike_sample import SpikeSample, digest_batch
+from data.spike import SpikeSample, digest_batch
 
 
 @YAMLSerializable.register("SequentialNetwork")

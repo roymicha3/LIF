@@ -6,11 +6,8 @@ import torch
 import matplotlib.pyplot as plt
 from omegaconf import DictConfig
 
-from data.dataset.dataset_factory import DatasetFactory
-from data.dataset.dataset import Dataset
+from data.dataset import Dataset, DataType, OutputType, DatasetFactory
 from encoders.encoder_factory import EncoderFactory
-from data.dataset.dataset import OutputType
-from data.dataset.dataset import DataType
 
 def load_dataset(
     dataset_config: DictConfig,

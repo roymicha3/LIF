@@ -7,9 +7,8 @@ from experiment_manager import Environment, Pipeline, Metric, RunStatus
 from experiment_manager.common import YAMLSerializable
 
 
-from data.dataset.dataset import Dataset, DataType, OutputType
-from data.dataset.dataset_factory import DatasetFactory
-from data.spike.spike_sample import SpikeSample
+from data.dataset import Dataset, DataType, OutputType, DatasetFactory
+from data.spike import SpikeSample
 from encoders.encoder_factory import EncoderFactory
 from network.loss.loss_factory import LossFactory
 from network.lr_scheduler.lr_scheduler_factory import LRSchedulerFactory

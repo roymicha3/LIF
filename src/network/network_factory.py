@@ -5,11 +5,7 @@ from omegaconf import DictConfig
 from network.activation.activation_factory import ActivationFactory
 from network.kernel.kernel_factory import KernelFactory
 from network.learning.lr_factory import LearningRuleFactory
-# import networks:
-from network.topology.network import Network
-from network.topology.neuron import NeuronLayer
-from network.topology.sequential_network import SequentialNetwork
-from network.topology.simple_connection import SimpleConnection
+from network.topology import Network, NeuronLayer, SequentialNetwork, SimpleConnection
 
 
 class NetworkFactory(Factory):

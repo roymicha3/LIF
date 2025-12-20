@@ -8,8 +8,7 @@ from typing_extensions import override
 from tools.utils import SEQ_LEN
 from encoders.encoder import Encoder
 from data.data_sample import DataSample
-from data.spike.spike_data import SpikeData
-from data.spike.spike_sample import SpikeSample
+from data.spike import SpikeData, SpikeSample
 
 from experiment_manager import Environment
 from experiment_manager.common import YAMLSerializable
