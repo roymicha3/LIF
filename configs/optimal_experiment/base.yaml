@@ -76,6 +76,14 @@ pipeline:
   callbacks:
     - type: "MetricsTracker"
 
+    - type: "VisualizationCallback"
+      plot_frequency: 10 # Generate voltage plots every 10 epochs
+      plot_voltage: true
+      plot_spikes: true
+      max_samples: 4
+      capture_batch: 0 # Capture from first batch
+      plot_mode: "deferred" # Plot at epoch end
+
     - type: "EarlyStopping"
       metric: "val_loss"
       patience: 10

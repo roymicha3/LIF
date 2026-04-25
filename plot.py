@@ -5,6 +5,11 @@ Enhanced version with all metrics and per-trial analysis.
 
 This script extracts all metrics from LIF experiments and creates comprehensive
 per-trial analysis with organized directory structure and detailed visualizations.
+
+Usage:
+    python plot.py [experiment_name]
+    
+    If experiment_name is not provided, it will use the default from EXPERIMENT_NAME below.
 """
 
 import sqlite3
@@ -13,10 +18,48 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import sys
+import argparse
 from scipy import stats
 from pathlib import Path
 
-def extract_validation_accuracy_from_batch_metric(db_path):
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+# Default experiment name - change this or pass as command-line argument
+DEFAULT_EXPERIMENT_NAME = 'optimal_experiment'
+
+# Base outputs directory (relative to script location)
+OUTPUTS_BASE_DIR = 'outputs'
+
+# Experiment manager path (adjust if needed)
+EXPERIMENT_MANAGER_PATH = r'C:\Users\roymi\projects\experiment_manager'
+# ============================================================================
+
+def get_experiment_paths(experiment_name):
+    """Get database path and base directory for an experiment."""
+    script_dir = Path(__file__).parent
+    base_dir = script_dir / OUTPUTS_BASE_DIR / experiment_name
+    db_path = base_dir / 'artifacts' / 'experiment.db'
+    return str(db_path), str(base_dir)
+
+def list_available_experiments():
+    """List all available experiments in the outputs directory."""
+    script_dir = Path(__file__).parent
+    outputs_dir = script_dir / OUTPUTS_BASE_DIR
+    
+    if not outputs_dir.exists():
+        return []
+    
+    experiments = []
+    for item in outputs_dir.iterdir():
+        if item.is_dir():
+            db_path = item / 'artifacts' / 'experiment.db'
+            if db_path.exists():
+                experiments.append(item.name)
+    
+    return sorted(experiments)
+
+def extract_validation_accuracy_from_batch_metric(db_path, experiment_name):
     """Extract validation accuracy from BATCH_METRIC table."""
     
     print("Extracting validation accuracy from BATCH_METRIC table...")
@@ -66,7 +109,7 @@ def extract_validation_accuracy_from_batch_metric(db_path):
         val_acc_data['batch'] = None
         val_acc_data['is_custom'] = False
         val_acc_data['timestamp'] = pd.Timestamp.now()  # Default timestamp
-        val_acc_data['experiment_name'] = 'sequential_workspace'  # Default value
+        val_acc_data['experiment_name'] = experiment_name
         
         # Rename columns to match expected format
         val_acc_data = val_acc_data.rename(columns={'epoch_idx': 'epoch', 'type': 'metric'})
@@ -91,7 +134,7 @@ def extract_validation_accuracy_from_batch_metric(db_path):
         traceback.print_exc()
         return pd.DataFrame()
 
-def extract_all_metrics(db_path):
+def extract_all_metrics(db_path, experiment_name):
     """Extract all available metrics using DataFrameExtractor."""
     
     print(f"Extracting all metrics from: {db_path}")
@@ -102,7 +145,7 @@ def extract_all_metrics(db_path):
     
     try:
         # Import experiment manager modules
-        sys.path.append(r'C:\Users\roymi\projects\experiment_manager')
+        sys.path.append(EXPERIMENT_MANAGER_PATH)
         from experiment_manager.results.extractors.dataframe_extractor import DataFrameExtractor
         from experiment_manager.results.sources.db_datasource import DBDataSource
         
@@ -148,7 +191,7 @@ def extract_all_metrics(db_path):
             print(f"  - Created epoch metrics: {epoch_df['metric'].unique()}")
         
         # Extract validation accuracy from BATCH_METRIC table
-        val_acc_df = extract_validation_accuracy_from_batch_metric(db_path)
+        val_acc_df = extract_validation_accuracy_from_batch_metric(db_path, experiment_name)
         if len(val_acc_df) > 0:
             # Combine with existing epoch data
             epoch_df = pd.concat([epoch_df, val_acc_df], ignore_index=True)
@@ -1209,7 +1252,7 @@ def handle_missing_epochs(df, strategy='forward_fill'):
             full_range = range(min_epoch, max_epoch + 1)
             
             trial_data = trial_data.reindex(full_range)
-            trial_data = trial_data.fillna(method='ffill')
+            trial_data = trial_data.ffill()  # Forward fill missing values
             trial_data = trial_data.reset_index()
             trial_data['trial_name'] = trial_name
             trial_data['is_interpolated'] = trial_data['value'].isna()
@@ -1949,19 +1992,55 @@ def generate_overall_summary_report(trial_summary, output_dir):
 def main():
     """Main analysis function."""
     
-    print("=== LIF Comprehensive Analysis - Per-Trial Analysis ===")
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description='LIF Comprehensive Analysis Script',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=f"""
+Examples:
+  python plot.py
+  python plot.py grid_experiment
+  python plot.py sequential_workspace
+        """
+    )
+    parser.add_argument(
+        'experiment_name',
+        nargs='?',
+        default=DEFAULT_EXPERIMENT_NAME,
+        help=f'Name of the experiment to analyze (default: {DEFAULT_EXPERIMENT_NAME})'
+    )
+    args = parser.parse_args()
     
-    # Configuration
-    db_path = r'outputs\grid_experiment\artifacts\experiment.db'
-    base_dir = r'outputs\grid_experiment'
+    experiment_name = args.experiment_name
+    
+    print("=== LIF Comprehensive Analysis - Per-Trial Analysis ===")
+    print(f"Experiment: {experiment_name}")
+    
+    # Get paths for this experiment
+    db_path, base_dir = get_experiment_paths(experiment_name)
+    
+    print(f"Database path: {db_path}")
+    print(f"Base directory: {base_dir}")
     
     # Step 1: Extract all metrics
     print("\n1. Extracting all metrics...")
-    batch_df, epoch_df, results_df = extract_all_metrics(db_path)
+    result = extract_all_metrics(db_path, experiment_name)
     
-    if batch_df is None:
-        print("[ERROR] Data extraction failed!")
+    if result is None:
+        print("\n[ERROR] Data extraction failed!")
+        print(f"Database file not found at: {db_path}")
+        print("\nAvailable experiments:")
+        available = list_available_experiments()
+        if available:
+            for exp in available:
+                print(f"  - {exp}")
+        else:
+            print("  (No experiments found in outputs directory)")
+        print(f"\nTo analyze an experiment, use:")
+        print(f"  python plot.py <experiment_name>")
         return
+    
+    batch_df, epoch_df, results_df = result
     
     # Step 2: Get unique trials
     trials = batch_df['trial_name'].unique()
